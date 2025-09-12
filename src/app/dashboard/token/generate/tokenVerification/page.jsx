@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../../../..//components/components/ui/button'
+import { Button } from '../../../../../components/components/ui/button'
 import CustomInput from '../../../../../components/components/ui/CustomInput'
 import { Label } from '../../../../../components/components/ui/label'
 import React, {  useState } from 'react'

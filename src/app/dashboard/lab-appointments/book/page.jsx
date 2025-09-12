@@ -1,7 +1,6 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/components/ui/card';
 import { Building, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
 
 const centers = [
   {
@@ -31,7 +30,7 @@ export default function BookLabAppointmentCenterSelectionPage() {
       </div>
       <div className="max-w-2xl mx-auto space-y-4">
         {centers.map((center) => (
-          <Link href={`/dashboard/lab-appointments?center=${encodeURIComponent(center.name)}`} key={center.name}>
+          <Link href={`/lab-appointments?center=${encodeURIComponent(center.name)}`} key={center.name}>
              <Card className="hover:bg-accent/50 hover:shadow-md transition-all">
                 <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">

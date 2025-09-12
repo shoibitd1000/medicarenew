@@ -1,22 +1,6 @@
 
 import { Button } from "../../../../components/components/ui/button";
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../../../components/components/ui/card";
-import { Input } from "../../../../components/components/ui/input";
-import { Label } from "../../../../components/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../../../components/components/ui/select";
 import { ChevronRight, MoveLeft, LaptopMinimal  } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 

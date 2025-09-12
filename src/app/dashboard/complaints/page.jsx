@@ -1,209 +1,107 @@
-import { useState, useEffect } from 'react';
-import { Button } from '../../../components/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/components/ui/card';
-import { Input } from '../../../components/components/ui/input';
-import { Label } from '../../../components/components/ui/label';
-import { Star, MessageCircleWarning } from 'lucide-react';
-import { cn } from '../../../lib/utils';
-import { useToast } from '../../../hooks/use-toast';
-import CustomTextArea from '../../../components/components/components/ui/CustomTextArea';
+import React, { useState } from "react";
 
-const starLabels = {
-  1: 'Very Poor',
-  2: 'Poor',
-  3: 'Average',
-  4: 'Good',
-  5: 'Excellent',
-};
+import CustomTextArea from "../../../components/components/ui/CustomTextArea";
+import CustomInput from "../../../components/components/ui/CustomInput";
+import { Star } from "lucide-react";
+import DatePicker from "react-datepicker";
 
-const initialComplaints = [
-  {
-    id: 1,
-    subject: 'Long wait time at OPD',
-    description: 'I had to wait for over an hour to see the doctor, even with an appointment.',
-    rating: 2,
-    date: '2024-07-28T10:30:00Z',
-  },
-  {
-    id: 2,
-    subject: 'Excellent nursing care',
-    description: "The nurses in the IPD wing were very attentive and caring during my mother's stay.",
-    rating: 5,
-    date: '2024-07-25T15:00:00Z',
-  },
-  {
-    id: 3,
-    subject: 'Billing Error',
-    description: '',
-    rating: 3,
-    date: '2024-07-22T12:00:00Z',
-  },
-];
-
-const StarRating = ({ rating, setRating, readOnly = false }) => {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="flex items-center space-x-2">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => !readOnly && setRating?.(star)}
-            className={cn(
-              "p-1 rounded-full transition-colors",
-              !readOnly && "hover:bg-yellow-200",
-              readOnly && "cursor-default"
-            )}
-            disabled={readOnly}
-          >
-            <Star
-              className={cn(
-                "w-8 h-8",
-                rating >= star
-                  ? "text-yellow-400 fill-yellow-400"
-                  : "text-muted-foreground/50",
-                !readOnly && "cursor-pointer"
-              )}
-            />
-          </button>
-        ))}
-      </div>
-      {starLabels[rating] && (
-        <p className="text-sm text-muted-foreground mt-2 font-semibold">
-          {rating}/5 - {starLabels[rating]}
-        </p>
-      )}
-    </div>
-  );
-};
-
-const ClientSideDate = ({ dateString }) => {
-  const [formattedDate, setFormattedDate] = useState('');
-
-  useEffect(() => {
-    setFormattedDate(new Date(dateString).toLocaleString());
-  }, [dateString]);
-
-  return <>{formattedDate}</>;
-};
-
-export default function ComplaintsPage() {
-  const [complaints, setComplaints] = useState(initialComplaints);
-  const [subject, setSubject] = useState('');
-  const [description, setDescription] = useState('');
+const FeedbackSection = () => {
+  const [subject, setSubject] = useState("12-Sep-2025");
+  const [description, setDescription] = useState("");
   const [rating, setRating] = useState(0);
-  const { toast } = useToast();
+  const [feedbackHistory, setFeedbackHistory] = useState([
+    {
+      date: "12-Sep-2025",
+      rating: 5,
+      comments: "5/5 - Excellent",
+      additionalInfo: "NA",
+    },
+  ]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!subject || rating === 0) {
-      toast({
-        title: "Incomplete Submission",
-        description: "Please provide a subject and a rating.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const newComplaint = {
-      id: Date.now(),
-      subject,
-      description,
-      rating,
-      date: new Date().toISOString(),
-    };
-    setComplaints([newComplaint, ...complaints]);
-    setSubject('');
-    setDescription('');
-    setRating(0);
-    toast({
-      title: "Feedback Submitted",
-      description: "Thank you for your feedback. We will look into it.",
-    });
+  const handleRatingClick = (index) => {
+    setRating(index + 1);
   };
 
+  const handleSubmitFeedback = () => {
+    const newFeedback = {
+      date: subject,
+      rating: rating,
+      comments: `${rating}/5 - ${rating === 5 ? "Excellent" : "Good"}`,
+      additionalInfo: description || "NA",
+    };
+    setFeedbackHistory([newFeedback, ...feedbackHistory]);
+    setSubject("12-Sep-2025");
+    setDescription("");tion
+    setRating(0);  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="text-center">
-        <MessageCircleWarning className="h-12 w-12 mx-auto text-primary" />
-        <h1 className="text-3xl font-bold font-headline text-primary mt-2">
-          Complaints & Feedback
-        </h1>
-        <p className="text-muted-foreground">
-          We value your opinion. Please let us know how we're doing.
-        </p>
+    <div className="max-w-4xl mx-auto mt-6 bg-white shadow-md rounded-lg p-4">
+      <div className="header mb-4">
+        <h1 className="text-xl font-semibold">We value your opinion. Please let us know how we're doing.</h1>
       </div>
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>Submit New Feedback</CardTitle>
-          <CardDescription>
-            Use this form to submit a new complaint or share your feedback.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="subject" className="text-base">Subject</Label>
-              <Input
-                id="subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g., Issue with billing, a suggestion, etc."
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Description (Optional)</Label>
-              <CustomTextArea
-                id="description"
-                repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                value={description}
-                placeHolderText={"Description....."}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-            <div className="space-y-4">
-              <Label className="text-base text-center block">Overall Rating</Label>
-              <StarRating rating={rating} setRating={setRating} />
-            </div>
-            <div className="flex justify-end">
-              <Button type="submit" size="lg">Submit Feedback</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="feedback-form bg-white p-4 rounded-lg shadow-md mb-4">
+        <h2 className="font-medium text-lg">Submit New Feedback</h2>
+        <p className="text-sm text-gray-500 mb-4">Use this form to submit a new complaint or share your feedback.</p>
 
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold font-headline text-center">Feedback History</h2>
-        {complaints.length > 0 ? (
-          <div className="space-y-4">
-            {complaints.map((complaint) => (
-              <Card key={complaint.id} className="shadow-md">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <p className="font-bold text-lg text-primary">{complaint.subject}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Submitted on: <ClientSideDate dateString={complaint.date} />
-                      </p>
-                    </div>
-                    <StarRating rating={complaint.rating} readOnly />
-                  </div>
-                  {complaint.description && (
-                    <p className="text-sm text-foreground/80 pt-2 border-t border-dashed">
-                      {complaint.description}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+        <div className="mb-4">
+          <DatePicker
+            id="subject"
+            type="date"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Subject"
+            className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
+          />
+        </div>
+
+        <div className="mb-4">
+          <CustomTextArea
+            repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
+            value={description}
+            placeHolderText="Provide more details here..."
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="font-medium text-sm">Overall Rating</label>
+          <div className="rating flex space-x-1 mt-2">
+            {[...Array(5)].map((_, index) => (
+              <Star
+                key={index}
+                onClick={() => handleRatingClick(index)}
+                color={rating > index ? "gold" : "gray"}
+                size={25}
+                className="cursor-pointer"
+              />
             ))}
           </div>
-        ) : (
-          <div className="text-center p-8 text-muted-foreground bg-card rounded-lg">
-            <p>You have not submitted any feedback yet.</p>
+        </div>
+
+        <div>
+          <button
+            onClick={handleSubmitFeedback}
+            className="w-full bg-blue-500 text-white py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            Submit Feedback
+          </button>
+        </div>
+      </div>
+
+      <div className="feedback-history mt-6 bg-white p-4 rounded-lg shadow-md">
+        <h2 className="font-medium text-lg">Feedback History</h2>
+        {feedbackHistory.map((feedback, index) => (
+          <div key={index} className="feedback-item mt-4">
+            <div className="text-sm text-gray-700">
+              <strong>{feedback.date}</strong> - {feedback.comments}
+            </div>
+            <div className="text-xs text-gray-500">{feedback.additionalInfo}</div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
-}
+};
+
+export default FeedbackSection;

@@ -4,6 +4,7 @@ import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
 import CustomTable from "../../../../components/components/ui/customTabel";
+// import  Card  from "../../../../components/components/ui/card";
 
 const initialLabReports = [
   {
@@ -108,7 +109,7 @@ export default function LabReportsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-4">
       <div className="text-center">
-        <TestTubeDiagonal  className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
+        <TestTubeDiagonal className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
         <h1 className="text-3xl font-bold text-primary">
           Lab Investigation Reports
         </h1>
@@ -139,7 +140,15 @@ export default function LabReportsPage() {
           />
         </div>
 
-        <div className="overflow-x-auto">
+        {formattedData?.map(item => <div key={item?.id} className="">
+          <div className="py-2  px-4">
+            <h2 className="text-lg text-primary font-extrabold py-1 uppercase"> {item?.ambType} </h2>
+            <span className="text-xs font-semibold py-1">{item?.baseFare}</span>
+            <div><span className="text-xs text-gray font-bold">{item?.perKm}</span></div>
+          </div>
+        </div>)}
+
+        {/* <div className="overflow-x-auto">
           <CustomTable
             Thead={Thead}
             data={formattedData}
@@ -153,7 +162,7 @@ export default function LabReportsPage() {
             cellClass="text-gray-700"
             actions={actions}
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="text-center">

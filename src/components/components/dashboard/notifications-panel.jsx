@@ -6,7 +6,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../ui/card";
+} from "../../../components/components/ui/card";
 import { Skeleton } from "../ui/skeleton";
 import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";

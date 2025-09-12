@@ -14,7 +14,15 @@ const CustomTable = ({
   cellClass = "",    // for <td>
 }) => {
   return (
-    <div className={`overflow-x-auto ${wrapperClass}`}>
+    <div
+      className={`overflow-y-auto overflow-x-auto h-[calc(100vh-200px)] ${wrapperClass}`}
+      style={{
+        scrollbarWidth: "thin", // Firefox
+        scrollbarColor: "#d1d5db transparent", // Firefox: gray thumb
+      }}
+    >
+      
+
       <table
         className={`min-w-full text-sm text-left border-collapse ${tableClass}`}
       >
@@ -64,7 +72,9 @@ const CustomTable = ({
                 {Thead.map((col) => (
                   <td
                     key={col.key}
-                    className={`px-4 py-2 ${bordered ? "border" : ""} ${cellClass}`}
+                    className={`px-4 py-2 ${
+                      bordered ? "border" : ""
+                    } ${cellClass}`}
                   >
                     {row[col.key]}
                   </td>

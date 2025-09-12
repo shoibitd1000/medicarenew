@@ -5,7 +5,6 @@ import { allUsers } from "./lib/users";
 // import CreateMpinPage from "./app/create-mpin/page";
 import ProfilePage from "./app/dashboard/profile/page";
 import ReminderPage from "./app/dashboard/reminder/page";
-import MedicinesPage from "./app/dashboard/clinical-record/medicines/page";
 import BookAppointment from "./app/dashboard/bookAppointment/page";
 import DoctorAppointment from "./app/dashboard/bookAppointment/doctorAppointment/page";
 import LoginPage from "./app/page";
@@ -25,6 +24,7 @@ import TokenPage from "./app/dashboard/token/page";
 import GenerateTokenPage from "./app/dashboard/token/generate/page";
 import TokenVerification from "./app/dashboard/token/generate/tokenVerification/page";
 import ConsultationHistoryPage from "./app/dashboard/clinical-record/consultations/page";
+import MedicinesPage from "./app/dashboard/clinical-record/medicines/page";
 
 export function App() {
   const [currentUser, setCurrentUser] = useState(allUsers[0]);

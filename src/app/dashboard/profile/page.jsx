@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import {
   Avatar,
@@ -22,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/components/ui/select";
-import { Textarea } from "../../../components/components/ui/textarea";
 import { Camera, ArrowLeft, KeyRound } from "lucide-react";
 import { useNavigate, useNavigation } from "react-router-dom";
 import {
@@ -35,6 +33,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "../../../components/components/ui/dialog";
+import CustomTextArea from "../../../components/components/ui/CustomTextArea";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -102,11 +101,15 @@ export default function ProfilePage() {
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                defaultValue="123 Health St, Wellness City, 10101"
-              />
+             
+              <div className="my-3">
+                <Label>Address</Label>
+                <CustomTextArea
+                  repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
+                  value={"23 Health St, Wellness City, 10101"}
+                  placeHolderText={"address."}
+                />
+              </div>
             </div>
             <div className="md:col-span-2 flex justify-end">
               <Button

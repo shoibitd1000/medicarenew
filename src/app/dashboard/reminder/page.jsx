@@ -17,7 +17,7 @@ import {
 } from "../../../components/components/ui/dialog";
 import { Input } from "../../../components/components/ui/input";
 import { Label } from "../../../components/components/ui/label";
-import { Textarea } from "../../../components/components/ui/textarea";
+
 import { Switch } from "../../../components/components/ui/switch";
 import { useToast } from "../../../hooks/use-toast";
 import {
@@ -286,13 +286,15 @@ export default function ReminderPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g., Take 1 pill after breakfast"
-                />
+                <div className="my-3">
+                  <Label>Description(Optional) </Label>
+                  <CustomTextArea
+                    repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
+                    value={""}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeHolderText={"e.g., Take 1 pill after breakfast....."}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>

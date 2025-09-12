@@ -34,6 +34,7 @@ import {
   DialogClose,
 } from "../../../components/components/ui/dialog";
 import CustomTextArea from "../../../components/components/ui/CustomTextArea";
+import CustomInput from "../../../components/components/ui/CustomInput";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -68,11 +69,15 @@ export default function ProfilePage() {
 
           <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" defaultValue="John Doe" />
+              <CustomInput
+                id="name"
+                type="text"
+                placeholder="Enter Your Name"
+                className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
+                required={"required"}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dob">Date of Birth</Label>
               <Input id="dob" type="date" defaultValue="1985-07-22" />
             </div>
             <div className="space-y-2">
@@ -101,7 +106,7 @@ export default function ProfilePage() {
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-             
+
               <div className="my-3">
                 <Label>Address</Label>
                 <CustomTextArea

@@ -82,7 +82,7 @@ const features = [
     icon: FileText,
     href: "/clinical-record",
     description: "View your health records",
-    bgColor: "bg-yellow-50",
+    bgColor: "bg-blue-50s",
     color: "bg-cyan-100 text-cyan-600",
   },
   {

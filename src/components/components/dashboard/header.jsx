@@ -15,13 +15,10 @@ import {
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Sheet, SheetTrigger, SheetContent } from "../ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { DialogBox } from "../ui/dialog";
+import SwitchProfileDialog from "./switch-profile-dialog";
+import NotificationsPanel from "./notifications-panel";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,10 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-
-import { DialogBox } from "../ui/dialog"; 
-import SwitchProfileDialog from "./switch-profile-dialog";
-import NotificationsPanel from "./notifications-panel";
 
 export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile }) {
   const [currentDate, setCurrentDate] = useState("");

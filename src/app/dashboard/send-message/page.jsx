@@ -16,7 +16,7 @@ const medicines = [
     prescribedBy: "Dr. John Smith",
     date: "02-sep-2025 11:23:34",
     status: "confirmed",
-    center: "Tenwek Hospital",
+    centerH: "Tenwek Hospital",
     mess: "Sent Message",
   },
   {
@@ -25,7 +25,7 @@ const medicines = [
     prescribedBy: "Dr. John Smith",
     date: "02-sep-2025 11:23:34",
     status: "confirmed",
-    center: "Tenwek Hospital",
+    centerH: "Tenwek Hospital",
     mess: "Sent Message",
   },
   {
@@ -34,7 +34,7 @@ const medicines = [
     prescribedBy: "Dr. John Smith",
     date: "02-sep-2025 11:23:34",
     status: "confirmed",
-    center: "Tenwek Hospital",
+    centerH: "Tenwek Hospital",
     mess: "Send Message",
   },
 
@@ -90,9 +90,7 @@ export default function SendMessagePage() {
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-md font-extrabold text-primary">{item?.name}</span>
-                          <span className="text-xs font-bold ">{item?.center}</span>
-
-
+                          <span className="text-xs font-bold ">{item?.centerH}</span>
                         </div>
                         <div className="text-[10px] py-[2px] font-medium text-primary">{item?.name}</div>
                         <div className="text-[10px] py-[2px] font-medium text-primary">{item?.date}</div>

@@ -15,13 +15,9 @@ import {
   Mail,
   Receipt,
 } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "../../components/components/ui/card";
+
 import PromoCarousel from "../../components/components/dashboard/promo-carousel";
+import { Card, CardDescription, CardHeader, CardTitle } from "../../components/components/ui/card";
 
 const features = [
   {
@@ -116,9 +112,9 @@ const features = [
     bgColor: "bg-sky-50",
   },
   {
-    title: "Complaints",
+    title: "Feedback",
     icon: MessageSquareText,
-    href: "/complaints",
+    href: "/feedback",
     description: "Submit feedback",
     color: "bg-teal-100 text-teal-600",
     bgColor: "bg-teal-50",

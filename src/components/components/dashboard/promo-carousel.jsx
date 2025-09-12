@@ -52,9 +52,8 @@ export default function PromoCarousel() {
       <CarouselContent>
         {promotions.map((promo, index) => (
           <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/4">
-            <div className="p-1">
-              <Card>
-                <CardContent className="flex aspect-[2/1] items-center justify-center p-0 overflow-hidden rounded-lg">
+            <div className="">
+                <div className="flex aspect-[2/1] items-center justify-center p-0 overflow-hidden rounded-lg">
                   <img
                     src={promo.src}
                     alt={promo.alt}
@@ -63,8 +62,7 @@ export default function PromoCarousel() {
                     className="w-full h-full object-cover"
                     data-ai-hint={promo.hint}
                   />
-                </CardContent>
-              </Card>
+                </div>
             </div>
           </CarouselItem>
         ))}

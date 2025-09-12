@@ -1,5 +1,5 @@
-import React from "react";
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import React, { useState, useRef, useEffect, KeyboardEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/components/ui/button";
 import {
   Card,
@@ -8,15 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/components/ui/card";
-import { Input } from "../../components/components/ui/input";
-import { useNavigate } from "react-router-dom";
 
 export default function CreateMpinPage() {
   const navigate = useNavigate();
   const length = 4;
   const [mpin, setMpin] = useState<string[]>(new Array(length).fill(""));
 
-  const inputRefs = useRef<Array<HTMLInputElement | null>>(new Array(length).fill(null));
+  const inputRefs = useRef<Array<HTMLInputElement | null>>(
+    new Array(length).fill(null)
+  );
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -24,7 +24,6 @@ export default function CreateMpinPage() {
 
   const handleChange = (value: string, index: number) => {
     const digitOnly = value.replace(/\D/g, "");
-
     const digits = digitOnly.split("");
 
     setMpin((prev) => {
@@ -39,15 +38,23 @@ export default function CreateMpinPage() {
     inputRefs.current[nextPos]?.focus();
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>, index: number) => {
+  const handlePaste = (
+    e: React.ClipboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, length - index);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, length - index);
     if (!pasted) return;
 
     const digits = pasted.split("");
     setMpin((prev) => {
       const next = [...prev];
-      for (let i = 0; i < digits.length && index + i < next.length; i++) next[index + i] = digits[i];
+      for (let i = 0; i < digits.length && index + i < next.length; i++) {
+        next[index + i] = digits[i];
+      }
       return next;
     });
 
@@ -89,7 +96,6 @@ export default function CreateMpinPage() {
   const handleConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     const enteredMpin = mpin.join("");
-    debugger
     if (enteredMpin.length === 4) {
       console.log(`MPIN created: ${enteredMpin}`);
       navigate("/dashboard");
@@ -103,17 +109,19 @@ export default function CreateMpinPage() {
       <div className="w-full max-w-sm">
         <Card className="shadow-2xl border-none">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold font-headline text-primary">
+            <CardTitle className="text-2xl font-bold text-primary">
               Create new MPIN
             </CardTitle>
-            <CardDescription>To login quicker on the Tenwek App</CardDescription>
+            <CardDescription>
+              To login quicker on the Tenwek App
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleConfirm} className="space-y-8">
               <div className="flex justify-center gap-2 sm:gap-4">
                 {mpin.map((value, index) => (
-                  <Input
+                  <input
                     key={index}
                     type="password"
                     inputMode="numeric"
@@ -124,12 +132,15 @@ export default function CreateMpinPage() {
                     onPaste={(e) => handlePaste(e, index)}
                     onFocus={(e) => e.target.select()}
                     ref={(el) => (inputRefs.current[index] = el)}
-                    className="w-14 h-14 sm:w-16 sm:h-16 text-center text-2xl font-bold"
+                    className="w-14 h-14 sm:w-16 sm:h-16 border rounded-lg text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 ))}
               </div>
 
-              <Button type="submit" className="w-full text-lg h-12 bg-primary hover:bg-primary/90">
+              <Button
+                type="submit"
+                className="w-full text-lg h-12 bg-primary hover:bg-primary/90"
+              >
                 Confirm
               </Button>
             </form>

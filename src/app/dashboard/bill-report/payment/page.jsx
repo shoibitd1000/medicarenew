@@ -2,22 +2,22 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Phone, CheckCircle, IndianRupee } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '../../../../components/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../../../components/components/ui/card';
+import { Input } from '../../../../components/components/ui/input';
+import { Label } from '../../../../components/components/ui/label';
+import { Phone, CheckCircle } from 'lucide-react';
 
-export default function LabPaymentPage() {
-  const router = useRouter();
+export default function BillPaymentPage() {
+  const router = useNavigate();
   const searchParams = useSearchParams();
-  const amount = searchParams.get('amount') || '200';
+  const amount = searchParams.get('amount') || '0';
   const [mobileNumber, setMobileNumber] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = (e) => {
     e.preventDefault();
     setIsProcessing(true);
     // Simulate payment processing
@@ -36,14 +36,14 @@ export default function LabPaymentPage() {
                         <CheckCircle className="h-12 w-12 text-green-600" />
                     </div>
                     <CardTitle className="text-2xl font-headline text-primary">Payment Successful!</CardTitle>
-                    <CardDescription>Your lab appointment is confirmed.</CardDescription>
+                    <CardDescription>Your bill payment has been received.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p>You will receive an SMS confirmation shortly. Thank you for choosing MediCare Hospitals.</p>
                 </CardContent>
                 <CardFooter className="flex-col gap-4">
-                    <Button onClick={() => router.push('/dashboard/lab-appointments')} className="w-full">
-                        View Lab Appointments
+                    <Button onClick={() => router.push('/dashboard/bill-report')} className="w-full">
+                        View Bill History
                     </Button>
                      <Button onClick={() => router.push('/dashboard')} className="w-full" variant="outline">
                         Back to Home
@@ -59,7 +59,7 @@ export default function LabPaymentPage() {
     <div className="max-w-md mx-auto">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline text-primary">M-Pesa Payment for Lab Test</CardTitle>
+          <CardTitle className="text-2xl font-headline text-primary">M-Pesa Bill Payment</CardTitle>
           <CardDescription>Enter your M-Pesa mobile number to complete the payment.</CardDescription>
         </CardHeader>
         <form onSubmit={handlePayment}>
@@ -82,9 +82,9 @@ export default function LabPaymentPage() {
             </CardContent>
             <CardFooter className="flex-col gap-2">
                 <Button type="submit" className="w-full" disabled={isProcessing}>
-                    {isProcessing ? 'Processing...' : `Pay KES ${amount}`}
+                    {isProcessing ? 'Processing...' : `Pay KES ${parseFloat(amount).toFixed(2)}`}
                 </Button>
-                <Button variant="ghost" className="w--full" onClick={() => router.back()}>
+                <Button variant="ghost" className="w-full" onClick={() => router.back()}>
                     Cancel
                 </Button>
             </CardFooter>
@@ -93,5 +93,3 @@ export default function LabPaymentPage() {
     </div>
   );
 }
-
-    

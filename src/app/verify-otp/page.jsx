@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Button } from '../../components/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/components/ui/card';
+import { Input } from '../../components/components/ui/input';
 import { ArrowLeft, MailCheck } from 'lucide-react';
 import Link from 'next/link';
 

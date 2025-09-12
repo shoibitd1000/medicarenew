@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
 import DashboardPage from "./app/dashboard/page";
 import { allUsers } from "./lib/users";
 // import CreateMpinPage from "./app/create-mpin/page";
@@ -25,10 +25,18 @@ import GenerateTokenPage from "./app/dashboard/token/generate/page";
 import TokenVerification from "./app/dashboard/token/generate/tokenVerification/page";
 import ConsultationHistoryPage from "./app/dashboard/clinical-record/consultations/page";
 import MedicinesPage from "./app/dashboard/clinical-record/medicines/page";
+import HealthTrackerPage from "./app/dashboard/health-tracker/page";
+import HealthTrackerDetails from "./app/dashboard/health-tracker/vital/page";
+import BillReportPage from "./app/dashboard/bill-report/page";
+import SendMessagePage from "./app/dashboard/send-message/page";
+import FaqPage from "./app/faq/page";
+import FeedbackSection from "./app/dashboard/complaints/page";
 
 export function App() {
   const [currentUser, setCurrentUser] = useState(allUsers[0]);
-//
+  const params = useParams()
+  console.log(params);
+
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-background">
@@ -108,10 +116,34 @@ export function App() {
             <Route
               path="/clinical-record/radiology-reports"
               element={<RadiologyReportsPage />}
-            />  
+            />
             <Route
               path="/clinical-record/medicines"
               element={<MedicinesPage />}
+            />
+            <Route
+              path="/health-tracker"
+              element={<HealthTrackerPage />}
+            />
+            <Route
+              path="/health-tracker/details"
+              element={<HealthTrackerDetails />}
+            />
+            <Route
+              path="/bill-history"
+              element={<BillReportPage />}
+            />
+            <Route
+              path="/send-message"
+              element={<SendMessagePage />}
+            />
+            <Route
+              path="/faq"
+              element={<FaqPage />}
+            />
+            <Route
+              path="/feedback"
+              element={<FeedbackSection />}
             />
           </Routes>
         </main>

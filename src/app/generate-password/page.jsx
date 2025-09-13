@@ -2,8 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/components/ui/card';
-import { Input } from '../../components/components/ui/input';
 import { Label } from '../../components/components/ui/label';
+import CustomInput from '../../components/components/ui/CustomInput';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
 
 export default function GeneratePasswordPage() {
@@ -12,7 +12,7 @@ export default function GeneratePasswordPage() {
   const handleSend = (e) => {
     e.preventDefault();
     // Logic to send OTP would go here
-    navigate('/verify-otp');
+    navigate('/verify/otp');
   };
 
   return (
@@ -32,7 +32,7 @@ export default function GeneratePasswordPage() {
               <ShieldAlert className="h-10 w-10 text-primary" />
             </div>
             <CardTitle className="text-3xl font-bold font-headline text-primary">
-              Login
+              Forget Password
             </CardTitle>
             <CardDescription>
               To reset your password, please enter the PatientId address linked to your account
@@ -43,14 +43,18 @@ export default function GeneratePasswordPage() {
             <form onSubmit={handleSend} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="patientId">Patient Id / Mobile Number</Label>
-                <Input
+                
+                <CustomInput
                   id="patientId"
                   type="text"
                   placeholder="Enter Patient Id / MoNumber"
+                  // value={""}
+                  // onChange={(e) => setUsername(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
                   required
                 />
               </div>
-              <Button type="submit" className="w-full text-lg h-12 bg-primary hover:bg-primary/90">
+              <Button type="submit" className="w-full text-lg h-12 bg-primary hover:bg-primary/90" >
                 Send
               </Button>
             </form>

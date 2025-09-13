@@ -131,6 +131,17 @@ const features = [
   },
 ];
 
+const banner = [
+  { src: "https://images.unsplash.com/photo-1512678080530-7760d81faba6?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG9zcGl0YWx8ZW58MHx8MHx8fDA%3D",alt: "Advanced heart care services now available.",
+    hint: "heart care", },
+  { src: "https://imgk.timesnownews.com/story/iStock-1046447804_12.jpg?tr=w-400,h-300,fo-auto",alt: "Advanced heart care services now available.",
+    hint: "heart care", },
+  { src: "https://images.unsplash.com/photo-1512678080530-7760d81faba6?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aG9zcGl0YWx8ZW58MHx8MHx8fDA%3D",alt: "Advanced heart care services now available.",
+    hint: "heart care", },
+  { src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQI0KUctIK8iNad1yGxzxU3bPmT7t4WFhjw8YXrVfUwm9CFLDrEROv9XIJEg3O6IKl9tTA&usqp=CAU",alt: "Advanced heart care services now available.",
+    hint: "heart care", },
+]
+
 export default function DashboardPage() {
   return (
     <>
@@ -157,7 +168,7 @@ export default function DashboardPage() {
             </span>
           </div>
         </div>
-        <PromoCarousel />
+        <PromoCarousel promotions={banner}/>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {features.map((feature) => (
             <Link to={feature.href} key={feature.title}>

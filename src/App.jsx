@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthContext } from "./app/authtication/Authticate";
+
 import DashboardPage from "./app/dashboard/page";
 import { allUsers } from "./lib/users";
-// import CreateMpinPage from "./app/create-mpin/page";
 import ProfilePage from "./app/dashboard/profile/page";
 import ReminderPage from "./app/dashboard/reminder/page";
 import BookAppointment from "./app/dashboard/bookAppointment/page";
@@ -29,125 +30,71 @@ import HealthTrackerPage from "./app/dashboard/health-tracker/page";
 import HealthTrackerDetails from "./app/dashboard/health-tracker/vital/page";
 import BillReportPage from "./app/dashboard/bill-report/page";
 import SendMessagePage from "./app/dashboard/send-message/page";
-import FaqPage from "./app/faq/page";
+import FaqPage from "./app/dashboard/faq/page";
 import FeedbackSection from "./app/dashboard/complaints/page";
+import GeneratePasswordPage from "./app/generate-password/page";
+import VerifyOtpPage from "./app/verify-otp/page";
 
 export function App() {
   const [currentUser, setCurrentUser] = useState(allUsers[0]);
-  const params = useParams()
-  console.log(params);
+  const { token, isLoading } = useContext(AuthContext);
+
+  if (isLoading) return <div>Loading...</div>; // wait for auth data
 
   return (
-    <Router>
-      <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
+      {token && (
         <DashboardHeader
           currentUser={currentUser}
           allUsers={allUsers}
           onSwitchProfile={setCurrentUser}
         />
-        <main className="">
-          <Routes>
-            <Route path="/" element={<LoginPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            {/* <Route path="/create-mpin" element={<CreateMpinPage />} /> */}
-            <Route path="/dashboard/profile" element={<ProfilePage />} />
-            <Route path="/dashboard/reminder" element={<ReminderPage />} />
-            <Route
-              path="/appointments/book"
-              element={<BookAppointment />}
-            />
-            <Route
-              path="/doctor-appointment"
-              element={<DoctorAppointment />}
-            />
-            <Route
-              path="/teleconsultation/book"
-              element={<Teleconsultation />}
-            />
-            <Route
-              path="/teleconsultation-appointment"
-              element={<TeleconsultationAppointment />}
-            />
-            <Route
-              path="/investigations/book"
-              element={<Investigations />}
-            />
-            <Route
-              path="/investigations"
-              element={<InvestigationsAppoin />}
-            />
-            <Route
-              path="/packages"
-              element={<PackageInformations />}
-            />
-            <Route
-              path="/packages/packages-details"
-              element={<PackageDetail />}
-            />
-            <Route
-              path="/ambulance"
-              element={<AmbulancePage />}
-            />
-            <Route
-              path="/my-document"
-              element={<MyDocumentsPage />}
-            />
-            <Route path="/token" element={<TokenPage />} />
-            <Route
-              path="/token/generate"
-              element={<GenerateTokenPage />}
-            />
-            <Route
-              path="/token/verification"
-              element={<TokenVerification />}
-            />
-            <Route
-              path="/clinical-record"
-              element={<ClinicalRecordPage />}
-            />
-            <Route
-              path="/clinical-record/consultations"
-              element={<ConsultationHistoryPage />}
-            />
-            <Route
-              path="/clinical-record/lab-reports"
-              element={<LabReportsPage />}
-            />
-            <Route
-              path="/clinical-record/radiology-reports"
-              element={<RadiologyReportsPage />}
-            />
-            <Route
-              path="/clinical-record/medicines"
-              element={<MedicinesPage />}
-            />
-            <Route
-              path="/health-tracker"
-              element={<HealthTrackerPage />}
-            />
-            <Route
-              path="/health-tracker/details"
-              element={<HealthTrackerDetails />}
-            />
-            <Route
-              path="/bill-history"
-              element={<BillReportPage />}
-            />
-            <Route
-              path="/send-message"
-              element={<SendMessagePage />}
-            />
-            <Route
-              path="/faq"
-              element={<FaqPage />}
-            />
-            <Route
-              path="/feedback"
-              element={<FeedbackSection />}
-            />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+      )}
+      <main className="">
+        <Routes>
+          {/* Default login route */}
+          <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LoginPage />} />
+
+          {/* Protected dashboard routes */}
+          {token && (
+            <>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard/profile" element={<ProfilePage />} />
+              <Route path="/dashboard/reminder" element={<ReminderPage />} />
+              <Route path="/appointments/book" element={<BookAppointment />} />
+              <Route path="/doctor-appointment" element={<DoctorAppointment />} />
+              <Route path="/teleconsultation/book" element={<Teleconsultation />} />
+              <Route path="/teleconsultation-appointment" element={<TeleconsultationAppointment />} />
+              <Route path="/investigations/book" element={<Investigations />} />
+              <Route path="/investigations" element={<InvestigationsAppoin />} />
+              <Route path="/packages" element={<PackageInformations />} />
+              <Route path="/packages/packages-details" element={<PackageDetail />} />
+              <Route path="/ambulance" element={<AmbulancePage />} />
+              <Route path="/my-document" element={<MyDocumentsPage />} />
+              <Route path="/token" element={<TokenPage />} />
+              <Route path="/token/generate" element={<GenerateTokenPage />} />
+              <Route path="/token/verification" element={<TokenVerification />} />
+              <Route path="/clinical-record" element={<ClinicalRecordPage />} />
+              <Route path="/clinical-record/consultations" element={<ConsultationHistoryPage />} />
+              <Route path="/clinical-record/lab-reports" element={<LabReportsPage />} />
+              <Route path="/clinical-record/radiology-reports" element={<RadiologyReportsPage />} />
+              <Route path="/clinical-record/medicines" element={<MedicinesPage />} />
+              <Route path="/health-tracker" element={<HealthTrackerPage />} />
+              <Route path="/health-tracker/details" element={<HealthTrackerDetails />} />
+              <Route path="/bill-history" element={<BillReportPage />} />
+              <Route path="/send-message" element={<SendMessagePage />} />
+              <Route path="/faq" element={<FaqPage />} />
+              <Route path="/feedback" element={<FeedbackSection />} />
+
+              {/* Redirect unknown routes to dashboard */}
+              <Route path="*" element={<Navigate to="/dashboard" />} />
+            </>
+          )}
+          <Route path="generate-password" element={<GeneratePasswordPage />} />
+          <Route path="/verify/otp" element={<VerifyOtpPage />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </main>
+    </div>
   );
 }

@@ -30,8 +30,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
+import { useContext } from "react";
+import { AuthContext } from "./../../../app/authtication/Authticate";
 
 export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile }) {
+  const { logout } = useContext(AuthContext)
   const [currentDate, setCurrentDate] = useState("");
   const [isSwitchProfileOpen, setIsSwitchProfileOpen] = useState(false);
   const navigate = useNavigate();
@@ -47,10 +50,12 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
     );
   }, []);
 
-  const handleLogout = () => {
-    // Clear session logic here
-    navigate("/");
-  };
+  
+
+const handleLogout = () => {
+  logout();  // pass navigate here
+};
+
 
   return (
     <header className="sticky top-0 z-10 bg-background backdrop-blur-sm border-b p-2 sm:p-4">

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ instead of next/navigation
 import { Button } from "../../components";
 import {
   Card,
@@ -11,6 +10,7 @@ import {
 import { Input } from "../../components/components/ui/input";
 import { Label } from "../../components/components/ui/label";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();

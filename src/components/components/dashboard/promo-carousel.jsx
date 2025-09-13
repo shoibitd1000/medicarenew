@@ -10,7 +10,7 @@ import {
   CarouselPrevious,
 } from "../ui/carousel";
 
-const promotions = [
+/* const promotions = [
   {
     src: "https://placehold.co/800x400.png",
     alt: "Free dental check-up camp this weekend.",
@@ -31,9 +31,9 @@ const promotions = [
     alt: "Monsoon health tips",
     hint: "healthy lifestyle",
   },
-];
+]; */
 
-export default function PromoCarousel() {
+export default function PromoCarousel({promotions}) {
   return (
     <Carousel
       className="w-full"

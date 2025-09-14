@@ -9,7 +9,7 @@ const initialLabReports = [
   {
     date: "2024-07-10",
     barcode: "L12345678",
-    ReportName	: "Complete Blood Count (CBC)",
+    ReportName: "Complete Blood Count (CBC)",
     Radiology: "Dr. John Smith",
     status: "Approved",
     url: "#",
@@ -18,7 +18,7 @@ const initialLabReports = [
     date: "2024-07-10",
     barcode: "L87654321",
     ReportName: "Lipid Profile",
-    Radiology:"Dr. John Smith",
+    Radiology: "Dr. John Smith",
     status: "Sample Collected",
     url: "#",
   },
@@ -51,19 +51,6 @@ export default function LabReportsPage() {
     setFromDate(from);
     setToDate(to);
 
-    setLabReports((prev) =>
-      [
-        ...prev,
-        {
-          date: new Date().toISOString(),
-          barcode: "L98765432",
-          ReportName: "Thyroid Panel",
-          Radiology: "Dr. Emily White",
-          status: "Result Done",
-          url: "#",
-        },
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    );
   }, []);
 
   const filteredReports = useMemo(() => {
@@ -78,22 +65,7 @@ export default function LabReportsPage() {
     });
   }, [labReports, fromDate, toDate]);
 
-  const Thead = [
-    { key: "date", label: "Date" },
-    { key: "barcode", label: "Barcode" },
-    { key: "ReportName", label: "Report Name" },
-    { key: "Radiology", label: "Radiology" },
-    { key: "status", label: "Status" },
-  ];
 
-  const actions = [
-    {
-      label: <FileDown className="h-4 w-4" />,
-      onClick: (row) => {
-        window.open(row.url, "_blank");
-      },
-    },
-  ];
 
   const formattedData = filteredReports.map((report) => ({
     ...report,
@@ -108,13 +80,18 @@ export default function LabReportsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-4">
       <div className="text-center">
-        <Scan  className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
+        <Scan className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
         <h1 className="text-3xl font-bold text-primary">
           Radiology  Investigation Reports
         </h1>
         <p className="text-gray-500">View Your imaging Reports like X-rays and Scans.</p>
       </div>
-
+      <button
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center border  px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
+      >
+        <span className="mr-2">←</span> Back
+      </button>
       <div className="border rounded-lg shadow-md p-4 bg-white">
         <h2 className="text-lg font-semibold">Your Radiology Reports</h2>
         <p className="text-sm text-gray-500 mb-4">
@@ -127,7 +104,7 @@ export default function LabReportsPage() {
             value={fromDate ? format(fromDate, "yyyy-MM-dd") : ""}
             placeHolderText={"Select From Date"}
             handleDate={(selectedDate) => setFromDate(selectedDate)}
-            icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+            icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
           />
 
           <CustomDatePicker
@@ -135,34 +112,47 @@ export default function LabReportsPage() {
             value={toDate ? format(toDate, "yyyy-MM-dd") : ""}
             placeHolderText={"Select To Date"}
             handleDate={(selectedDate) => setToDate(selectedDate)}
-            icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+            icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
           />
         </div>
 
         <div className="overflow-x-auto">
-          <CustomTable
-            Thead={Thead}
-            data={formattedData}
-            striped
-            bordered
-            hover
-            wrapperClass="rounded-md shadow"
-            tableClass="text-center"
-            headerClass="bg-gray-200"
-            rowClass="even:bg-gray-50"
-            cellClass="text-gray-700"
-            actions={actions}
-          />
-        </div>
-      </div>
+          {formattedData?.length > 0 ? (
+            formattedData.map((item, i) => (
+              <div
+                key={i}
+                className="border rounded-lg shadow-md p-4 bg-white my-3 "
+              >
+                <div className="flex justify-between">
+                  <h2 className="text-lg font-semibold text-primary">{item?.ReportName}</h2>
+                  <span className="text-sm text-gray-500 mb-4">
+                    {item?.topN}
+                  </span>
+                </div>
+                <span className="text-sm font-semibold mb-4">
+                  {item?.date}
+                </span>
+                <h2 className="text-lg font-semibold">{item?.pName}</h2>
+                <div className="flex justify-between">
+                  <div className="flex justify-between">
+                    <span
+                      className={`text-sm mb-4 ${statusClasses[item?.status] || ""}`}
+                    >
+                      {item?.status}
+                    </span>
+                  </div>
 
-      <div className="text-center">
-        <button
-          onClick={() => navigate("/clinical-record")}
-          className="inline-flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-gray-100"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to Clinical Records
-        </button>
+                  <button className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition" /* onClick={() => setIsOpen(true)} */>
+                    <FileDown className="h-4 w-4" />
+                  </button>
+
+                </div>
+              </div>
+            ))
+          ) : (
+            <h2 className="text-lg font-extrabold text-center">No Radiology Investigation available.</h2>
+          )}
+        </div>
       </div>
     </div>
   );

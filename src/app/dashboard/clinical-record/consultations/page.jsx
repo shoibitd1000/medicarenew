@@ -49,6 +49,12 @@ export default function ConsultationHistoryPage() {
 
       <div className=" p-4">
         <div className="space-y-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center border  px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
+          >
+            <span className="mr-2">←</span> Back
+          </button>
           {consultations.map((consult, index) => (
             <div
               key={index}
@@ -64,7 +70,7 @@ export default function ConsultationHistoryPage() {
                   </p>
                 </div>
                 <button className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition" onClick={() => setIsOpen(true)}>
-                  <FileDown className="h-4 w-4" /> 
+                  <FileDown className="h-4 w-4" />
                 </button>
               </div>
               <h4 className="text-md underline font-semibold">diagnosis:{" "}</h4>
@@ -87,12 +93,6 @@ export default function ConsultationHistoryPage() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="flex justify-center">
-        <button onClick={() => navigate("/clinical-record")} className="flex items-center justify-center gap-2 px-4 py-2 border rounded-md hover:bg-gray-100 transition" >
-          <ArrowLeft className="h-4 w-4" /> Back to Clinical Records
-        </button>
       </div>
       <DialogBox
         open={isOpen}

@@ -7,6 +7,7 @@ import { closeIcon, DialogBox } from "../../../../components/components/ui/dialo
 import CustomTimePicker from "../../../../components/components/ui/CustomTimePicker";
 import { Label } from "../../../../components/components/ui/label";
 import CustomTextArea from "../../../../components/components/ui/CustomTextArea";
+import { useNavigate } from "react-router-dom";
 
 // dummy data
 
@@ -89,6 +90,7 @@ const timeSlots = [
 
 
 export default function AppointmentsPage() {
+    const navigate = useNavigate()
     const [tab, setTab] = useState("book");
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -178,7 +180,7 @@ export default function AppointmentsPage() {
                                                 <p className="text-xs text-cyan-500">Finding a doctor at tenwenk</p>
                                             </div>
                                             <div className="">
-                                                <Button className="text-white btn">Change Center</Button>
+                                                <Button className="text-white btn" onClick={() => navigate(-1)}>Change Center</Button>
                                             </div>
                                         </div>
                                         <div className=" space-y-6  grid md:grid-cols-2 gap-6">
@@ -195,7 +197,7 @@ export default function AppointmentsPage() {
                                             />
 
                                             <CustomSelect
-                                                placeholder="Select a Department"
+                                                placeholder="Select a Doctor"
                                                 options={doctors.map((dep) => ({
                                                     value: dep.value,
                                                     label: dep.label,
@@ -212,7 +214,7 @@ export default function AppointmentsPage() {
                                                     value={selectedDate}
                                                     placeHolderText={"Select Date"}
                                                     handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                                    icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+                                                    icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
                                                 />
                                             </div>
 
@@ -231,18 +233,20 @@ export default function AppointmentsPage() {
                                                 onChange={(selectedOption) => setSelectedSlot(selectedOption.value)}
                                             />
                                         </div>
+                                        <div className="flex justify-center pt-4">
+                                            <button
+                                                className="px-4 py-2 bg-primary text-white rounded uppercase"
+                                                onClick={handleConfirm}
+                                            >
+                                                Confirm Appointment
+                                            </button>
+                                        </div>
                                     </>
                                 )}
 
+
                             </div>
-                            <div className="flex justify-center pt-4">
-                                <button
-                                    className="px-4 py-2 bg-primary text-white rounded uppercase"
-                                    onClick={handleConfirm}
-                                >
-                                    Confirm Appointment
-                                </button>
-                            </div>
+
                         </>
                     )}
 
@@ -278,7 +282,7 @@ export default function AppointmentsPage() {
                                         value={selectedDate}
                                         placeHolderText={"Select Date"}
                                         handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                        icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+                                        icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
                                     />
                                 </div>
                                 <div className="my-3">

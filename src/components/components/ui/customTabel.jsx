@@ -15,7 +15,7 @@ const CustomTable = ({
 }) => {
   return (
     <div
-      className={`overflow-y-auto overflow-x-auto h-[calc(100vh-200px)] ${wrapperClass}`}
+      className={`overflow-y-auto overflow-x-auto  ${wrapperClass}`}
       style={{
         scrollbarWidth: "thin", // Firefox
         scrollbarColor: "#d1d5db transparent", // Firefox: gray thumb

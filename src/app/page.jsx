@@ -23,11 +23,12 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [deviceId, setDeviceId] = useState("");
 
-  // On mount, fetch deviceId (or generate one if not exists)
   useEffect(() => {
     let storedId = localStorage.getItem("deviceId");
     if (!storedId) {
@@ -41,7 +42,6 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMsg("");
     setLoading(true);
-
     try {
       const encryptedPassword = encryptPassword(password);
 

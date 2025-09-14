@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-
 import CustomTextArea from "../../../components/components/ui/CustomTextArea";
-import CustomInput from "../../../components/components/ui/CustomInput";
-import { Star } from "lucide-react";
-import DatePicker from "react-datepicker";
+import { Calendar, Star } from "lucide-react";
+import CustomDatePicker from "../../../components/components/ui/CustomDatePicker";
 
 const FeedbackSection = () => {
   const [subject, setSubject] = useState("12-Sep-2025");
@@ -31,28 +29,54 @@ const FeedbackSection = () => {
     };
     setFeedbackHistory([newFeedback, ...feedbackHistory]);
     setSubject("12-Sep-2025");
-    setDescription("");tion
-    setRating(0);  };
+    setDescription("");
+    setRating(0);
+  };
+
+  // Function to decide star color
+  const getStarColor = (index) => {
+    if (rating > index) {
+      switch (index + 1) {
+        case 1:
+          return "text-red-500";
+        case 2:
+          return "text-green-500";
+        case 3:
+          return "text-blue-500";
+        case 4:
+          return "text-yellow-400";
+        case 5:
+          return "text-yellow-500"; // Gold-like color
+        default:
+          return "text-gray-300";
+      }
+    }
+    return "text-gray-300";
+  };
 
   return (
     <div className="max-w-4xl mx-auto mt-6 bg-white shadow-md rounded-lg p-4">
       <div className="header mb-4">
-        <h1 className="text-xl font-semibold">We value your opinion. Please let us know how we're doing.</h1>
+        <h1 className="text-xl font-semibold">
+          We value your opinion. Please let us know how we're doing.
+        </h1>
       </div>
 
       <div className="feedback-form bg-white p-4 rounded-lg shadow-md mb-4">
         <h2 className="font-medium text-lg">Submit New Feedback</h2>
-        <p className="text-sm text-gray-500 mb-4">Use this form to submit a new complaint or share your feedback.</p>
+        <p className="text-sm text-gray-500 mb-4">
+          Use this form to submit a new complaint or share your feedback.
+        </p>
 
         <div className="mb-4">
-          <DatePicker
-            id="subject"
-            type="date"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="Subject"
-            className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
+          <CustomDatePicker
+            repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
+            selected={subject ? new Date(subject) : null}
+            placeHolderText={"From Date"}
+            handleDate={(date) => setSubject(date.toLocaleDateString("en-GB"))}
+            icon={<Calendar className="absolute right-3  text-gray-500 pointer-events-none" />}
           />
+
         </div>
 
         <div className="mb-4">
@@ -71,9 +95,8 @@ const FeedbackSection = () => {
               <Star
                 key={index}
                 onClick={() => handleRatingClick(index)}
-                color={rating > index ? "gold" : "gray"}
-                size={25}
-                className="cursor-pointer"
+                size={20}
+                className={`cursor-pointer ${getStarColor(index)}`}
               />
             ))}
           </div>

@@ -33,7 +33,7 @@ export default function HealthTrackerPage() {
             value={format(selectedDate instanceof Date ? selectedDate : new Date(), "yyyy-MM-dd")}
             handleDate={(e) => setSelectedDate(new Date(e.target.value))}
             placeHolderText="Select Date"
-            icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+            icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
           />
 
         </div>

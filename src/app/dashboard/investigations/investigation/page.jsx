@@ -7,7 +7,7 @@ import CustomMultiSelect from "../../../../components/components/ui/CustomMultiS
 
 
 const doctoAppointmentSecList = [
-    {
+    /* {
         name: "Dr. Dino Crognale",
         hospitalName: "Tenwek Hospital",
         appointmentDate: "12-Aug-2026",
@@ -35,7 +35,7 @@ const doctoAppointmentSecList = [
         appointmentDate: "12-Aug-2026",
         appointmentTime: "09:45 AM",
         status: "Confirmed",
-    },
+    }, */
 ];
 
 
@@ -175,7 +175,7 @@ export default function InvestigationsAppoin() {
                                                     value={selectedDate}
                                                     placeHolderText={"Select Date"}
                                                     handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                                    icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+                                                    icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
                                                 />
                                             </div>
                                         </div>
@@ -239,7 +239,7 @@ export default function InvestigationsAppoin() {
                                             </div>
                                         ))
                                     ) : (
-                                        <h2 className="text-md text-red-400 text-center">
+                                        <h2 className="text-lg font-extrabold text-center">
                                             Upcoming Investigations.
                                         </h2>
                                     )}
@@ -332,7 +332,7 @@ export default function InvestigationsAppoin() {
                                             </div>
                                         ))
                                     ) : (
-                                        <h2 className="text-md text-red-400 text-center">No Past Investigatios Found.</h2>
+                                        <h2 className="text-lg font-extrabold text-center">No Past Investigatios Found.</h2>
                                     )}
 
                                 </div>

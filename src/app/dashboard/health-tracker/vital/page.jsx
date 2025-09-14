@@ -239,7 +239,7 @@ export default function HealthTrackerPage() {
               repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
               value={selectedDate}
               placeHolderText={"From Date"}
-              icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+              icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
               handleDate={(date) => setSelectedDate(date)}
             />
 
@@ -247,12 +247,12 @@ export default function HealthTrackerPage() {
               repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
               value={toDate}
               placeHolderText={"To Date"}
-              icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+              icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
               handleDate={(date) => setToDate(date)}
             />
           </div>
 
-          <div>
+          <div className="border shadow-md my-3 rounded p-3">
             <h3 className="font-semibold mb-2">Trend Graph</h3>
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
@@ -277,7 +277,7 @@ export default function HealthTrackerPage() {
             striped
             bordered
             hover
-            wrapperClass="rounded-md shadow"
+            wrapperClass="rounded-md shadow h-[calc(100vh-200px)]"
             tableClass="text-center"
             headerClass="bg-gray-200"
             rowClass="even:bg-gray-50"

@@ -70,6 +70,13 @@ export default function MedicinesPage() {
       </div>
 
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center border  px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
+        >
+          <span className="mr-2">←</span> Back 
+        </button>
         <div className="xl:m-auto">
           <button
             onClick={() => setTab("prescription Medicines")}
@@ -104,7 +111,7 @@ export default function MedicinesPage() {
                 <>
                   <div className="space-y-8 p-6 bg-white rounded-lg  rounded-s-0">
                     <div className="text-center">
-                      <h2 className="text-2xl font-bold text-primary mb-1">Prescription Medicines</h2>
+                      <h2 className="text-2xl font-bold text-primary mb-1">Issued Medicines</h2>
                     </div>
 
                     <div className=" grid md:grid-cols-1 lg:grid-cols-2 gap-4">
@@ -120,10 +127,10 @@ export default function MedicinesPage() {
                             </button>
 
                           </div>
-                          <div className="text-[10px] py-[2px] font-medium text-primary">{item?.name}</div>
-                          <div className="text-[10px] py-[2px] font-medium text-primary">{item?.date}</div>
-                          <div className="text-[10px] py-[2px] font-extrabold ">{item?.medi}</div>
-                          <div className="text-[10px] py-[2px] font-medium text-primary">{item?.medicines}</div>
+                          <div className="text-[13px] py-[2px] font-medium text-primary">{item?.name}</div>
+                          <div className="text-[13px] py-[2px] font-medium text-primary">{item?.date}</div>
+                          <div className="text-[13px] py-[2px] font-extrabold ">{item?.medi}</div>
+                          <div className="text-[13px] py-[2px] font-medium text-primary">{item?.medicines}</div>
                           <span className="text-xs font-medium">{item?.dosage}</span>
                         </div>
                       ))}
@@ -152,11 +159,11 @@ export default function MedicinesPage() {
                       <span className="text-md font-extrabold text-primary">{item?.center}</span>
                       <span className="text-xs font-medium">{item?.dosage}</span>
                     </div>
-                    <div className="text-[10px] py-[2px] font-medium text-primary">{item?.name}</div>
-                    <div className="text-[10px] py-[2px] font-medium text-primary">{item?.date}</div>
-                    <div className="text-[10px] py-[2px] font-extrabold ">{item?.medi}</div>
+                    <div className="text-[13px] py-[2px] font-medium text-primary">{item?.name}</div>
+                    <div className="text-[13px] py-[2px] font-medium text-primary">{item?.date}</div>
+                    <div className="text-[13px] py-[2px] font-extrabold ">{item?.medi}</div>
                     <div className="flex justify-between">
-                      <div className="text-[10px] py-[2px] font-medium text-primary">{item?.medicines}</div>
+                      <div className="text-[13px] py-[2px] font-medium text-primary">{item?.medicines}</div>
                       <button className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition" onClick={() => setIsOpen(true)}>
                         <FileDown className="h-4 w-4" />
                       </button>
@@ -168,15 +175,7 @@ export default function MedicinesPage() {
           </>
         )}
 
-        {/* Back Button */}
-        <div className="text-center">
-          <button
-            onClick={() => navigate("/dashboard/clinical-record")}
-            className="inline-flex items-center border border-blue-500 text-blue-500 px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
-          >
-            <span className="mr-2">←</span> Back to Clinical Records
-          </button>
-        </div>
+
       </div>
     </div>
   );

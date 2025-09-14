@@ -24,9 +24,9 @@ function PackageDetail() {
             </div>
             <div className=" w-full m-auto md:w-1/2">
                 <div
-                    className="py-4"
+                    className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
                 >
-                    <div>
+                    <div className=''>
                         <h4 className="text-md font-extrabold ">Package Inclusions</h4>
                         <div className='flex items-center'>
                             <span className="text-sm">

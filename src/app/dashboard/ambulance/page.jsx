@@ -140,7 +140,7 @@ export default function AmbulancePage() {
                                                 value={selectedDate}
                                                 placeHolderText={"Select Date"}
                                                 handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                                icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+                                                icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
                                             />
                                             <CustomTimePicker
                                                 repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"

@@ -1,29 +1,33 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig({
-  plugins: [tailwindcss()],
-  server: {
-    proxy: {
-      // Proxying API requests based on the environment
-      '/MobileApp_API': {
-        target: getApiBaseUrl(), // Dynamically set target based on environment
-        changeOrigin: true, // Allow cross-origin requests
-        rewrite: (path) => path.replace(/^\/MobileApp_API/, ''), // Rewrite the path if needed
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  function getApiBaseUrl() {
+    const currentEnv = env.VITE_NODE_ENV || 'development';
+    switch (currentEnv) {
+      case 'production':
+        return env.VITE_APP_REACT_APP_BASE_URL;
+      case 'staging':
+        return env.VITE_APP_REACT_APP_PROD_URL;
+      case 'development':
+      default:
+        return env.VITE_APP_REACT_APP_DEV_URL;
+    }
+  }
+
+  return {
+    plugins: [tailwindcss()],
+    server: {
+      proxy: {
+        '/MobileApp_API': {
+          target: getApiBaseUrl(), 
+          changeOrigin: true,      
+        },
       },
     },
-  },
-});
 
-function getApiBaseUrl() {
-  const environment = process.env.VITE_NODE_ENV || 'development'; // Fallback to 'development' if the environment variable is not set
-  switch (environment) {
-    case 'production':
-      return process.env.VITE_APP_REACT_APP_BASE_URL;
-    case 'staging':
-      return process.env.VITE_APP_REACT_APP_PROD_URL;
-    case 'development':
-    default:
-      return process.env.VITE_APP_REACT_APP_DEV_URL;
-  }
-}
+
+  };
+});

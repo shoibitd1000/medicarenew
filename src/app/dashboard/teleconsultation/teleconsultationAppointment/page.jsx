@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
 import CustomSelect from "../../../../components/components/ui/CustomSelect";
 import { Button } from "../../../../components/components/ui/button";
-import { AlarmClockPlus, Calendar, ChevronRight, FileDown, Hospital, SquarePlus, Video } from "lucide-react";
+import { Calendar, FileDown, Video } from "lucide-react";
 import { closeIcon, DialogBox } from "../../../../components/components/ui/dialog";
-import CustomTimePicker from "../../../../components/components/ui/CustomTimePicker";
-import { Label } from "../../../../components/components/ui/label";
-import CustomTextArea from "../../../../components/components/ui/CustomTextArea";
+import { useNavigate } from "react-router-dom";
+
 
 // dummy data
 
@@ -91,7 +90,7 @@ export default function TeleconsultationAppointment() {
     const [selectedSlot, setSelectedSlot] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-
+    const navigate = useNavigate()
     const handleConfirm = () => setShowConfirm(true);
 
     return (
@@ -171,7 +170,7 @@ export default function TeleconsultationAppointment() {
                                                 <p className="text-xs text-cyan-500">Finding a doctor for online consultations. your physical location is Kaboson</p>
                                             </div>
                                             <div className="">
-                                                <Button className="text-white btn">Change Center</Button>
+                                                <Button className="text-white btn" onClick={() => navigate(-1)}>Change Center</Button>
                                             </div>
                                         </div>
                                         <div className=" space-y-6  grid md:grid-cols-2 gap-6">
@@ -195,7 +194,7 @@ export default function TeleconsultationAppointment() {
                                                     value={selectedDate}
                                                     placeHolderText={"Select Date"}
                                                     handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                                    icon={<Calendar className="absolute right-3 top-3 text-gray-500 pointer-events-none" />}
+                                                    icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
                                                 />
                                             </div>
 
@@ -340,8 +339,10 @@ export default function TeleconsultationAppointment() {
 
 
                                                     </span>
-                                                    <div className="text-xs font-extrabold text-green-900">
-                                                        {pastAppoin?.status}
+                                                    <div>
+                                                        <span className={`text-xs font-extrabold border rounded  py-1 px-2 ${pastAppoin?.status === "Confirmed" ? "text-green-900 " : "text-black"}`}>
+                                                            {pastAppoin?.status}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

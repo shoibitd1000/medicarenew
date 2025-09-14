@@ -34,6 +34,7 @@ import FaqPage from "./app/dashboard/faq/page";
 import FeedbackSection from "./app/dashboard/complaints/page";
 import GeneratePasswordPage from "./app/generate-password/page";
 import VerifyOtpPage from "./app/verify-otp/page";
+import DischargeSummary from "./app/dashboard/clinical-record/dischargeSummary/DischargeSummary";
 
 export function App() {
   const [currentUser, setCurrentUser] = useState(allUsers[0]);
@@ -52,10 +53,8 @@ export function App() {
       )}
       <main className="">
         <Routes>
-          {/* Default login route */}
           <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LoginPage />} />
 
-          {/* Protected dashboard routes */}
           {token && (
             <>
               <Route path="/dashboard" element={<DashboardPage />} />
@@ -79,6 +78,7 @@ export function App() {
               <Route path="/clinical-record/lab-reports" element={<LabReportsPage />} />
               <Route path="/clinical-record/radiology-reports" element={<RadiologyReportsPage />} />
               <Route path="/clinical-record/medicines" element={<MedicinesPage />} />
+              <Route path="/clinical-record/discharge-summary" element={<DischargeSummary />} />
               <Route path="/health-tracker" element={<HealthTrackerPage />} />
               <Route path="/health-tracker/details" element={<HealthTrackerDetails />} />
               <Route path="/bill-history" element={<BillReportPage />} />

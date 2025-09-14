@@ -1,6 +1,5 @@
-const environment = import.meta.env.VITE_NODE_ENV;
+const environment = import.meta.env.VITE_NODE_ENV || "development";
 
-console.log("enviornment" , import.meta.env)
 const allEnvApiUrls = {
   production: {
     baseUrl: import.meta.env.VITE_APP_REACT_APP_BASE_URL,
@@ -9,16 +8,18 @@ const allEnvApiUrls = {
     baseUrl: import.meta.env.VITE_APP_REACT_APP_PROD_URL,
   },
   development: {
-    baseUrl: import.meta.env.VITE_APP_REACT_APP_DEV_URL,
+    baseUrl: "", // <--- EMPTY so Vite proxy is used
   },
-  environment : {
-    baseUrl : import.meta.env.VITE_APP_ENVIRONMENT
-  }
 };
 
+const currentEnv = allEnvApiUrls[environment] ? environment : "development";
 
-const envUrl = `${allEnvApiUrls['development']?.baseUrl}/MobileApp_API/API`;
-console.log('envUrl',envUrl)
+const envUrl =
+  currentEnv === "development"
+    ? "/MobileApp_API/API" // <--- Relative path triggers proxy
+    : `${allEnvApiUrls[currentEnv]?.baseUrl}/MobileApp_API/API`;
+
 export const apiUrls = {
   login: `${envUrl}/LoginAPIDynamic/Getlogin`,
-}
+  getDashBoard: `${envUrl}/LoginAPIDynamic/GetDashBoard `,
+};

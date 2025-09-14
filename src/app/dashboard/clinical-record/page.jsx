@@ -2,7 +2,7 @@
 
 import { Link } from "react-router-dom";
 import React from "react";
-import {  Scan, Pill, ChevronRight, SquarePlus, ClipboardPlus, TestTubeDiagonal } from "lucide-react";
+import {  Scan, Pill, ChevronRight, Bed, ClipboardPlus, TestTubeDiagonal } from "lucide-react";
 
 const recordTypes = [
   {
@@ -18,7 +18,7 @@ const recordTypes = [
     href: "/clinical-record/lab-reports",
   },
   {
-    name: "Radiology Investigation Reports",
+    name: "Diagnosis Investigation Reports",
     description: "View your imaging reports like X-rays and scans.",
     icon: Scan,
     href: "/clinical-record/radiology-reports",
@@ -28,6 +28,12 @@ const recordTypes = [
     description: "See a list of your prescribed medications.",
     icon: Pill,
     href: "/clinical-record/medicines",
+  },
+  {
+    name: "Discharge Summary",
+    description: "See a discharge charge Summary.",
+    icon: Bed ,
+    href: "/clinical-record/discharge-summary",
   },
 ];
 

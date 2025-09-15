@@ -97,16 +97,26 @@ module.exports = {
           '50%': { opacity: '0' },
         },
       },
-      animation: {
-        blink: 'blink 1s infinite',
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
+        },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        marquee: "marquee 25s linear infinite",
-        marquee2: "marquee2 25s linear infinite",
+        marquee: 'marquee 15s linear infinite',
       },
     },
+    animation: {
+      blink: 'blink 1s infinite',
+    },
+    animation: {
+      "accordion-down": "accordion-down 0.2s ease-out",
+      "accordion-up": "accordion-up 0.2s ease-out",
+      marquee: "marquee 25s linear infinite",
+      marquee2: "marquee2 25s linear infinite",
+    },
   },
+},
   plugins: [require("tailwindcss-animate")],
 };

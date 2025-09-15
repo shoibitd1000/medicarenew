@@ -2,13 +2,13 @@ const environment = import.meta.env.VITE_NODE_ENV || "development";
 
 const allEnvApiUrls = {
   production: {
-    baseUrl: import.meta.env.VITE_APP_REACT_APP_BASE_URL,
+    baseUrl: import.meta.env.VITE_BASE_URL_PROD,
   },
-  stagging: {
-    baseUrl: import.meta.env.VITE_APP_REACT_APP_PROD_URL,
+  staging: {
+    baseUrl: import.meta.env.VITE_BASE_URL_STAGING,
   },
   development: {
-    baseUrl: "", // <--- EMPTY so Vite proxy is used
+    baseUrl: "", // proxy
   },
 };
 
@@ -16,10 +16,14 @@ const currentEnv = allEnvApiUrls[environment] ? environment : "development";
 
 const envUrl =
   currentEnv === "development"
-    ? "/MobileApp_API/API" // <--- Relative path triggers proxy
+    ? "/MobileApp_API/API"
     : `${allEnvApiUrls[currentEnv]?.baseUrl}/MobileApp_API/API`;
 
 export const apiUrls = {
   login: `${envUrl}/LoginAPIDynamic/Getlogin`,
-  getDashBoard: `${envUrl}/LoginAPIDynamic/GetDashBoard `,
+  getDashBoard: `${envUrl}/LoginAPIDynamic/GetDashBoard`,
+  welcomeText: `${envUrl}/LoginAPIDynamic/ReactBindWelcomeMessage`,
+  centerLab: `${envUrl}/LoginAPIDynamic/GetLabCentre`,
+  doctor_speciality: `${envUrl}/LoginAPIDynamic/getDoctorSpecialityList`,
+  doctors: `${envUrl}/LoginAPIDynamic/GetAppHistory`,
 };

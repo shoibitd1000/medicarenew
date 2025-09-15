@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
 export const AuthContext = createContext();
 
@@ -9,26 +10,23 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [deviceId, setDeviceId] = useState(null);
 
-  // local expiry (default: 1 hour)
   const TOKEN_EXPIRY_KEY = "tokenExpiry";
 
   useEffect(() => {
     try {
-      const storedToken = localStorage.getItem("token");
+      const storedToken = localStorage.getItem("token");   // APIToken
       const storedUserData = localStorage.getItem("userData");
       const storedDeviceId = localStorage.getItem("deviceId");
       const storedPatientId = localStorage.getItem("selectedPatientId");
-      const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+      /* const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
 
       if (expiry && Date.now() > parseInt(expiry, 10)) {
         clearAuth();
         setIsLoading(false);
         return;
-      }
+      } */
 
-      if (storedToken && isValidToken(storedToken)) {
-        setToken(storedToken);
-      }
+      if (storedToken) setToken(storedToken);
 
       if (storedUserData) {
         try {
@@ -57,9 +55,9 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const isValidToken = (token) => {
-    return typeof token === "string" && token.length > 20; // e.g. JWT length
-  };
+  const isValidToken = (token) =>
+    typeof token === "string" && token.trim().length > 0;
+
 
   const clearAuth = () => {
     localStorage.removeItem("token");
@@ -72,6 +70,15 @@ export const AuthProvider = ({ children }) => {
     setUserData(null);
     setSelectedPatientId(null);
     setDeviceId(null);
+  };
+
+  const logout = (navigate) => {
+    clearAuth();
+    if (navigate && typeof navigate === "function") {
+      navigate("/", { replace: true });
+    } else {
+      window.location.href = "/";
+    }
   };
 
   const saveToken = (newToken, ttlMs = 6 * 60 * 60 * 1000) => {
@@ -98,11 +105,6 @@ export const AuthProvider = ({ children }) => {
     setSelectedPatientId(patientId);
   };
 
-  const logout = (navigate) => {
-    clearAuth();
-    if (navigate) navigate("/", { replace: true });
-  };
-
   const saveDeviceId = (id) => {
     try {
       localStorage.setItem("deviceId", id);
@@ -115,6 +117,32 @@ export const AuthProvider = ({ children }) => {
   const getCurrentPatientId = () => {
     return selectedPatientId || userData?.PatientID || null;
   };
+
+
+  const getAuthHeader = () => {
+    if (token) {
+      return {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+    } else {
+      return {};
+    }
+  };
+
+
+  // Axios interceptor (inject token)
+  useEffect(() => {
+    const reqInterceptor = axios.interceptors.request.use((config) => {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+    return () => {
+      axios.interceptors.request.eject(reqInterceptor);
+    };
+  }, [token]);
 
   return (
     <AuthContext.Provider
@@ -129,6 +157,7 @@ export const AuthProvider = ({ children }) => {
         saveDeviceId,
         isLoading,
         getCurrentPatientId,
+        getAuthHeader,
       }}
     >
       {children}

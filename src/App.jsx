@@ -35,16 +35,17 @@ import FeedbackSection from "./app/dashboard/complaints/page";
 import GeneratePasswordPage from "./app/generate-password/page";
 import VerifyOtpPage from "./app/verify-otp/page";
 import DischargeSummary from "./app/dashboard/clinical-record/dischargeSummary/DischargeSummary";
+import IsLoader from "./app/loading";
 
 export function App() {
   const [currentUser, setCurrentUser] = useState(allUsers[0]);
-  const { token, isLoading } = useContext(AuthContext);
-
-  if (isLoading) return <div>Loading...</div>; // wait for auth data
+  const { token, isLoading, userData } = useContext(AuthContext);
+  
+  if (isLoading) return <div><IsLoader /></div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {token && (
+      {token && userData && (
         <DashboardHeader
           currentUser={currentUser}
           allUsers={allUsers}
@@ -53,15 +54,17 @@ export function App() {
       )}
       <main className="">
         <Routes>
-          <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LoginPage />} />
-
-          {token && (
+          <Route
+            path="/"
+            element={token && userData ? <Navigate to="/dashboard" /> : <LoginPage />}
+          />
+          {token && userData && (
             <>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/dashboard/profile" element={<ProfilePage />} />
               <Route path="/dashboard/reminder" element={<ReminderPage />} />
               <Route path="/appointments/book" element={<BookAppointment />} />
-              <Route path="/doctor-appointment" element={<DoctorAppointment />} />
+              <Route path="/doctor-appointment/:id" element={<DoctorAppointment />} />
               <Route path="/teleconsultation/book" element={<Teleconsultation />} />
               <Route path="/teleconsultation-appointment" element={<TeleconsultationAppointment />} />
               <Route path="/investigations/book" element={<Investigations />} />
@@ -85,14 +88,12 @@ export function App() {
               <Route path="/send-message" element={<SendMessagePage />} />
               <Route path="/faq" element={<FaqPage />} />
               <Route path="/feedback" element={<FeedbackSection />} />
-
-              {/* Redirect unknown routes to dashboard */}
-              <Route path="*" element={<Navigate to="/dashboard" />} />
+              {/* <Route path="*" element={<Navigate to="/dashboard" />} /> */}
             </>
           )}
           <Route path="generate-password" element={<GeneratePasswordPage />} />
           <Route path="/verify/otp" element={<VerifyOtpPage />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          {/* <Route path="*" element={<Navigate to="/" />} /> */}
         </Routes>
       </main>
     </div>

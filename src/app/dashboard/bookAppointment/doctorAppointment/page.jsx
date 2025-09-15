@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
 import CustomSelect from "../../../../components/components/ui/CustomSelect";
 import { Button } from "../../../../components/components/ui/button";
@@ -7,7 +7,12 @@ import { closeIcon, DialogBox } from "../../../../components/components/ui/dialo
 import CustomTimePicker from "../../../../components/components/ui/CustomTimePicker";
 import { Label } from "../../../../components/components/ui/label";
 import CustomTextArea from "../../../../components/components/ui/CustomTextArea";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { AuthContext } from "../../../../app/authtication/Authticate";
+import { notify } from "../../../../lib/notify";
+import { apiUrls } from "../../../../components/Network/ApiEndpoint";
+import { encryptPassword } from "../../../../components/EncyptHooks/EncryptLib";
 
 // dummy data
 
@@ -91,16 +96,97 @@ const timeSlots = [
 
 export default function AppointmentsPage() {
     const navigate = useNavigate()
-    const [tab, setTab] = useState("book");
+    const centerID = useParams()
+    const { token, getAuthHeader, getCurrentPatientId } = useContext(AuthContext)
+    const patientid = getCurrentPatientId();
     const [selectedDepartment, setSelectedDepartment] = useState("");
     const [selectedDoctor, setSelectedDoctor] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
+    const [tab, setTab] = useState("book");
     const [selectedSlot, setSelectedSlot] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [isDoctors, setDoctors] = useState();
     const [isOpenCancellation, setISOpenCancellation] = useState(false);
-
+    const [drSpecility, setDrSepcility] = useState('');
+    const [fromDate, setFromDate] = useState(() => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - 1);
+        return date;
+    });
+    const [toDate, setToDate] = useState(new Date());
     const handleConfirm = () => setShowConfirm(true);
+
+    const fetchDoctors = async () => {
+        try {
+            if (!token) {
+                notify("No token available", "error");
+                setDoctors([]);
+                return;
+            }
+
+            const response = await axios.post(
+                apiUrls.doctor_speciality,
+                { CentreID: centerID?.ID || 1 },
+                {
+                    headers: {
+                        ...getAuthHeader(),
+                    },
+                }
+            );
+            if (response.data.status) {
+                setDoctors(response.data.response || []);
+            } else {
+                notify(response.data.message, "error");
+                setDoctors([]);
+            }
+        } catch (error) {
+            notify(
+                error?.response?.data?.message || "Something went wrong",
+                "error"
+            );
+            setDoctors([]);
+        } finally {
+
+        }
+    };
+    const fetchAppointments = async () => {
+        try {
+            const encodedPatientId = encryptPassword(patientid);
+            console.log(encodedPatientId);
+
+            const today = new Date().toISOString().split("T")[0];
+
+            const apiUrl =
+                setTab === "upcoming"
+                    ? `${apiUrls.doctors}LoginAPIDynamic/GetAppHistory?patientid=${"I8Jt%2Bm05aRwOZSr3f%2FMm15KakuAtjoRWynqKii9pyuM%3D"}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${today}&Todate=${today}&DoctorID=&Status=`
+                    : `${apiUrls.doctors}LoginAPIDynamic/GetAppHistory?patientid=${encodedPatientId}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${fromDate
+                        .toISOString()
+                        .split("T")[0]}&Todate=${toDate
+                            .toISOString()
+                            .split("T")[0]}&DoctorID=&Status=`;
+
+            const response = await axios.post(
+                apiUrl,
+                null, // no request body needed
+                {
+                    headers: {
+                        ...getAuthHeader(),
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching appointments:", error);
+            return [];
+        } finally {
+        }
+    };
+
+    useEffect(() => {
+        fetchAppointments()
+        fetchDoctors()
+    }, [])
 
     return (
         <>
@@ -186,27 +272,22 @@ export default function AppointmentsPage() {
                                         <div className=" space-y-6  grid md:grid-cols-2 gap-6">
                                             <CustomSelect
                                                 placeholder="Select a Department"
-                                                options={departments.map((dep) => ({
-                                                    value: dep.value,
-                                                    label: dep.label,
-                                                }))}
-                                                value={
-                                                    departments.find((d) => d.value === selectedDepartment) || null
-                                                }
-                                                onChange={(selectedOption) => setSelectedDepartment(selectedOption.value)}
+                                                options={isDoctors}
+                                                value={selectedDoctor}
+                                                onChange={(selectedOption) => setSelectedDepartment(selectedOption)}
+                                                valueKey="ID"
+                                                labelKey="doctorname"
                                             />
 
                                             <CustomSelect
                                                 placeholder="Select a Doctor"
-                                                options={doctors.map((dep) => ({
-                                                    value: dep.value,
-                                                    label: dep.label,
-                                                }))}
-                                                value={
-                                                    doctors.find((d) => d.value === selectedDoctor) || null
-                                                }
-                                                onChange={(selectedOption) => setSelectedDoctor(selectedOption.value)}
+                                                options={isDoctors}
+                                                value={selectedDoctor}
+                                                onChange={(selectedOption) => setSelectedDoctor(selectedOption)}
+                                                valueKey="ID"
+                                                labelKey="doctorname"
                                             />
+
 
                                             <div className="m-0">
                                                 <CustomDatePicker

@@ -1,18 +1,34 @@
 import React, { useState } from "react";
 import Select from "react-select";
 
-const CustomSelect = ({ options, value, onChange, placeholder, id, required }) => {
+const CustomSelect = ({
+  options = [],   // raw API data
+  value,
+  onChange,
+  placeholder,
+  id,
+  required,
+  valueKey = "ID",       // API key for value
+  labelKey = "doctorname" // API key for label
+}) => {
   const [isFocused, setIsFocused] = useState(false);
   const hasValue = !!value;
+
+  // map raw API data → react-select options
+  const formattedOptions = options.map((item) => ({
+    value: item[valueKey],
+    label: item[labelKey],
+    ...item, // keep the full object in case you need it later
+  }));
 
   return (
     <div className="relative w-full">
       <Select
         id={id}
-        options={options}
+        options={formattedOptions}
         value={value}
         onChange={onChange}
-        placeholder=" " // empty placeholder to trigger label float
+        placeholder=" " 
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         isSearchable
@@ -24,15 +40,10 @@ const CustomSelect = ({ options, value, onChange, placeholder, id, required }) =
             borderRadius: "0.5rem",
             borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
             boxShadow: state.isFocused ? "0 0 0 2px #93c5fd" : "none",
-            "&:hover": {
-              borderColor: "#3b82f6",
-            },
+            "&:hover": { borderColor: "#3b82f6" },
             padding: "2px 4px",
           }),
-          placeholder: (base) => ({
-            ...base,
-            color: "#9ca3af", // Tailwind text-gray-400
-          }),
+          placeholder: (base) => ({ ...base, color: "#9ca3af" }),
           menu: (base) => ({
             ...base,
             borderRadius: "0.5rem",
@@ -43,9 +54,7 @@ const CustomSelect = ({ options, value, onChange, placeholder, id, required }) =
             ...base,
             backgroundColor: state.isFocused ? "#e5e7eb" : "white",
             color: "#111827",
-            "&:active": {
-              backgroundColor: "#bfdbfe",
-            },
+            "&:active": { backgroundColor: "#bfdbfe" },
           }),
         }}
       />

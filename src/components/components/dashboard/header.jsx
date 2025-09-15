@@ -53,7 +53,7 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
   
 
 const handleLogout = () => {
-  logout();  // pass navigate here
+  logout(navigate); // pass navigate so it redirects after clearing auth
 };
 
 
@@ -164,7 +164,7 @@ const handleLogout = () => {
               {/* Logout Confirmation */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2" />
                     Logout
                   </DropdownMenuItem>
@@ -179,7 +179,7 @@ const handleLogout = () => {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={handleLogout}
+                      
                       className="bg-destructive hover:bg-destructive/90"
                     >
                       Logout

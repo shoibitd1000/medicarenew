@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   SquarePlus,
@@ -19,6 +19,10 @@ import {
 import PromoCarousel from "../../components/components/dashboard/promo-carousel";
 import { Card, CardDescription, CardHeader, CardTitle } from "../../components/components/ui/card";
 import { apiUrls } from "../../components/Network/ApiEndpoint";
+import { encryptPassword } from "../../components/EncyptHooks/EncryptLib";
+import axios from "axios";
+import { AuthContext } from "../authtication/Authticate";
+import { notify } from "../../lib/notify";
 
 const features = [
   {
@@ -152,40 +156,55 @@ const banner = [
 ]
 
 export default function DashboardPage() {
-  const getDasboardData = async () => {
-    try {
-      await axios.post(
-        apiUrls.getDashBoard,
-        {},
-      );
-    }
-    catch {
+  const { getAuthHeader, isLoading } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(false);
+  const getdashboadrddata = async () => {
+    setLoading(true);
 
+    try {
+      const res = await axios.get(
+        apiUrls.welcomeText,
+        {
+          headers: {
+            ...getAuthHeader(),
+          },
+        }
+      );
+
+      const data = res.data;
+      if (data.status) {
+        setData(data.response?.[0])
+      } else {
+        notify(data.message, "error");
+      }
+    } catch (error) {
+      setLoading(true)
+      notify(data.message, "error" || "Something went wrong, please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+
   useEffect(() => {
-    getDasboardData()
-  }, [])
+    getdashboadrddata();
+  }, []);
+
+  if (isLoading) return <div><Loader /></div>;
+
   return (
     <>
       <div className="space-y-8 bg-background p-2">
         <div className="banner-container">
-          <div className="marquee">
-            <span className="banner-title">
-              Welcome to the Patient Mobile App Powered by ITdose Healthcare
-              Solutions
+          <div className="marquee w-full text-end flex justify-between">
+            <span className="  font-bold text-primary px-3">
+              {data?.Message ? data?.Message : "Manage your health easily and securely—anytime, anywhere."}
             </span>
-            <span className="banner-subtitle">
-              Manage your health easily and securely—anytime, anywhere.
+            <span className=" font-bold px-3">
+              {data?.DescriptionMessage ? data?.DescriptionMessage : "Manage your health easily and securely—anytime, anywhere."}
             </span>
-          </div>
-          <div className="marquee marquee2">
-            <span className="banner-title">
-              Welcome to the Patient Mobile App Powered by ITdose Healthcare
-              Solutions
-            </span>
-            <span className="banner-subtitle">
-              Manage your health easily and securely—anytime, anywhere.
+            <span className=" font-bold text-primary px-3">
+              {data?.Message ? data?.Message : "Manage your health easily and securely—anytime, anywhere."}
             </span>
           </div>
         </div>

@@ -44,23 +44,25 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const encryptedPassword = encryptPassword(password);
-
       const params = {
         username,
         password: encryptedPassword,
         devicetype: "A",
         deviceid: deviceId,
       };
-      const res = await axios.post(apiUrls.login, null, { params });
 
+      const res = await axios.post(apiUrls.login, null, { params });
       const data = res.data;
 
       if (data.status) {
+        debugger
         const user = data.response?.[0];
+        if (user.APIToken) {
+          saveToken(user.APIToken);  
+        }
 
-        await saveToken(data.token || "dummy-token");
-        await saveUserData(user);
-        await saveDeviceId(deviceId);
+        saveUserData(user);
+        saveDeviceId(deviceId);
 
         navigate("/dashboard", { replace: true });
       } else {
@@ -73,6 +75,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
 
 
 

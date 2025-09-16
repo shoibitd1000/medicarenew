@@ -7,7 +7,6 @@ import CustomSelect from '../../../../components/components/ui/CustomSelect';
 import CustomTextArea from '../../../../components/components/ui/CustomTextArea';
 import { Button } from '../../../../components/components/ui/button';
 import { DialogBox, closeIcon } from '../../../../components/components/ui/dialog';
-import { Label } from '../../../../components/components/ui/label';
 import { AlarmClockPlus, Calendar, FileDown, Hospital } from 'lucide-react';
 import Toaster, { notify } from '../../../../lib/notify';
 import { AuthContext } from '../../../../app/authtication/Authticate';
@@ -670,7 +669,7 @@ const AppointmentsPage = () => {
                             >
                                 <div className="space-y-4">
                                     <div>
-                                        <Label>Select New Date</Label>
+                                        <label>Select New Date</label>
                                         <CustomDatePicker
                                             repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                                             value={newDate}
@@ -680,7 +679,7 @@ const AppointmentsPage = () => {
                                         />
                                     </div>
                                     <div>
-                                        <Label>Select Time Slot</Label>
+                                        <label>Select Time Slot</label>
                                         <CustomSelect
                                             placeholder={timeSlotsLoading ? 'Loading...' : timeSlots.length === 0 ? 'No available slots' : 'Select a Time Slot'}
                                             options={timeSlots}
@@ -725,7 +724,7 @@ const AppointmentsPage = () => {
                                 }
                             >
                                 <div className="my-3">
-                                    <Label>Reason For Cancellation</Label>
+                                    <label>Reason For Cancellation</label>
                                     <CustomTextArea
                                         repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                                         value={cancelReason}

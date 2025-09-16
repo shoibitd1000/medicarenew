@@ -1,4 +1,3 @@
-import { Label } from "../../../components/components/ui/label";
 import CustomTextArea from "../../../components/components/ui/CustomTextArea";
 import { DialogBox } from "../../../components/components/ui/dialog";
 import { ChevronRight, FileDown, Mail, Pill, SquarePlus } from "lucide-react";
@@ -134,7 +133,7 @@ export default function SendMessagePage() {
         }
       >
         <div className="my-3">
-          <Label>Type Your Message</Label>
+          <label>Type Your Message</label>
           <CustomTextArea
             repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
             value={""}

@@ -3,7 +3,6 @@ import React from "react"
 import { useState } from 'react';
 import { Button } from '../../../components/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/components/ui/card';
-import { Label } from '../../../components/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../../../components/components/ui/radio-group';
 import { PhoneCall, MapPin, LocateFixed, Clock, User, AlertTriangle, LifeBuoy, Calendar } from 'lucide-react';
 import CustomInput from "../../../components/components/ui/CustomInput";
@@ -113,7 +112,7 @@ export default function AmbulancePage() {
 
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="condition" className="text-base">Patient's Condition (Briefly)</Label>
+                                    <label htmlFor="condition" className="text-base">Patient's Condition (Briefly)</label>
                                     <CustomTextArea
                                         repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                                         value={""}
@@ -122,15 +121,15 @@ export default function AmbulancePage() {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <Label className="text-base">Schedule Request</Label>
+                                    <label className="text-base">Schedule Request</label>
                                     <RadioGroup defaultValue="now" value={requestType} onValueChange={setRequestType}>
                                         <div className="flex items-center space-x-2">
                                             <RadioGroupItem value="now" id="now" />
-                                            <Label htmlFor="now">Request Immediately</Label>
+                                            <label htmlFor="now">Request Immediately</label>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             <RadioGroupItem value="later" id="later" />
-                                            <Label htmlFor="later">Schedule for Later</Label>
+                                            <label htmlFor="later">Schedule for Later</label>
                                         </div>
                                     </RadioGroup>
                                     {requestType === 'later' && (

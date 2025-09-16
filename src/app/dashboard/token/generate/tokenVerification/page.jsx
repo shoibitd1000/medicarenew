@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../../../components/components/ui/button'
 import CustomInput from '../../../../../components/components/ui/CustomInput'
-import { Label } from '../../../../../components/components/ui/label'
 import React, {  useState } from 'react'
 import CustomTable from '../../../../../components/components/ui/customTabel';
 import CustomSelect from '../../../../../components/components/ui/CustomSelect';
@@ -53,7 +52,7 @@ function TokenVerification() {
             <div
                 className=" bg-white p-4 shadow-sm hover:shadow-md transition rounded-md m-3 "
             >
-                <Label className='text-md text-primary mb-2'> Patient Lookup</Label>
+                <label className='text-md text-primary mb-2'> Patient Lookup</label>
                 <div className="relative flex-grow">
                     <CustomInput
                         id="userId"

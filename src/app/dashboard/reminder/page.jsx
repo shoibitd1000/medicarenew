@@ -16,7 +16,6 @@ import {
   DialogClose,
 } from "../../../components/components/ui/dialog";
 import { Input } from "../../../components/components/ui/input";
-import { Label } from "../../../components/components/ui/label";
 
 import { Switch } from "../../../components/components/ui/switch";
 import { useToast } from "../../../hooks/use-toast";
@@ -243,7 +242,7 @@ export default function ReminderPage() {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Reminder Name</Label>
+                <label htmlFor="title">Reminder Name</label>
                 <Input
                   id="title"
                   value={title}
@@ -253,7 +252,7 @@ export default function ReminderPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="schedulerType">Type Of Scheduler</Label>
+                <label htmlFor="schedulerType">Type Of Scheduler</label>
                 <Select value={schedulerType} onValueChange={setSchedulerType}>
                   <SelectTrigger id="schedulerType">
                     <SelectValue placeholder="Select scheduler type" />
@@ -266,7 +265,7 @@ export default function ReminderPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Start Date</Label>
+                <label htmlFor="date">Start Date</label>
                 <Input
                   id="date"
                   type="date"
@@ -276,7 +275,7 @@ export default function ReminderPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="time">Start Time</Label>
+                <label htmlFor="time">Start Time</label>
                 <Input
                   id="time"
                   type="time"
@@ -287,7 +286,7 @@ export default function ReminderPage() {
               </div>
               <div className="space-y-2">
                 <div className="my-3">
-                  <Label>Description(Optional) </Label>
+                  <label>Description(Optional) </label>
                   <CustomTextArea
                     repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                     value={""}

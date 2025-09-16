@@ -6,7 +6,7 @@ import {  Scan, Pill, ChevronRight, Bed, ClipboardPlus, TestTubeDiagonal } from 
 
 const recordTypes = [
   {
-    name: "Consultation History",
+    name: "Doctor Prescriptions",
     description: "View past doctor consultations and prescriptions.",
     icon: ClipboardPlus ,
     href: "/clinical-record/consultations",

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SquarePlus, ChevronRight, Loader } from "lucide-react";
 import { AuthContext } from "../../../app/authtication/Authticate";
-import { notify } from "../../../lib/notify";
+import Toaster, { notify } from "../../../lib/notify";
 import { ToastContainer } from "react-toastify";
 import { apiUrls } from "../../../components/Network/ApiEndpoint";
 import axios from "axios";
@@ -16,10 +16,10 @@ const recordTypes = [
 ];
 
 export default function BookAppointment() {
-    const { getAuthHeader, isLoading } = useContext(AuthContext);
+    const { getAuthHeader } = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
-    
+
 
     const getCenterlab = async () => {
         setLoading(true);
@@ -63,18 +63,9 @@ export default function BookAppointment() {
                 <h2 className="text-2xl font-bold text-primary mb-1">Book An Appointment</h2>
                 <p className="text-gray-500">Please Select a hospital Center to Proceed</p>
             </div>
-            <ToastContainer
-                autoClose={1000}
-                draggable={false}
-                position="top-right"
-                hideProgressBar={false}
-                newestOnTop
-                closeOnClick
-                rtl={false}
-                pauseOnHover
-            />
+            <Toaster />
             <div className=" grid md:grid-cols-1 lg:grid-cols-2 gap-4">
-                {data?.map((item,i) => (
+                {data?.map((item, i) => (
                     <Link
                         to={`/doctor-appointment/${item?.CentreID}`}
                         key={i}

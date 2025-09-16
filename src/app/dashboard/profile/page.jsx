@@ -13,7 +13,7 @@ import {
   CardFooter,
 } from "../../../components/components/ui/card";
 import { Input } from "../../../components/components/ui/input";
-import { Label } from "../../../components/components/ui/label";
+
 import {
   Select,
   SelectContent,
@@ -102,7 +102,7 @@ export default function ProfilePage() {
               />
             </div>
             <div className="space-y-2">
-              {/* <Label htmlFor="mobile">Mobile Number</Label>
+              {/* <label htmlFor="mobile">Mobile Number</label>
               <Input id="mobile" type="tel" defaultValue="+1234567890" /> */}
 
               <CustomInput
@@ -127,7 +127,7 @@ export default function ProfilePage() {
             <div className="space-y-2 md:col-span-2">
 
               <div className="">
-                <Label>Address</Label>
+                <label>Address</label>
                 <CustomTextArea
                   repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                   value={"23 Health St, Wellness City, 10101"}

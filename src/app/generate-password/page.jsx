@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/components/ui/card';
-import { Label } from '../../components/components/ui/label';
 import CustomInput from '../../components/components/ui/CustomInput';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
 
@@ -42,7 +41,7 @@ export default function GeneratePasswordPage() {
           <CardContent>
             <form onSubmit={handleSend} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="patientId">Patient Id / Mobile Number</Label>
+                <label htmlFor="patientId">Patient Id / Mobile Number</label>
                 
                 <CustomInput
                   id="patientId"

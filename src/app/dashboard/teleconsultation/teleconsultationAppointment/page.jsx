@@ -8,6 +8,7 @@ import { closeIcon, DialogBox } from "../../../../components/components/ui/dialo
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../../../../app/authtication/Authticate';
 import { apiUrls } from "../../../../components/Network/ApiEndpoint";
+import { encryptPassword } from "../../../../components/EncyptHooks/EncryptLib";
 // import { GET_DR_TELE } from "../../../../src/const/config"; // Adjust path as needed
 
 const TeleconsultationAppointment = () => {

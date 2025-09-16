@@ -66,7 +66,7 @@ export function App() {
               <Route path="/appointments/book" element={<BookAppointment />} />
               <Route path="/doctor-appointment/:id" element={<DoctorAppointment />} />
               <Route path="/teleconsultation/book" element={<Teleconsultation />} />
-              <Route path="/teleconsultation-appointment" element={<TeleconsultationAppointment />} />
+              <Route path="/teleconsultation-appointment/:id/:center-name" element={<TeleconsultationAppointment />} />
               <Route path="/investigations/book" element={<Investigations />} />
               <Route path="/investigations" element={<InvestigationsAppoin />} />
               <Route path="/packages" element={<PackageInformations />} />

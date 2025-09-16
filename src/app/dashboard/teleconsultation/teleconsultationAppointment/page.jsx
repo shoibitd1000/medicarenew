@@ -7,11 +7,12 @@ import { Calendar, FileDown, Video } from "lucide-react";
 import { closeIcon, DialogBox } from "../../../../components/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../../../../app/authtication/Authticate';
+import { apiUrls } from "../../../../components/Network/ApiEndpoint";
 // import { GET_DR_TELE } from "../../../../src/const/config"; // Adjust path as needed
 
 const TeleconsultationAppointment = () => {
     const navigate = useNavigate();
-    const { token, userData, getCurrentPatientId } = useContext(AuthContext);
+    const { token, userData, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
     const patientid = getCurrentPatientId();
     const centerID = 1; // Replace with dynamic center ID if passed via props or context
     const centerName = "Kaboson"; // Replace with dynamic center name if available
@@ -321,7 +322,7 @@ const TeleconsultationAppointment = () => {
 
             const dateToUse = new Date();
             const formattedDate = formatAppointmentDate(dateToUse);
-            const encodedPatientId = encodeURIComponent(patientid || "");
+            const encodedPatientId = encodeURIComponent(encryptPassword(patientid));
             const formattedFromDate =
                 tab === "upcoming" ? formattedDate : formatAppointmentDate(fromDate);
             const formattedToDate =
@@ -332,20 +333,22 @@ const TeleconsultationAppointment = () => {
                 : null;
             const doctorID = doctor?.DoctorID || 555;
 
-            const apiUrl = `http://197.138.207.30/MobileApp_API/API/LoginAPIDynamic/GetAppHistory?patientid=${encodedPatientId}&IsTeleconsulation=1&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${encodeURIComponent(
-                formattedFromDate
-            )}&ToDate=${encodeURIComponent(formattedToDate)}&DoctorID=${doctorID}&Status=IsConform`;
+
 
             const response = await axios.post(
-                apiUrl,
-                {},
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                }
+                `${apiUrls.doctors}?patientid=${encodedPatientId}` +
+                `&IsTeleconsulation=1` +
+                `&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D` +
+                `&FromDate=${encodeURIComponent(encryptPassword(formattedFromDate))}` +
+                `&ToDate=${encodeURIComponent(encryptPassword(formattedToDate))}` +
+                `&DoctorID=${doctorID}` +
+                `&Status=IsConform`,
+                null,
+                {headers: getAuthHeader(),
+            }
             );
+
+
 
             if (response?.data?.status === true) {
                 const appointments = response.data.response || [];
@@ -468,14 +471,17 @@ const TeleconsultationAppointment = () => {
         const amount = appointmentRate?.Rate || 800;
 
         const url = `http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx?PatientID=${encodeURIComponent(
-            patientID
+            encryptPassword(patientID)
         )}&PhoneNumber=${encodeURIComponent(
-            phoneNumber
-        )}&BillNo=${encodeURIComponent(billNo)}&Amount=${encodeURIComponent(amount)}`;
+            encryptPassword(phoneNumber)
+        )}&BillNo=${encodeURIComponent(
+            encryptPassword(billNo)
+        )}&Amount=${encodeURIComponent(encryptPassword(amount))}`;
 
         setPaymentUrl(url);
         setShowPaymentModal(true);
     };
+
 
     // Confirm Appointment
     const handleConfirm = async () => {

@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { DialogBox } from "../../../../components/components/ui/dialog";
 import { AuthContext } from "../../../authtication/Authticate";
-import { v4 as uuidv4 } from "uuid";
 import { apiUrls } from "../../../../components/Network/ApiEndpoint";
 import { encryptPassword } from "../../../../components/EncyptHooks/EncryptLib";
 import Toaster, { notify } from "../../../../lib/notify";
+import IsLoader from "../../../loading";
 
 const ConsultationHistoryPage = () => {
   const navigate = useNavigate();
-  const { token, getCurrentPatientId, getAuthorization } = useContext(AuthContext);
+  const { token, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -23,35 +23,136 @@ const ConsultationHistoryPage = () => {
   const deviceID = localStorage.getItem("deviceId")
   // Rest of your code remains the same...
 
-  const fetchConsultationHistory = async () => {
-    const encodedPatientId = encryptPassword(patientId);
-    debugger
+
+  /* const fetchConsultationHistory = useCallback(
+    async (pageNum = 1, append = false) => {
+      if (!deviceID || !patientId || (pageNum > 1 && !hasMore)) return;
+
+      try {
+        setLoading(pageNum === 1);
+        setLoadingMore(pageNum > 1);
+
+        const formData = new URLSearchParams();
+        formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
+        formData.append("UserType", "Patient");
+        formData.append("AccessScreen", "Pathology");
+        formData.append("AppVersion", "");
+        formData.append("Device_ID", deviceID);
+        formData.append("Page", pageNum);
+        formData.append("PageSize", 10);
+
+        const encodedPatientId = encodeURIComponent(encryptPassword(patientId));
+
+        const response = await axios.post(
+          `${apiUrls?.consualtationHistory}?PatientID=${encodedPatientId}`,
+          formData.toString(),
+          {
+            headers: {
+              ...getAuthorization(),
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+
+        if (response.data?.status) {
+          const newData = response.data.response || [];
+          setConsultations((prev) => (append ? [...prev, ...newData] : newData));
+          setHasMore(newData.length === 10);
+        } else {
+          if (pageNum === 1) {
+            alert("No Data: No consultation history found.");
+          }
+          setHasMore(false);
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching consultation history:",
+          error.response?.status,
+          error.response?.data || error.message
+        );
+        if (error.response?.status === 500) {
+          alert("Server Error: An internal server error occurred. Please try again later.");
+        } else {
+          alert("Error: Failed to load consultation history.");
+        }
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [deviceID, patientId, hasMore, getAuthorization]
+  ); */
+
+
+  const fetchConsultationHistory = async (pageNum = 1, append = false) => {
     try {
-      const response = await axios.get(
-        `${apiUrls?.consualtationHistory}?PatientID=${encodedPatientId}`,
+      // Set loading states properly
+      setLoading(pageNum === 1);
+      setLoadingMore(pageNum > 1);
+
+      // Prepare FormData payload
+      const formData = new FormData();
+      formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
+      formData.append("UserType", "Patient");
+      formData.append("AccessScreen", "Pathology");
+      formData.append("AppVersion", "");
+      formData.append("Device_ID", deviceID);
+      formData.append("Page", pageNum);
+      formData.append("PageSize", 10);
+
+      const encodedPatientId = encryptPassword(patientId);
+
+      // ✅ Pass formData as the body, not null
+      const response = await axios.post(
+        `${apiUrls.consualtationHistory}?PatientID=${encodedPatientId}`,
+        formData.toString(),
         {
           headers: {
-            ...getAuthorization(),
+            ...getAuthHeader(),
           },
         }
       );
 
-      console.log(response.data);
+      if (response.data?.status) {
+        const newData = response.data.response || [];
+        setConsultations((prev) => (append ? [...prev, ...newData] : newData));
+        setHasMore(newData.length === 10);
+      } else {
+        if (pageNum === 1) {
+          alert("No Data: No consultation history found.");
+        }
+        setHasMore(false);
+      }
     } catch (error) {
-      notify("Error fetching consultation history:", "error");
+      console.error(
+        "Error fetching consultation history:",
+        error.response?.status,
+        error.response?.data || error.message
+      );
+      if (error.response?.status === 500) {
+        alert("Server Error: An internal server error occurred. Please try again later.");
+      } else {
+        alert("Error: Failed to load consultation history.");
+      }
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
 
-  useEffect(() => {
-    fetchConsultationHistory()
-  }, [])
 
-  /*  useEffect(() => {
-     if (deviceID && token && patientId) {
-       fetchConsultationHistory(1);
-     }
-   }, [deviceID, token, patientId]); */
+  /* useEffect(() => {
+    if (deviceID && token && patientId) {
+      fetchConsultationHistory(1);
+    }
+  }, [deviceID, token, patientId]); */
+
+  useEffect(() => {
+    if (deviceID && token && patientId) {
+      fetchConsultationHistory(1);
+    }
+  }, [deviceID, token, patientId]);
 
   // Load more consultations
   const loadMore = () => {
@@ -71,7 +172,7 @@ const ConsultationHistoryPage = () => {
         {
           responseType: "blob",
           headers: {
-            ...getAuthorization(),
+            ...getAuthHeader(),
           },
         }
       );
@@ -120,8 +221,9 @@ const ConsultationHistoryPage = () => {
 
             {loading ? (
               <div className="text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-                <p>Loading...</p>
+                {/* <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                <p>Loading...</p> */}
+                <IsLoader isFullScreen={false} size="6" text="Loading more..." />
               </div>
             ) : consultations.length > 0 ? (
               <>

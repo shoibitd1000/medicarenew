@@ -27,15 +27,13 @@ export const apiUrls = {
   doctor_speciality: `${envUrl}/LoginAPIDynamic/getDoctorSpecialityList`,
   doctors: `${envUrl}/LoginAPIDynamic/GetAppHistory`,
   appointmentslot: `${envUrl}/LoginAPIDynamic/ReactbindappointmentslotMobileApp`,
-  // doctor_speciality: `${envUrl}/LoginAPIDynamic/GetDrSpeciality`,
   appointmentslot: `${envUrl}/LoginAPIDynamic/ReactbindappointmentslotMobileApp`,
-  // doctors: `${envUrl}/LoginAPIDynamic/GetAppHistory`,
   saveAppointment: `${envUrl}/LoginAPIDynamic/SaveAppointment`,
   rescheduleAppointment: `${envUrl}/LoginAPIDynamic/RescheduleAppointment`,
   cancelAppointment: `${envUrl}/LoginAPIDynamic/CancelAppointment`,
   appointmentRate: `${envUrl}/LoginAPIDynamic/GetAppointmentRate`,
   consualtationHistory: `${envUrl}/LoginAPIDynamic/ReactGetPatientConsualtationHistory`,
-  doctorPrescription: `${envUrl}/LoginAPIDynamic/DoctorPrescription.aspx`,
+  doctorPrescription: `${envUrl}/LoginAPIDynamic/DoctorPrescription`,
   // payment: 'http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
 
 };

@@ -8,10 +8,3 @@ export const encryptPassword = plainPassword => {
   });
   return encrypted.toString(); // no encodeURIComponent
 };
-
-
-
-
-
-
-

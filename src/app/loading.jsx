@@ -1,11 +1,28 @@
-    import React from "react";
-
-const IsLoader = () => {
+import React from "react";
+const IsLoader = ({ isFullScreen = true, text = "Loading ....", size = "10" }) => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-slate-500 px-5 py-2 z-50">
-      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"></div>
-    </div>
+    <>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          .custom-spin {
+            animation: spin 1s linear infinite;
+            border: 5px solid #1e3a8a;
+            border-top-color: transparent;
+            border-radius: 50%;
+          }
+        `}
+      </style>
+      <div className={`${isFullScreen ? "fixed inset-0 flex items-center justify-center bg-slate-200 px-5 py-2 z-50" : "flex items-center justify-center"}`}>
+        <div className={`${isFullScreen ? "border shadow-xl rounded-md py-2 px-4 bg-white" : ""} flex items-center gap-3 justify-center`}>
+          <div className={`w-${size} h-${size} custom-spin`}></div>
+          <div className="font-semibold">{text}</div>
+        </div>
+      </div>
+    </>
   );
 };
-
 export default IsLoader;

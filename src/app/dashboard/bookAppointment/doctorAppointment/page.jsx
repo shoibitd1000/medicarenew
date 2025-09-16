@@ -159,7 +159,7 @@ export default function AppointmentsPage() {
 
             const apiUrl =
                 setTab === "upcoming"
-                    ? `${apiUrls.doctors}LoginAPIDynamic/GetAppHistory?patientid=${"I8Jt%2Bm05aRwOZSr3f%2FMm15KakuAtjoRWynqKii9pyuM%3D"}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${today}&Todate=${today}&DoctorID=&Status=`
+                    ? `${apiUrls.doctors}LoginAPIDynamic/GetAppHistory?patientid=${encodedPatientId}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${today}&Todate=${today}&DoctorID=&Status=`
                     : `${apiUrls.doctors}LoginAPIDynamic/GetAppHistory?patientid=${encodedPatientId}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${fromDate
                         .toISOString()
                         .split("T")[0]}&Todate=${toDate

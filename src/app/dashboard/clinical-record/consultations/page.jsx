@@ -17,6 +17,7 @@ const ConsultationHistoryPage = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  console.log(consultations, "consultations");
 
   const [isOpen, setIsOpen] = useState(false);
   const patientId = getCurrentPatientId();
@@ -92,20 +93,20 @@ const ConsultationHistoryPage = () => {
 
       // Prepare FormData payload
       const formData = new FormData();
-      formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
-      formData.append("UserType", "Patient");
-      formData.append("AccessScreen", "Pathology");
-      formData.append("AppVersion", "");
-      formData.append("Device_ID", deviceID);
-      formData.append("Page", pageNum);
-      formData.append("PageSize", 10);
+      // formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
+      // formData.append("UserType", "Patient");
+      // formData.append("AccessScreen", "Pathology");
+      // formData.append("AppVersion", "");
+      // formData.append("Device_ID", deviceID);
+      // formData.append("Page", pageNum);
+      // formData.append("PageSize", 10);
 
       const encodedPatientId = encryptPassword(patientId);
-
+      formData.append("PatientID", encodedPatientId);
       // ✅ Pass formData as the body, not null
       const response = await axios.post(
         `${apiUrls.consualtationHistory}?PatientID=${encodedPatientId}`,
-        formData.toString(),
+        formData,
         {
           headers: {
             ...getAuthHeader(),
@@ -115,24 +116,27 @@ const ConsultationHistoryPage = () => {
 
       if (response.data?.status) {
         const newData = response.data.response || [];
-        setConsultations((prev) => (append ? [...prev, ...newData] : newData));
+        setConsultations(prev => (append ? [...prev, ...newData] : newData));
         setHasMore(newData.length === 10);
       } else {
         if (pageNum === 1) {
-          alert("No Data: No consultation history found.");
+          notify('No Data', 'No consultation history found.');
         }
         setHasMore(false);
       }
     } catch (error) {
       console.error(
-        "Error fetching consultation history:",
+        'Error fetching consultation history:',
         error.response?.status,
-        error.response?.data || error.message
+        error.response?.data || error.message,
       );
       if (error.response?.status === 500) {
-        alert("Server Error: An internal server error occurred. Please try again later.");
+        notify(
+          'Server Error',
+          'An internal server error occurred. Please try again later.',
+        );
       } else {
-        alert("Error: Failed to load consultation history.");
+        notify('Error', 'Failed to load consultation history.');
       }
     } finally {
       setLoading(false);
@@ -155,33 +159,36 @@ const ConsultationHistoryPage = () => {
   }, [deviceID, token, patientId]);
 
   // Load more consultations
-  const loadMore = () => {
-    if (!loadingMore && hasMore) {
-      setPage((prev) => {
-        const nextPage = prev + 1;
-        fetchConsultationHistory(nextPage, true);
-        return nextPage;
-      });
-    }
-  };
+  // const loadMore = () => {
+  //   if (!loadingMore && hasMore) {
+  //     setPage((prev) => {
+  //       const nextPage = prev + 1;
+  //       fetchConsultationHistory(nextPage, true);
+  //       return nextPage;
+  //     });
+  //   }
+  // };
 
   const handleDownloadPDF = async (appId) => {
     try {
       const response = await axios.get(
-        `${apiUrls.doctorPrescription}?App_ID = ${appId} `,
+        `${apiUrls.doctorPrescription}?App_ID=${appId}&fileName=Consultation.pdf`,
         {
-          responseType: "blob",
+          responseType: "blob", // 👈 important to handle binary files
           headers: {
             ...getAuthHeader(),
           },
         }
       );
 
-      // Create a blob URL
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // Create a blob URL for the PDF
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary link and trigger download
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Consultation_${appId}.pdf`);
+      link.setAttribute("download", "Consultation.pdf"); // filename for the user
       document.body.appendChild(link);
       link.click();
 
@@ -189,10 +196,10 @@ const ConsultationHistoryPage = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("Error: Failed to download PDF.");
+      notify("Error: Failed to download PDF.");
     }
   };
+
 
   // Rest of your JSX return statement remains the same...
   return (
@@ -241,13 +248,14 @@ const ConsultationHistoryPage = () => {
                           {consult.Designation || "N/A"} | {consult.Date || ""}
                         </p>
                       </div>
-                      <button
+                      <a
+                        href={`http://197.138.207.30/Tenwek2208/Design/CPOE/DoctorPrescription.aspx?App_ID=567803`}
+                        target="blank"
                         className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
-                        onClick={() => handleDownloadPDF(consult.App_ID || "567803")}
+
                       >
                         <FileDown className="h-4 w-4" />
-                        <span>Download PDF</span>
-                      </button>
+                      </a>
                     </div>
                     <h4 className="text-md underline font-semibold">Diagnosis:</h4>
                     <span className="text-sm font-normal">{consult.Diagnosis || "N/A"}</span>

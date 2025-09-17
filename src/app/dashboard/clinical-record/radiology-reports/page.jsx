@@ -2,37 +2,12 @@ import React, { useState, useMemo, useEffect } from "react";
 import { FileDown, ArrowLeft, Calendar, Scan } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
 import CustomTable from "../../../../components/components/ui/customTabel";
+import { apiUrls } from "../../../../components/Network/ApiEndpoint";
 
-const initialLabReports = [
-  {
-    date: "2024-07-10",
-    barcode: "L12345678",
-    ReportName: "Complete Blood Count (CBC)",
-    Radiology: "Dr. John Smith",
-    status: "Approved",
-    url: "#",
-  },
-  {
-    date: "2024-07-10",
-    barcode: "L87654321",
-    ReportName: "Lipid Profile",
-    Radiology: "Dr. John Smith",
-    status: "Sample Collected",
-    url: "#",
-  },
-  {
-    date: "2024-06-15",
-    barcode: "L54321678",
-    ReportName: "Urine Analysis",
-    Radiology: "Dr. John Smith",
-    status: "Approved",
-    url: "#",
-  },
-];
-
-const statusClasses = {
+const IsResultClasses = {
   Approved: "bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold",
   "Sample Collected": "bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold",
   "Result Done": "bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-semibold",
@@ -40,23 +15,77 @@ const statusClasses = {
 };
 
 export default function LabReportsPage() {
-  const [labReports, setLabReports] = useState(initialLabReports);
+  const [labReports, setLabReports] = useState([]);
   const [fromDate, setFromDate] = useState();
   const [toDate, setToDate] = useState();
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Simulated token and patient ID (replace with actual AuthContext or similar)
+  const token = "YOUR_BEARER_TOKEN"; // Replace with actual token from your auth context
+  const patientId = "YOUR_PATIENT_ID"; // Replace with actual patient ID from your auth context
 
   useEffect(() => {
     const to = new Date();
     const from = subDays(to, 30);
     setFromDate(from);
     setToDate(to);
-
   }, []);
+
+  const fetchRadioRecord = async () => {
+    if (!fromDate || !toDate) return;
+    try {
+      setLoading(true);
+      const RADIO_RECORD = `${apiUrls.patientRadiologyHistoryapi}?PatientID=${encodeURIComponent(
+        patientId
+      )}&Fromdate=${fromDate.toISOString().split("T")[0]}&Todate=${toDate
+        .toISOString()
+        .split("T")[0]}`;
+
+      const formData = new URLSearchParams();
+      formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
+      formData.append("UserType", "Patient");
+      formData.append("AccessScreen", "Pathology");
+
+      const response = await axios.post(RADIO_RECORD, formData.toString(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+
+      if (response.data?.IsResult === true) {
+        setLabReports(response.data.response);
+      } else {
+        setLabReports([]);
+      }
+    } catch (error) {
+      console.error("API Error:", error.response?.data || error.message);
+      setLabReports([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateValue) => {
+    if (!dateValue) return "N/A";
+    const parsedDate = new Date(dateValue);
+    if (isNaN(parsedDate)) return "Invalid Date";
+    return parsedDate.toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  };
+
+  useEffect(() => {
+    fetchRadioRecord();
+  }, [fromDate, toDate]);
 
   const filteredReports = useMemo(() => {
     if (!fromDate || !toDate) return labReports;
     return labReports.filter((report) => {
-      const reportDate = new Date(report.date);
+      const reportDate = new Date(report.DATE);
       const from = new Date(fromDate);
       from.setHours(0, 0, 0, 0);
       const to = new Date(toDate);
@@ -65,16 +94,20 @@ export default function LabReportsPage() {
     });
   }, [labReports, fromDate, toDate]);
 
-
-
   const formattedData = filteredReports.map((report) => ({
     ...report,
-    date: format(new Date(report.date), "yyyy-MM-dd"),
-    status: (
-      <span className={statusClasses[report.status] || ""}>
-        {report.status}
+    date: formatDate(report.DATE),
+    ReportName: report.InvestigationName || "Unknown",
+    barcode: report.BarcodeNo || "N/A",
+    Radiology: report.DoctorName || "N/A",
+    IsResult: (
+      <span className={IsResultClasses[report.IsResult || "Pending"] || ""}>
+        {report.IsResult || "Pending"}
       </span>
     ),
+    url: `http://197.138.207.15/Tenwek/Design/Lab/OnlineprintLabReport_pdf.aspx?IsPrev=1&TestID=${encodeURIComponent(
+      report.Test_ID || ""
+    )}&Phead=0`,
   }));
 
   return (
@@ -117,34 +150,39 @@ export default function LabReportsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          {formattedData?.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="text-lg">Loading...</div>
+            </div>
+          ) : formattedData?.length > 0 ? (
             formattedData.map((item, i) => (
               <div
                 key={i}
                 className="border rounded-lg shadow-md p-4 bg-white my-3 "
               >
                 <div className="flex justify-between">
-                  <h2 className="text-lg font-semibold text-primary">{item?.ReportName}</h2>
+                  <h2 className="text-lg font-semibold text-primary">{item?.InvestigationName}</h2>
                   <span className="text-sm text-gray-500 mb-4">
-                    {item?.topN}
+                    {item?.DATE}
                   </span>
                 </div>
                 <span className="text-sm font-semibold mb-4">
-                  {item?.date}
+                  {item?.DoctorName}
                 </span>
-                <h2 className="text-lg font-semibold">{item?.pName}</h2>
                 <div className="flex justify-between">
-                  <div className="flex justify-between">
-                    <span
-                      className={`text-sm mb-4 ${statusClasses[item?.status] || ""}`}
-                    >
-                      {item?.status}
-                    </span>
+                  <div className="flex items-center">
+                    {item?.IsResult}
                   </div>
 
-                  <button className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition" /* onClick={() => setIsOpen(true)} */>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={`RadiologyReport_${item.Test_ID}.pdf`}
+                    className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
+                  >
                     <FileDown className="h-4 w-4" />
-                  </button>
+                  </a>
 
                 </div>
               </div>

@@ -1,96 +1,114 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
-import { parse } from 'date-fns';
-import CustomDatePicker from '../../../../components/components/ui/CustomDatePicker';
-import CustomSelect from '../../../../components/components/ui/CustomSelect';
-import CustomTextArea from '../../../../components/components/ui/CustomTextArea';
-import { Button } from '../../../../components/components/ui/button';
-import { DialogBox, closeIcon } from '../../../../components/components/ui/dialog';
-import { AlarmClockPlus, Calendar, FileDown, Hospital } from 'lucide-react';
-import Toaster, { notify } from '../../../../lib/notify';
-import { AuthContext } from '../../../../app/authtication/Authticate';
-import { apiUrls } from '../../../../components/Network/ApiEndpoint';
-import { encryptPassword } from '../../../../components/EncyptHooks/EncryptLib';
-import IsLoader from '../../../loading';
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import axios from "axios";
+import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
+import CustomSelect from "../../../../components/components/ui/CustomSelect";
+import { Button } from "../../../../components/components/ui/button";
+import { Calendar, FileDown, Video } from "lucide-react";
+import { closeIcon, DialogBox } from "../../../../components/components/ui/dialog";
+import { useNavigate, useParams } from "react-router-dom";
+import { AuthContext } from "../../../../app/authtication/Authticate";
+import { apiUrls } from "../../../../components/Network/ApiEndpoint";
+import { encryptPassword } from "../../../../components/EncyptHooks/EncryptLib";
+import IsLoader from "../../../loading";
+import Toaster, { notify } from "../../../../lib/notify";
 
-const AppointmentsPage = () => {
+const TeleconsultationAppointment = () => {
     const navigate = useNavigate();
-    const { ID: centerID } = useParams();
-    const { token, getAuthHeader, getCurrentPatientId, userData } = useContext(AuthContext);
+    const { token, userData, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
     const patientid = getCurrentPatientId();
-    const [loading, setLoading] = useState(false);
-    const [tab, setTab] = useState('book');
-    const [departments, setDepartments] = useState([]);
-    const [doctorsByDept, setDoctorsByDept] = useState({});
-    const [isDoctors, setDoctors] = useState([]);
-    const [selectedDepartment, setSelectedDepartment] = useState('');
-    const [selectedDoctor, setSelectedDoctor] = useState('');
+    const { id: centerID } = useParams();
+    const centerName = "Kaboson";
+
+    // State management
+    const [tab, setTab] = useState("book");
+    const [selectedDoctor, setSelectedDoctor] = useState("");
     const [selectedDate, setSelectedDate] = useState(null);
-
-
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [doctors, setDoctors] = useState([]);
+    const [doctorLoading, setDoctorLoading] = useState(false);
     const [timeSlots, setTimeSlots] = useState([]);
     const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
-    const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+    const [upAppointments, setUpAppointments] = useState([]);
     const [pastAppointments, setPastAppointments] = useState([]);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [rescheduleOpen, setRescheduleOpen] = useState(false);
-    const [cancelOpen, setCancelOpen] = useState(false);
-    const [doctorNotesOpen, setDoctorNotesOpen] = useState(false);
-    const [rescheduleAppointmentId, setRescheduleAppointmentId] = useState('');
-    const [cancelAppointmentId, setCancelAppointmentId] = useState('');
-    const [cancelReason, setCancelReason] = useState('');
-    const [newDate, setNewDate] = useState();
-    console.log(newDate, "321423");
-    const [newSlot, setNewSlot] = useState(null);
-    const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [upcomingErrorMessage, setUpcomingErrorMessage] = useState("");
+    const [pastErrorMessage, setPastErrorMessage] = useState("");
+    const [appointmentRate, setAppointmentRate] = useState(null); // Singular to match function
+    const [paymentUrl, setPaymentUrl] = useState("");
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [pdfModalVisible, setPdfModalVisible] = useState(false);
     const [fromDate, setFromDate] = useState(() => {
         const date = new Date();
         date.setMonth(date.getMonth() - 1);
         return date;
     });
     const [toDate, setToDate] = useState(new Date());
-    const [appointmentRate, setAppointmentRate] = useState(null);
 
-    // Error handler
-    const handleApiError = (error) => {
-        if (error.response?.status === 401) {
-            navigate('/login');
-        } else {
-            notify(error.response?.data?.message || 'An error occurred', 'error');
+    // Memoized format date function
+    const formatDateForApi = useCallback((date) => {
+        if (!date || isNaN(new Date(date).getTime())) {
+            return null;
         }
-        console.error(error);
-    };
+        const day = date.getDate().toString().padStart(2, "0");
+        const monthNames = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        ];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    }, []);
 
     // Validation for booking
     const validateBooking = () => {
-        if (!selectedDepartment) {
-            notify('Please select a department', 'warn');
-            return false;
-        }
         if (!selectedDoctor) {
-            notify('Please select a doctor', 'warn');
+            notify("Please select a doctor", "warn");
             return false;
         }
         if (!selectedDate) {
-            notify('Please select a date', 'warn');
+            notify("Please select a date", "warn");
             return false;
         }
         if (!selectedSlot) {
-            notify('Please select a time slot', 'warn');
+            notify("Please select a time slot", "warn");
             return false;
         }
         return true;
     };
 
-    // Fetch doctors
+    // Fetch appointments
+    useEffect(() => {
+        fetchAppointments();
+    }, [token, tab, fromDate, toDate]);
+
+    // Fetch doctors when tab is "book"
+    useEffect(() => {
+        if (tab === "book") {
+            fetchDoctors();
+        }
+    }, [tab, token]);
+
+    // Fetch time slots with debounce
+    useEffect(() => {
+        let timeoutId;
+        if (selectedDoctor && selectedDate && !isNaN(new Date(selectedDate).getTime())) {
+            timeoutId = setTimeout(() => {
+                fetchTimeSlots();
+            }, 300);
+        } else {
+            setTimeSlots([]);
+            setSelectedSlot(null);
+        }
+        return () => clearTimeout(timeoutId);
+    }, [selectedDoctor, selectedDate]);
+
+    // API: Fetch Doctors
     const fetchDoctors = async () => {
-        setLoading(true);
+        setDoctorLoading(true);
         try {
             if (!token) {
-                notify('No token available', 'error');
                 setDoctors([]);
+                notify("Authentication token is missing.", "error");
                 return;
             }
             const response = await axios.post(
@@ -99,467 +117,409 @@ const AppointmentsPage = () => {
                 { headers: getAuthHeader() }
             );
             if (response?.data?.status && Array.isArray(response.data.response)) {
-                const validDoctors = response.data.response
-                    .filter(doc => doc.DoctorSpecilization && doc.doctorname)
-                    .map(doc => ({
-                        id: doc.ID,
-                        name: doc.doctorname.trim(),
-                        specialization: doc.DoctorSpecilization,
-                        profileImg: doc.ProfileImg || null,
-                        centre: doc.CentreName,
-                    }));
-
-                const groupedBySpecialization = validDoctors.reduce((acc, doc) => {
-                    if (!acc[doc.specialization]) acc[doc.specialization] = [];
-                    acc[doc.specialization].push(doc);
-                    return acc;
-                }, {});
-
-                setDepartments(
-                    Object.keys(groupedBySpecialization).map(dep => ({
-                        value: dep,
-                        label: dep,
-                    }))
-                );
-                setDoctorsByDept(groupedBySpecialization);
-                setDoctors(validDoctors);
+                setDoctors(response.data.response);
             } else {
-                notify('No doctor specialties available', 'error');
                 setDoctors([]);
+                notify("No doctors found.", "info");
             }
         } catch (error) {
-            handleApiError(error);
+            console.error("Error fetching doctors:", error);
             setDoctors([]);
+            notify("Failed to fetch doctors.", "error");
+            if (error.response?.status === 401) {
+                navigate("/");
+            }
         } finally {
-            setLoading(false);
+            setDoctorLoading(false);
         }
     };
 
-    const convertTo24Hour = (timeStr) => {
-        const [time, modifier] = timeStr.split(' ');
-        let [hours, minutes] = time.split(':').map(Number);
-        if (modifier === 'PM' && hours < 12) hours += 12;
-        if (modifier === 'AM' && hours === 12) hours = 0;
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    };
-
-    // Fetch time slots
-    const fetchTimeSlots = async (date = selectedDate, doctorId = selectedDoctor, isReschedule = false) => {
+    // API: Fetch Time Slots
+    const fetchTimeSlots = async () => {
         setTimeSlotsLoading(true);
         setTimeSlots([]);
+        setSelectedSlot(null);
         try {
             if (!token) {
-                notify('No token available', 'error');
+                notify("Authentication token is missing.", "error");
                 return;
             }
-            if (!date || isNaN(new Date(date).getTime())) {
-                notify('Invalid date selected', 'error');
+            if (!selectedDate || isNaN(new Date(selectedDate).getTime())) {
+                notify("Please select a valid date.", "error");
                 return;
             }
-            const doctor = isDoctors.find(doc => doc.id === doctorId);
-            if (!doctor?.id) {
-                notify('Selected doctor not found', 'error');
+            const doctor = doctors.find((doc) => doc.doctorname === selectedDoctor);
+            if (!doctor?.ID) {
+                notify("Selected doctor not found.", "error");
                 return;
             }
-            const formattedDate = new Date(date).toISOString().split('T')[0];
+            const formattedDate = new Date(selectedDate).toISOString().split("T")[0];
             const response = await axios.get(
-                `${apiUrls.appointmentslot}?CentreID=${centerID || 1}&appdate=${formattedDate}&DoctorID=${doctor.id}`,
+                `${apiUrls.appointmentslot}?CentreID=${centerID || 1}&appdate=${formattedDate}&DoctorID=${doctor.ID}`,
                 { headers: getAuthHeader() }
             );
             if (response?.data?.status && Array.isArray(response.data.response)) {
                 const uniqueSlots = response.data.response
-                    .filter((slot, index, self) =>
-                        index === self.findIndex(s => s.FromTime === slot.FromTime && s.ToTime === slot.ToTime)
+                    .filter(
+                        (slot, index, self) =>
+                            index ===
+                            self.findIndex(
+                                (s) => s.FromTime === slot.FromTime && s.ToTime === slot.ToTime
+                            )
                     )
-                    .filter(slot => slot.SlotStatus !== 'Booked') // Only include non-booked slots
-                    .map(slot => ({
+                    .filter((slot) => slot.SlotStatus !== "Booked")
+                    .map((slot) => ({
                         value: `${slot.FromTime}-${slot.ToTime}`,
                         label: `${slot.FromTime} - ${slot.ToTime} (${slot.ShiftName})`,
                         fromTime: slot.FromTime,
                         toTime: slot.ToTime,
                         status: slot.SlotStatus,
+                        shiftName: slot.ShiftName,
                     }));
                 setTimeSlots(uniqueSlots);
                 if (uniqueSlots.length === 0) {
-                    notify('No available time slots found for the selected date and doctor', 'info');
+                    notify("No available time slots for the selected doctor and date.", "info");
                 }
             } else {
-                notify(response.data?.message || 'No time slots available', 'info');
+                notify(response.data?.message || "No time slots available.", "info");
             }
         } catch (error) {
-            handleApiError(error);
-            notify('Error fetching time slots', 'info');
+            console.error("Error fetching time slots:", error);
+            notify("Failed to fetch time slots. Please try again.", "error");
+            if (error.response?.status === 401) {
+                navigate("/");
+            }
         } finally {
             setTimeSlotsLoading(false);
         }
     };
 
-    // Fetch appointments
-    const fetchAppointments = async () => {
-        setLoading(true);
-        try {
-            const encodedPatientId = encodeURIComponent(encryptPassword(patientid));
-            let fromDateStr, toDateStr;
-            if (tab.toLowerCase() === 'upcoming') {
-                const today = new Date().toISOString().split('T')[0];
-                const newDates = newDate.toISOString().split('T')[0];
-
-                fromDateStr = newDates ? newDates : today;
-                toDateStr = today;
-            } else {
-                fromDateStr = fromDate.toISOString().split('T')[0];
-                toDateStr = toDate.toISOString().split('T')[0];
-            }
-            // const apiUrl = `${apiUrls.doctors}?patientid=${encodedPatientId}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${fromDateStr}&Todate=${toDateStr}&DoctorID=&Status=`;
-
-            const response = await axios.post(`${apiUrls.doctors}?patientid=${encodedPatientId}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${fromDateStr}&Todate=${toDateStr}&DoctorID=&Status=`, null, {
-                headers: getAuthHeader(),
-            });
-
-            if (response?.data?.status) {
-                const past = [];
-                const upcoming = [];
-                response.data.response.forEach(item => {
-                    const appointmentDate = parse(
-                        `${item.BookingDate} ${item.BookingTime}`,
-                        'dd-MMM-yyyy hh:mm a',
-                        new Date()
-                    );
-
-                    if (isNaN(appointmentDate.getTime())) {
-                        console.error(`Invalid date format: ${item.BookingDate}`);
-                        return;
-                    }
-
-                    const appointmentData = {
-                        id: item.AppID,
-                        doctor: item.DrName,
-                        patientName: item.PName,
-                        specialty: item.DoctorSpeciality,
-                        appointmentDate: item.BookingDate,
-                        appointmentTime: item.BookingTime,
-                        center: item.CentreName,
-                        status: item.IsConform === 1 ? 'Confirmed' : 'Pending',
-                        cancel: item.IsCancel,
-                        expired: item.isExpired,
-                        AppID: item.AppID,
-                    };
-
-                    if (item.IsCancel === 1 || appointmentDate < new Date()) {
-                        past.push(appointmentData);
-                    } else {
-                        upcoming.push(appointmentData);
-                    }
-                });
-
-                setPastAppointments(past.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)));
-                setUpcomingAppointments(upcoming.sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate)));
-            } else {
-                notify(response.data?.message || 'No data available', 'error');
-                setPastAppointments([]);
-                setUpcomingAppointments([]);
-            }
-        } catch (error) {
-            handleApiError(error);
-            setPastAppointments([]);
-            setUpcomingAppointments([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Fetch appointment rate
+    // API: Fetch Appointment Rate
     const fetchAppointmentRate = async (doctorId, centerId) => {
         setLoading(true);
         try {
             const response = await axios.post(
-                `${apiUrls.appointmentRate}?IsTeleconsultation=0&DoctorID=${doctorId}&CenteID=${centerId}`,
+                `${apiUrls.appointmentRate}?IsTeleconsultation=1&DoctorID=${doctorId}&CentreID=${centerId}`,
                 {},
                 { headers: getAuthHeader() }
             );
-            if (response?.data?.status && response.data.response.length > 0) {
+            if (response?.data?.status && response.data.response?.length > 0) {
                 setAppointmentRate(response.data.response[0]);
             } else {
-                notify('Unable to fetch appointment rate', 'error');
+                notify("Unable to fetch appointment rate", "error");
                 setAppointmentRate(null);
             }
         } catch (error) {
-            handleApiError(error);
-            setAppointmentRate(null);
+            console.error("Error fetching appointment rate:", error);
+            notify("Failed to fetch appointment rate.", "error");
+            if (error.response?.status === 401) {
+                navigate("/");
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    // Save appointment
+    // API: Save Appointment
     const fetchSaveAppointment = async (referenceNo) => {
-        setLoading(true);
         try {
-            if (!appointmentRate?.ItemCode || !appointmentRate?.ItemID) {
-                notify('Missing appointment rate details', 'error');
+            const selectedDoctorData = doctors.find((doc) => doc.doctorname === selectedDoctor);
+            if (!selectedDoctorData) {
+                notify("Selected doctor data not found.", "error");
                 return;
             }
-            const doctor = isDoctors.find(doc => doc.id === selectedDoctor);
-            const formattedDate = selectedDate
-                ? (() => {
-                    const date = new Date(selectedDate);
-                    date.setDate(date.getDate() + 1); // Increase date by 1 day
-                    return `${String(date.getDate()).padStart(2, '0')}-${[
-                        'Jan',
-                        'Feb',
-                        'Mar',
-                        'Apr',
-                        'May',
-                        'Jun',
-                        'Jul',
-                        'Aug',
-                        'Sep',
-                        'Oct',
-                        'Nov',
-                        'Dec',
-                    ][date.getMonth()]}-${date.getFullYear()}`;
-                })()
-                : '';
+            if (!selectedSlot) {
+                notify("Please select a valid time slot.", "error");
+                return;
+            }
+            const formattedDate = formatDateForApi(selectedDate);
+            if (!formattedDate) {
+                notify("Invalid appointment date.", "error");
+                return;
+            }
             const body = {
                 appointment_mobile: [
                     {
                         AppDate: formattedDate,
                         AppType: 5,
-                        CenrteID: centerID || 1,
-                        DoctorID: doctor?.id,
-                        Doctor_Name: doctor?.name,
-                        EndTime: selectedSlot?.toTime || '',
-                        FromTime: selectedSlot?.fromTime || '',
-                        HashCode: '534',
-                        ItemCode: appointmentRate.ItemCode,
-                        ItemID: appointmentRate.ItemID,
-                        PAddress: userData?.Address || '',
-                        PAge: userData?.Age || '',
-                        PAmount: appointmentRate.Rate,
-                        PEmail: userData?.Email || '',
-                        PFirstName: userData?.FirstName || '',
-                        PGender: userData?.Gender || '',
-                        PLastName: userData?.LastName || '',
-                        PMobileno: userData?.Mobile || '',
-                        PTitle: userData?.Title || '',
+                        CentreID: centerID || 1,
+                        DoctorID: selectedDoctorData.ID,
+                        Doctor_Name: selectedDoctor,
+                        EndTime: selectedSlot.toTime,
+                        FromTime: selectedSlot.fromTime,
+                        HashCode: "534",
+                        ItemCode: appointmentRate?.ItemCode || "",
+                        ItemID: appointmentRate?.ItemID || "4660",
+                        PAddress: userData?.Address || "",
+                        PAge: userData?.Age || "",
+                        PAmount: appointmentRate?.Rate || 1100.0,
+                        PEmail: userData?.Email || "n11@gmail.com",
+                        PFirstName: userData?.FirstName || "NEELAM",
+                        PGender: userData?.Gender || "Female",
+                        PLastName: userData?.LastName || "SINGH",
+                        PMobileno: userData?.Mobile || "0757270488",
+                        PTitle: userData?.Title || "Mrs.",
                         PatientID: patientid,
-                        Ratelistid: appointmentRate.RateListID || 10,
-                        ScheduleChargeID: appointmentRate.ScheduleChargeID || 100,
-                        UserID: userData?.ID || 'gRWyl7xEbEiVQ3u397J1KQ==',
-                        IsTeleconsulation: 0,
+                        Ratelistid: appointmentRate?.RateListID || 10,
+                        ScheduleChargeID: appointmentRate?.ScheduleChargeID || 100,
+                        UserID: userData?.ID || "gRWyl7xEbEiVQ3u397J1KQ==",
                     },
                 ],
                 appointment_mobilepaymentdetail: [
                     {
-                        Adjustment: appointmentRate.Rate || 1100.0,
-                        ReffrenceNo: referenceNo || 'zxc12345678',
-                        OrderID: 'zxc123456',
+                        Adjustment: appointmentRate?.Rate || 1100.0,
+                        ReferenceNo: referenceNo || "zxc12345678",
+                        OrderID: "zxc123456",
                     },
                 ],
             };
-            const response = await axios.post(apiUrls.saveAppointment, body, {
-                headers: getAuthHeader(),
-            });
+            const response = await axios.post(
+                `${apiUrls.saveAppointment}?sourceType=video`,
+                body,
+                { headers: getAuthHeader() }
+            );
             if (response.data?.status) {
-                notify('Appointment saved successfully!', 'success');
+                notify("Appointment saved successfully!", "success");
                 setShowConfirm(false);
+                setPdfModalVisible(true);
                 fetchAppointments();
+                setSelectedDoctor("");
+                setSelectedDate(null);
+                setSelectedSlot(null);
             } else {
-                notify(response.data?.message || 'Failed to save appointment', 'error');
+                notify(response.data?.message || "Failed to save appointment.", "error");
             }
         } catch (error) {
-            handleApiError(error);
-        } finally {
-            setLoading(false);
+            console.error("Error saving appointment:", error);
+            notify("Failed to save appointment. Please try again.", "error");
+            if (error.response?.status === 401) {
+                navigate("/");
+            }
         }
     };
 
-    // Handle payment
-    const handlePayment = async () => {
-        try {
-            const patientID = patientid;
-            const phoneNumber = userData?.Mobile || '';
-            const amount = appointmentRate?.Rate || 0;
-            const url = `${apiUrls.payment}?PatientID=${encodeURIComponent(patientID)}&PhoneNumber=${encodeURIComponent(phoneNumber)}&BillNo=&Amount=${encodeURIComponent(amount)}`;
-            window.location.href = url; // Redirect to payment page
-        } catch (error) {
-            notify('Failed to initiate payment', 'error');
-        }
-    };
-
-    // Reschedule appointment
-    const rescheduleAppointment = async () => {
-        if (!newDate || !newSlot) {
-            notify('Please select a new date and time', 'warn');
-            return;
-        }
-
-        const selectedSlot = timeSlots.find(
-            slot => slot.fromTime === newSlot.fromTime && slot.toTime === newSlot.toTime
-        );
-        if (!selectedSlot || selectedSlot.status === 'Booked') {
-            notify('Selected time slot is not available', 'error');
-            return;
-        }
-
+    // API: Fetch Appointments
+    const fetchAppointments = async () => {
         setLoading(true);
         try {
-            const formattedDate = new Date(newDate).toISOString().split('T')[0];
-            const fromTime = convertTo24Hour(newSlot.fromTime);
-            const toTime = convertTo24Hour(newSlot.toTime);
-
-            const apiUrl = `${apiUrls.rescheduleAppointment}?fromtime=${fromTime}&totime=${toTime}&AppDate=${formattedDate}&AppID=${rescheduleAppointmentId}`;
-
-            const response = await axios.post(apiUrl, {}, { headers: getAuthHeader() });
-
-            if (response?.data?.status) {
-                notify('Appointment rescheduled successfully!', 'success');
-                setRescheduleOpen(false);
-                setNewDate(null);
-                setNewSlot(null);
-                setTimeSlots([]);
-                fetchAppointments();
+            if (!token) {
+                notify("Authentication token is missing.", "error");
+                return;
+            }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const formattedFromDate = tab === "past" ? formatDateForApi(fromDate) : formatDateForApi(today);
+            const formattedToDate = tab === "past" ? formatDateForApi(toDate) : formatDateForApi(today);
+            if (!formattedFromDate || !formattedToDate) {
+                notify("Invalid date range selected.", "error");
+                setPastAppointments([]);
+                setUpAppointments([]);
+                setUpcomingErrorMessage(tab === "upcoming" ? "Invalid date range." : "");
+                setPastErrorMessage(tab === "past" ? "Invalid date range." : "");
+                return;
+            }
+            const encodedPatientId = encodeURIComponent(encryptPassword(patientid));
+            const doctor = selectedDoctor
+                ? doctors.find((doc) => doc.doctorname === selectedDoctor)
+                : null;
+            const DoctorID = doctor?.ID || 0;
+            const response = await axios.post(
+                `${apiUrls.doctors}?patientid=${encodedPatientId}&IsTeleconsulation=1&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${formattedFromDate}&ToDate=${formattedToDate}&DoctorID=${DoctorID}&status`,
+                null,
+                { headers: getAuthHeader() }
+            );
+            if (response?.data?.status && Array.isArray(response.data.response)) {
+                const past = [];
+                const upcoming = [];
+                response.data.response.forEach((item) => {
+                    const dateParts = item.BookingDate.split("-");
+                    if (dateParts.length !== 3) {
+                        console.warn(`Invalid BookingDate format: ${item.BookingDate}`);
+                        return;
+                    }
+                    const day = parseInt(dateParts[0], 10);
+                    const monthStr = dateParts[1];
+                    const year = parseInt(dateParts[2], 10);
+                    const monthNames = [
+                        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                    ];
+                    const month = monthNames.indexOf(monthStr);
+                    if (month === -1) {
+                        console.warn(`Invalid month format in BookingDate: ${item.BookingDate}`);
+                        return;
+                    }
+                    const [hours, minutes] = item.BookingTime.split(":");
+                    const appointmentDate = new Date(year, month, day, parseInt(hours), parseInt(minutes));
+                    if (isNaN(appointmentDate.getTime())) {
+                        console.warn(`Invalid appointment date/time: ${item.BookingDate} ${item.BookingTime}`);
+                        return;
+                    }
+                    const appointmentData = {
+                        id: `${item.App_ID}`,
+                        doctor: item.DrName,
+                        PName: item.PName,
+                        specialty: item.DoctorSpeciality,
+                        dateTime: `${item.BookingDate} at ${item.BookingTime}`,
+                        center: item.CentreName,
+                        status: item.IsConform === 1 ? "Confirmed" : "Pending",
+                        meetingUrl: item.PatientMeetingUrl || null,
+                        isShowJoin: item.isshowjoin === 1,
+                    };
+                    const appointmentOnlyDate = new Date(year, month, day);
+                    appointmentOnlyDate.setHours(0, 0, 0, 0);
+                    if (appointmentOnlyDate.getTime() <= today.getTime()) {
+                        past.push(appointmentData);
+                    } else {
+                        upcoming.push(appointmentData);
+                    }
+                });
+                const sortAppointments = (apps) =>
+                    apps.sort((a, b) => {
+                        const dateA = new Date(a.dateTime.split(" at ")[0].split("-").reverse().join("-"));
+                        const dateB = new Date(b.dateTime.split(" at ")[0].split("-").reverse().join("-"));
+                        return dateA - dateB;
+                    });
+                setPastAppointments(sortAppointments(past));
+                setUpAppointments(sortAppointments(upcoming));
+                setUpcomingErrorMessage(
+                    upcoming.length === 0 && tab === "upcoming"
+                        ? "No upcoming appointments found."
+                        : ""
+                );
+                setPastErrorMessage(
+                    past.length === 0 && tab === "past" ? "No past appointments found." : ""
+                );
             } else {
-                notify(response.data?.message || 'Failed to reschedule appointment', 'error');
+                setPastAppointments([]);
+                setUpAppointments([]);
+                setUpcomingErrorMessage(
+                    tab === "upcoming"
+                        ? response?.data?.message || "No upcoming appointments available"
+                        : ""
+                );
+                setPastErrorMessage(
+                    tab === "past" ? response?.data?.message || "No past appointments available" : ""
+                );
             }
         } catch (error) {
-            handleApiError(error);
+            console.error("Error fetching appointments:", error);
+            setPastAppointments([]);
+            setUpAppointments([]);
+            setUpcomingErrorMessage(
+                tab === "upcoming" ? "Failed to fetch upcoming appointments" : ""
+            );
+            setPastErrorMessage(tab === "past" ? "Failed to fetch past appointments" : "");
+            if (error.response?.status === 401) {
+                navigate("/");
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    // Cancel appointment
-    const cancelAppointment = async () => {
-        if (!cancelReason) {
-            notify('Please provide a reason for cancellation', 'warn');
+    // Handle Video Call
+    const handleVideoCall = (meetingUrl) => {
+        const url = meetingUrl || "https://demo.vimhans.live/AppID12";
+        if (window.confirm("You are about to start a video consultation. Do you want to proceed?")) {
+            try {
+                window.open(url, "_blank");
+            } catch (error) {
+                console.error("Error opening video call link:", error);
+                notify("Failed to open video call link.", "error");
+            }
+        }
+    };
+
+    // Handle Payment
+    const handlePayment = () => {
+        if (!userData?.PatientASID || !userData?.Mobile) {
+            notify("User data incomplete. Please ensure profile is complete.", "error");
             return;
         }
-        setLoading(true);
-        try {
-            const formData = new URLSearchParams();
-            formData.append('mobileappid', 'gRWyl7xEbEiVQ3u397J1KQ==');
-            formData.append('UserType', 'Patient');
-            formData.append('AccessScreen', 'Pathology');
-            const apiUrl = `${apiUrls.cancelAppointment}?appid=${cancelAppointmentId}&CancelReason=${encodeURIComponent(cancelReason)}`;
-            const response = await axios.post(apiUrl, formData.toString(), {
-                headers: {
-                    ...getAuthHeader(),
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-            });
-            if (response?.data?.status) {
-                notify('Appointment cancelled successfully!', 'success');
-                setCancelOpen(false);
-                setCancelReason('');
-                setCancelAppointmentId('');
-                fetchAppointments();
-            } else {
-                notify(response.data?.message || 'Failed to cancel appointment', 'error');
-            }
-        } catch (error) {
-            handleApiError(error);
-        } finally {
-            setLoading(false);
-        }
+        const patientID = userData.PatientASID;
+        const phoneNumber = userData.Mobile;
+        const billNo = "";
+        const amount = appointmentRate?.Rate || 800;
+        const url = `${apiUrls.paymentRequest}?PatientID=${encodeURIComponent(
+            encryptPassword(patientID)
+        )}&PhoneNumber=${encodeURIComponent(
+            encryptPassword(phoneNumber)
+        )}&BillNo=${encodeURIComponent(
+            encryptPassword(billNo)
+        )}&Amount=${encodeURIComponent(encryptPassword(amount))}`;
+        setPaymentUrl(url);
+        setShowPaymentModal(true);
     };
 
-    // Fetch doctors and appointments on mount
-    useEffect(() => {
-        fetchDoctors();
-        fetchAppointments();
-    }, []);
-
-    // Fetch time slots when doctor or date changes
-    useEffect(() => {
-        if (selectedDoctor && selectedDate) {
-            fetchTimeSlots();
-        }
-    }, [selectedDoctor, selectedDate]);
-
-    // Fetch time slots for reschedule
-    useEffect(() => {
-        if (rescheduleOpen && newDate && rescheduleAppointmentId) {
-            const appointment = upcomingAppointments.find(app => app.id === rescheduleAppointmentId);
-            const doctorId = appointment?.DoctorID || isDoctors.find(doc => doc.name === appointment?.doctor)?.id;
-
-            if (doctorId) {
-                fetchTimeSlots(newDate, doctorId, true);
-            } else {
-                notify('Doctor not found for this appointment', 'error');
-                setTimeSlots([]);
-            }
-
-        }
-    }, [rescheduleOpen, newDate, rescheduleAppointmentId]);
-
-    useEffect(() => {
-        if (tab === 'past') {
-            fetchAppointments();
-        }
-    }, [fromDate, toDate, tab]);
-
-    // Handle department change
-    const handleDepartmentChange = (selected) => {
-        setSelectedDepartment(selected.value);
-        setDoctors(doctorsByDept[selected.value] || []);
-        setSelectedDoctor('');
-        setSelectedSlot(null);
-        setTimeSlots([]);
-    };
-
-    // Handle confirm appointment
+    // Confirm Appointment
     const handleConfirm = async () => {
-        if (validateBooking()) {
-            const doctor = isDoctors.find(doc => doc.id === selectedDoctor);
-            await fetchAppointmentRate(doctor.id, centerID || 1);
-            setShowConfirm(true);
+        if (!validateBooking()) {
+            return;
         }
+        const selectedDoctorData = doctors.find((doc) => doc.doctorname === selectedDoctor);
+        if (!selectedDoctorData) {
+            notify("Selected doctor not found.", "error");
+            return;
+        }
+        setLoading(true);
+        await fetchAppointmentRate(selectedDoctorData.ID, centerID || 1); // Updated to use centerID
+        setLoading(false);
+        setShowConfirm(true);
     };
-
-    if (loading) return <div><IsLoader /></div>;
 
     return (
         <>
             <Toaster />
             <div className="space-y-8 p-4">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-blue-600">Doctor Appointments</h1>
-                    <p className="text-gray-500">Manage your upcoming and past appointments.</p>
+                    <p className="text-gray-500">
+                        Manage your upcoming and past consultations.
+                    </p>
                 </div>
-
                 <div className="m-0">
                     <div className="grid grid-cols-3 gap-2">
-                        {['book', 'upcoming', 'past'].map(tabName => (
+                        {["book", "upcoming", "past"].map((tabName) => (
                             <button
                                 key={tabName}
-                                className={`py-2 shadow-md border rounded-t-md ${tab === tabName ? 'bg-white font-semibold shadow-md' : ''}`}
+                                className={`py-2 shadow-md border rounded-t-md ${tab === tabName ? "bg-white font-semibold shadow-md" : ""}`}
                                 onClick={() => setTab(tabName)}
                             >
-                                {tabName === 'book' ? 'Book New' : tabName === 'upcoming' ? 'Upcoming' : 'Past'}
+                                {tabName === "book" ? "Book New" : tabName === "upcoming" ? "Upcoming" : "Past"}
                             </button>
                         ))}
                     </div>
-
-                    {tab === 'book' && (
+                    {tab === "book" && (
                         <div className="bg-white border rounded-b-lg p-4 shadow">
                             {showConfirm ? (
                                 <>
                                     <div className="p-2 text-center my-2">
-                                        <h2 className="text-xl font-bold mb-4 text-primary">Confirm Appointment</h2>
+                                        <h2 className="text-xl font-bold mb-4 text-primary">Confirm Teleconsultation</h2>
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-bold mb-4 text-shadow-sm">Appointment Details</h2>
+                                        <h2 className="text-xl font-bold mb-4 text-shadow-sm">Consultation Details</h2>
                                     </div>
                                     <div className="space-y-6 grid md:grid-cols-2 lg:grid-cols-3 gap-6 border p-5 rounded">
-                                        <p><strong>Patient:</strong> {userData?.AccountHolderName || patientid}</p>
-                                        <p><strong>Center:</strong> {isDoctors.find(doc => doc.id === selectedDoctor)?.centre || '—'}</p>
-                                        <p><strong>Doctor:</strong> {isDoctors.find(doc => doc.id === selectedDoctor)?.name || '—'}</p>
-                                        <p><strong>Department:</strong> {selectedDepartment || '—'}</p>
-                                        <p><strong>Date:</strong> {selectedDate ? new Date(selectedDate).toLocaleDateString('en-GB') : '—'}</p>
-                                        <p><strong>Time:</strong> {selectedSlot?.label || '—'}</p>
-                                        <p><strong>Item:</strong> {appointmentRate?.Item || '—'}</p>
-                                        <p><strong>Rate:</strong> {appointmentRate?.Rate || '—'}</p>
+                                        <p><strong>Patient:</strong> {userData?.FirstName || "N/A"}</p>
+                                        <p><strong>Center:</strong> {centerName}</p>
+                                        <p><strong>Doctor:</strong> {selectedDoctor || "N/A"}</p>
+                                        <p>
+                                            <strong>Date:</strong>{" "}
+                                            {selectedDate && !isNaN(new Date(selectedDate).getTime())
+                                                ? selectedDate.toLocaleDateString("en-GB")
+                                                : "N/A"}
+                                        </p>
+                                        <p>
+                                            <strong>Time:</strong>{" "}
+                                            {selectedSlot
+                                                ? `${selectedSlot.fromTime} - ${selectedSlot.toTime} (${selectedSlot.shiftName})`
+                                                : "N/A"}
+                                        </p>
+                                        {appointmentRate && (
+                                            <>
+                                                <p><strong>Item:</strong> {appointmentRate.Item || "N/A"}</p>
+                                                <p><strong>Rate:</strong> {appointmentRate.Rate || "N/A"}</p>
+                                            </>
+                                        )}
                                         <div className="flex gap-4 mt-4">
                                             <button
                                                 className="px-4 py-2 bg-emerald-200 rounded w-full"
@@ -580,8 +540,10 @@ const AppointmentsPage = () => {
                                 <>
                                     <div className="py-2 px-4 shadow-md my-2 flex justify-between">
                                         <div>
-                                            <h2 className="text-2xl font-bold">Book a New Appointment</h2>
-                                            <p className="text-xs text-cyan-500">Finding a doctor at Tenwek</p>
+                                            <h2 className="text-2xl font-bold">Book a New Teleconsultation</h2>
+                                            <p className="text-xs text-cyan-500">
+                                                Finding a doctor for online consultations. Your physical location is {centerName}
+                                            </p>
                                         </div>
                                         <div>
                                             <Button className="text-white btn" onClick={() => navigate(-1)}>
@@ -591,44 +553,47 @@ const AppointmentsPage = () => {
                                     </div>
                                     <div className="space-y-6 grid md:grid-cols-2 gap-6">
                                         <CustomSelect
-                                            placeholder="Select a Department"
-                                            options={departments}
-                                            value={departments.find(dep => dep.value === selectedDepartment) || null}
-                                            onChange={handleDepartmentChange}
-                                        />
-                                        <CustomSelect
                                             placeholder="Select a Doctor"
-                                            options={isDoctors.map(doc => ({ value: doc.id, label: doc.name }))}
-                                            value={selectedDoctor ? { value: selectedDoctor, label: isDoctors.find(doc => doc.id === selectedDoctor)?.name || '' } : null}
-                                            onChange={selectedOption => setSelectedDoctor(selectedOption.value)}
+                                            options={doctors.map((doc) => ({
+                                                value: doc.doctorname,
+                                                label: doc.doctorname,
+                                            }))}
+                                            value={
+                                                selectedDoctor
+                                                    ? { value: selectedDoctor, label: selectedDoctor }
+                                                    : null
+                                            }
+                                            onChange={(selectedOption) => setSelectedDoctor(selectedOption?.value || "")}
+                                            isLoading={doctorLoading}
+                                            isDisabled={doctorLoading || doctors.length === 0}
                                         />
                                         <CustomDatePicker
                                             repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                                             value={selectedDate}
                                             placeHolderText="Select Date"
-                                            handleDate={date => setSelectedDate(date)}
+                                            handleDate={setSelectedDate}
                                             icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
+                                            minDate={new Date()}
                                         />
                                         <CustomSelect
-                                            placeholder={timeSlotsLoading ? 'Loading...' : timeSlots.length === 0 ? 'No available slots' : 'Select a Time Slot'}
+                                            placeholder={timeSlotsLoading ? "Loading..." : timeSlots.length === 0 ? "No available slots" : "Select a Time Slot"}
                                             options={timeSlots}
                                             value={selectedSlot ? { value: selectedSlot.value, label: selectedSlot.label } : null}
-                                            onChange={selectedOption => {
-                                                const slot = timeSlots.find(slot => slot.value === selectedOption.value);
-                                                if (slot.status !== 'Booked') {
+                                            onChange={(selectedOption) => {
+                                                const slot = timeSlots.find((slot) => slot.value === selectedOption.value);
+                                                if (slot.status !== "Booked") {
                                                     setSelectedSlot(slot);
                                                 } else {
-                                                    notify('This time slot is not available for booking', 'warn');
+                                                    notify("This time slot is not available for booking", "warn");
                                                 }
                                             }}
                                             isDisabled={timeSlotsLoading || timeSlots.length === 0}
                                         />
                                     </div>
-                                    <div className="flex justify-center pt-4">
+                                    <div className="flex justify-center mt-4">
                                         <button
-                                            className="px-4 py-2 bg-blue-600 text-white rounded uppercase disabled:opacity-50"
+                                            className="px-4 py-2 bg-blue-600 text-white rounded uppercase"
                                             onClick={handleConfirm}
-                                            disabled={loading}
                                         >
                                             Confirm Appointment
                                         </button>
@@ -637,152 +602,41 @@ const AppointmentsPage = () => {
                             )}
                         </div>
                     )}
-
-                    {tab === 'upcoming' && (
+                    {tab === "upcoming" && (
                         <div className="bg-white border rounded-b-lg p-4 shadow">
-                            <DialogBox
-                                open={rescheduleOpen}
-                                onOpenChange={setRescheduleOpen}
-                                title="Reschedule Appointment"
-                                size="sm"
-                                footer={
-                                    <>
-                                        <button
-                                            className="px-3 py-1 text-sm font-medium bg-red-100 rounded hover:bg-blue-500 transition"
-                                            onClick={() => {
-                                                setRescheduleOpen(false);
-                                                setNewDate(null);
-                                                setNewSlot(null);
-                                            }}
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
-                                            onClick={rescheduleAppointment}
-                                            disabled={timeSlotsLoading || timeSlots.length === 0}
-                                        >
-                                            Save
-                                        </button>
-                                    </>
-                                }
-                            >
-                                <div className="space-y-4">
-                                    <div>
-                                        <label>Select New Date</label>
-                                        <CustomDatePicker
-                                            repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                                            value={newDate}
-                                            placeHolderText="Select Date"
-                                            handleDate={date => setNewDate(date)}
-                                            icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label>Select Time Slot</label>
-                                        <CustomSelect
-                                            placeholder={timeSlotsLoading ? 'Loading...' : timeSlots.length === 0 ? 'No available slots' : 'Select a Time Slot'}
-                                            options={timeSlots}
-                                            value={newSlot ? { value: `${newSlot.fromTime}-${newSlot.toTime}`, label: `${newSlot.fromTime} - ${newSlot.toTime}` } : null}
-                                            onChange={selectedOption => {
-                                                const slot = timeSlots.find(s => s.value === selectedOption.value);
-                                                if (slot.status !== 'Booked') {
-                                                    setNewSlot({ fromTime: slot.fromTime, toTime: slot.toTime });
-                                                } else {
-                                                    notify('This time slot is not available for booking', 'warn');
-                                                }
-                                            }}
-                                            isDisabled={timeSlotsLoading || timeSlots.length === 0}
-                                        />
-                                    </div>
-                                </div>
-                            </DialogBox>
-
-                            <DialogBox
-                                open={cancelOpen}
-                                onOpenChange={setCancelOpen}
-                                title="Cancel Appointment"
-                                size="sm"
-                                footer={
-                                    <>
-                                        <button
-                                            className="px-3 py-1 text-sm font-medium bg-red-100 rounded hover:bg-blue-500 transition"
-                                            onClick={() => {
-                                                setCancelOpen(false);
-                                                setCancelReason('');
-                                            }}
-                                        >
-                                            Back
-                                        </button>
-                                        <button
-                                            className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
-                                            onClick={cancelAppointment}
-                                        >
-                                            Cancel Appointment
-                                        </button>
-                                    </>
-                                }
-                            >
-                                <div className="my-3">
-                                    <label>Reason For Cancellation</label>
-                                    <CustomTextArea
-                                        repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                                        value={cancelReason}
-                                        placeHolderText="Reasons..."
-                                        onChange={e => setCancelReason(e.target.value)}
-                                    />
-                                </div>
-                            </DialogBox>
-
                             <div className="py-2 px-4 shadow-md my-2">
-                                <h2 className="text-2xl font-bold mb-1">Upcoming Appointments</h2>
+                                <h2 className="text-2xl font-bold mb-1">Upcoming Teleconsultations</h2>
                             </div>
                             {loading ? (
-                                <div className="text-center">Loading...</div>
-                            ) : upcomingAppointments.length === 0 ? (
-                                <div className="text-center text-gray-500">No upcoming appointments found.</div>
+                                <IsLoader isFullScreen={false} />
+                            ) : upAppointments.length === 0 ? (
+                                <p className="text-center text-gray-500">{upcomingErrorMessage}</p>
                             ) : (
                                 <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
-                                    {upcomingAppointments.map(app => (
+                                    {upAppointments.map((app, i) => (
                                         <div
-                                            key={app.id}
+                                            key={i}
                                             className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div>
-                                                    <h3 className="text-lg font-medium text-primary">{app.doctor}</h3>
-                                                    <span className="text-xs font-semibold">
-                                                        {app.appointmentDate} at {app.appointmentTime}
-                                                    </span>
-                                                    <div className={`text-xs font-semibold ${app.cancel === 1 ? 'text-red-600' : 'text-green-900'}`}>
-                                                        {app.cancel === 1 ? 'Cancelled' : app.status}
-                                                    </div>
+                                                    <h3 className="text-lg font-medium text-blue-600">{app.doctor}</h3>
+                                                    <span className="text-xs font-semibold">{app.dateTime}</span>
+                                                    <div className="text-xs font-semibold text-green-900">{app.status}</div>
                                                 </div>
                                             </div>
                                             <div>
                                                 <div className="text-xs font-semibold py-3">{app.center}</div>
-                                                {!app.cancel && (
-                                                    <div className="text-xs font-semibold py-3 flex gap-2">
+                                                <div className="text-xs font-semibold py-3 flex gap-2">
+                                                    {app.isShowJoin && app.meetingUrl && (
                                                         <button
-                                                            className="px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                                                            onClick={() => {
-                                                                setRescheduleAppointmentId(app.id);
-                                                                setRescheduleOpen(true);
-                                                            }}
+                                                            className="px-2 py-1 text-xs font-medium bg-blue-300 text-gray-700 rounded hover:bg-blue-700 transition"
+                                                            onClick={() => handleVideoCall(app.meetingUrl)}
                                                         >
-                                                            Reschedule
+                                                            <Video />
                                                         </button>
-                                                        <button
-                                                            className="px-2 py-1 text-xs font-medium bg-red-600 text-white rounded hover:bg-red-700 transition"
-                                                            onClick={() => {
-                                                                setCancelAppointmentId(app.id);
-                                                                setCancelOpen(true);
-                                                            }}
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -790,88 +644,65 @@ const AppointmentsPage = () => {
                             )}
                         </div>
                     )}
-
-                    {tab === 'past' && (
+                    {tab === "past" && (
                         <div className="bg-white border rounded-b-lg p-4 shadow">
-                            <DialogBox
-                                open={doctorNotesOpen}
-                                onOpenChange={setDoctorNotesOpen}
-                                title="Doctor Notes"
-                                size="xl"
-                                closeIcon={closeIcon}
-                                footer={
-                                    <button
-                                        className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
-                                        onClick={() => setDoctorNotesOpen(false)}
-                                    >
-                                        Close
-                                    </button>
-                                }
-                            >
-                                {/* <iframe
-                                    src={`${apiUrls.DoctorPrescription}?App_ID=${selectedAppointmentId}`}
-                                    style={{ width: '100%', height: '500px', border: 'none' }}
-                                    title="Doctor Notes"
-                                /> */}
-                            </DialogBox>
-
                             <div className="grid md:grid-cols-2 lg:grid-cols-3">
                                 <div className="py-2 px-4">
-                                    <h2 className="text-2xl font-bold mb-1">Past Appointments</h2>
+                                    <h2 className="text-2xl font-bold mb-1">Past Teleconsultations</h2>
                                 </div>
                                 <div className="flex gap-3">
                                     <CustomDatePicker
                                         repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                                         value={fromDate}
                                         placeHolderText="From Date"
-                                        handleDate={date => setFromDate(date)}
+                                        handleDate={setFromDate}
+                                        maxDate={toDate}
                                     />
                                     <CustomDatePicker
                                         repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                                         value={toDate}
                                         placeHolderText="To Date"
-                                        handleDate={date => setToDate(date)}
+                                        handleDate={setToDate}
+                                        minDate={fromDate}
+                                        maxDate={new Date()}
                                     />
                                 </div>
                             </div>
                             {loading ? (
-                                <div className="text-center">Loading...</div>
+                                <IsLoader isFullScreen={false} />
                             ) : pastAppointments.length === 0 ? (
-                                <div className="text-center text-gray-500">No past appointments found.</div>
+                                <p className="text-center text-gray-500">{pastErrorMessage}</p>
                             ) : (
                                 <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
-                                    {pastAppointments.map(app => (
+                                    {pastAppointments.map((app, i) => (
                                         <div
-                                            key={app.id}
+                                            key={i}
                                             className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div>
-                                                    <h3 className="text-lg font-medium text-primary">{app.doctor}</h3>
-                                                    <div className="text-xs font-semibold">{app.patientName}</div>
-                                                    <span className="text-xs font-semibold">
-                                                        {app.appointmentDate} at {app.appointmentTime}
-                                                    </span>
-                                                    <div className={`text-xs font-extrabold ${app.cancel === 1 ? 'text-red-600' : 'text-green-900'}`}>
-                                                        {app.cancel === 1 ? 'Cancelled' : app.expired === 1 ? 'Expired' : 'Completed'}
+                                                    <h3 className="text-lg font-medium text-blue-600">{app.doctor}</h3>
+                                                    <div className="text-xs font-semibold">{app.PName}</div>
+                                                    <span className="text-xs font-semibold">{app.dateTime}</span>
+                                                    <div>
+                                                        <span
+                                                            className={`text-xs font-extrabold border rounded py-1 px-2 ${app.status === "Confirmed" ? "text-green-900" : "text-black"}`}
+                                                        >
+                                                            {app.status}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div>
                                                 <div className="text-xs font-semibold text-green-600 py-4">{app.center}</div>
-                                                {app.cancel === 0 && (
-                                                    <div className="text-xs font-semibold py-4 flex gap-2">
-                                                        <button
-                                                            className="px-2 py-1 text-xs text-primary font-medium bg-slate-200 rounded-md"
-                                                            onClick={() => {
-                                                                setSelectedAppointmentId(app.AppID);
-                                                                setDoctorNotesOpen(true);
-                                                            }}
-                                                        >
-                                                            <FileDown />
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                <div className="text-xs font-semibold py-4 flex gap-2">
+                                                    <button
+                                                        className="px-2 py-1 text-xs text-blue-600 font-medium bg-slate-200 rounded-md"
+                                                        onClick={() => setPdfModalVisible(true)}
+                                                    >
+                                                        <FileDown />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -879,10 +710,73 @@ const AppointmentsPage = () => {
                             )}
                         </div>
                     )}
+                    <DialogBox
+                        open={showPaymentModal}
+                        onOpenChange={setShowPaymentModal}
+                        title="M-Pesa Payment"
+                        size="xl"
+                        closeIcon={closeIcon}
+                        footer={
+                            <button
+                                className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
+                                onClick={() => setShowPaymentModal(false)}
+                            >
+                                Close
+                            </button>
+                        }
+                    >
+                        {paymentUrl ? (
+                            <iframe
+                                src={paymentUrl}
+                                className="w-full h-96"
+                                title="M-Pesa Payment"
+                                onLoad={() => console.log("Payment iframe loaded")}
+                                onError={() => {
+                                    notify("Failed to load payment page.", "error");
+                                    setShowPaymentModal(false);
+                                }}
+                            />
+                        ) : (
+                            <p>Loading payment page...</p>
+                        )}
+                    </DialogBox>
+                    <DialogBox
+                        open={pdfModalVisible}
+                        onOpenChange={setPdfModalVisible}
+                        title="Doctor Notes"
+                        size="xl"
+                        closeIcon={closeIcon}
+                        footer={
+                            <button
+                                className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
+                                onClick={() => {
+                                    setPdfModalVisible(false);
+                                    setSelectedDoctor("");
+                                    setSelectedDate(null);
+                                    setSelectedSlot(null);
+                                }}
+                            >
+                                Close
+                            </button>
+                        }
+                    >
+                        <iframe
+                            src={`${apiUrls.doctorNotes}?ReceiptNo=&LedgerTransactionNo=2019489&IsBill=1&Duplicate=1&Type=OPD`}
+                            className="w-full h-96"
+                            title="Doctor Notes PDF"
+                            onError={() => {
+                                notify("Failed to load PDF.", "error");
+                                setPdfModalVisible(false);
+                                setSelectedDoctor("");
+                                setSelectedDate(null);
+                                setSelectedSlot(null);
+                            }}
+                        />
+                    </DialogBox>
                 </div>
             </div>
         </>
     );
 };
 
-export default AppointmentsPage;
+export default TeleconsultationAppointment;

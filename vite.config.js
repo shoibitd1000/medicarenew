@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => {
           target: getApiBaseUrl(), 
           changeOrigin: true,      
         },
+        
       },
     },
 

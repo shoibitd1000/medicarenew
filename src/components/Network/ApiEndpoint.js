@@ -27,13 +27,21 @@ export const apiUrls = {
   doctor_speciality: `${envUrl}/LoginAPIDynamic/getDoctorSpecialityList`,
   doctors: `${envUrl}/LoginAPIDynamic/GetAppHistory`,
   appointmentslot: `${envUrl}/LoginAPIDynamic/ReactbindappointmentslotMobileApp`,
-  appointmentslot: `${envUrl}/LoginAPIDynamic/ReactbindappointmentslotMobileApp`,
   saveAppointment: `${envUrl}/LoginAPIDynamic/SaveAppointment`,
   rescheduleAppointment: `${envUrl}/LoginAPIDynamic/RescheduleAppointment`,
   cancelAppointment: `${envUrl}/LoginAPIDynamic/CancelAppointment`,
   appointmentRate: `${envUrl}/LoginAPIDynamic/GetAppointmentRate`,
   consualtationHistory: `${envUrl}/LoginAPIDynamic/ReactGetPatientConsualtationHistory`,
-  doctorPrescription: `${envUrl}/LoginAPIDynamic/DoctorPrescription`,
+  doctorPrescription: `${envUrl}/LoginAPIDynamic/DoctorPrescription.aspx`,
+  patientLabHistory: `${envUrl}/LoginAPIDynamic/ReactGetPatientLabHistory`,
+  doctorPrescribedToPatient: `${envUrl}/LoginAPIDynamic/ReactGetDoctorPrescribedToPatient`,
+  patientOPDMedicines: `${envUrl}/LoginAPIDynamic/ReactGetPatientOPDMedicines`,
+  dischargeSummaryapi: `${envUrl}/LoginAPIDynamic/React_GetDischargeSummery`,
+  patientRadiologyHistoryapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientRadioHistory`,
+  // feedback Api 
+  patientFeedbackapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientFeedback`,
+  patientFeedbackSubjectapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientFeedbackSubject`,
+  patientFeedbackSaveapi: `${envUrl}/LoginAPIDynamic/ReactSavePatientFeedback`,
   // payment: 'http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
 
 };

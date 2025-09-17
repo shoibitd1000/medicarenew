@@ -93,7 +93,7 @@ export function App() {
           )}
           <Route path="generate-password" element={<GeneratePasswordPage />} />
           <Route path="/verify/otp" element={<VerifyOtpPage />} />
-          {/* <Route path="*" element={<Navigate to="/" />} /> */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
     </div>

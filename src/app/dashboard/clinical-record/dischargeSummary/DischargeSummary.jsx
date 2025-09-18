@@ -99,7 +99,7 @@ export default function DischargeSummary() {
                 </div>
                 {loading ? (
                     <div className="text-center py-8">
-                        <IsLoader isFullScreen={false} text="Loading dishcharge Summary..." />
+                        <IsLoader isFullScreen={false} size="6" text="Loading dishcharge Summary..." />
                     </div>
                 ) : labReports?.length > 0 ? (
                     labReports.map((item, i) => (

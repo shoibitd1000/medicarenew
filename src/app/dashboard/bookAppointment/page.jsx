@@ -56,7 +56,7 @@ export default function BookAppointment() {
         getCenterlab();
     }, []);
 
-    if (loading) return <div><IsLoader /></div>;
+    // if (loading) return <div><IsLoader /></div>;
     return (
         <div className="space-y-8 p-6">
             <div className="text-center">
@@ -65,19 +65,28 @@ export default function BookAppointment() {
             </div>
             <Toaster />
             <div className=" grid md:grid-cols-1 lg:grid-cols-2 gap-4">
-                {data?.map((item, i) => (
-                    <Link
-                        to={`/doctor-appointment/${item?.CentreID}`}
-                        key={i}
-                        className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
-                    >
-                        <div className="flex items-center gap-4">
-                            <SquarePlus className="h-6 w-6 text-primary bg-slate-300 rounded-sm" />
-                            <span className="text-lg font-medium">{item?.CentreName}</span>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </Link>
-                ))}
+                {loading ? (
+                    <div className="flex justify-center items-center col-span-full">
+                        <IsLoader isFullScreen={false} size="6" text="Loading discharge Summary..." />
+                    </div>
+                ) : data?.length > 0 ? (
+                    data.map((item, i) => (
+                        <Link
+                            to={`/doctor-appointment/${item?.CentreID}`}
+                            key={i}
+                            className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
+                        >
+                            <div className="flex items-center gap-4">
+                                <SquarePlus className="h-6 w-6 text-primary bg-slate-300 rounded-sm" />
+                                <span className="text-lg font-medium">{item?.CentreName}</span>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </Link>
+                    ))
+                ) : (
+                    <p className="text-center py-8 text-gray-500">No Center Avilable.</p>
+                )}
+
             </div>
         </div>
     );

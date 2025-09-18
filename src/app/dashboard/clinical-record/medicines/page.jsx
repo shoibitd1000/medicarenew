@@ -225,7 +225,7 @@ export default function MedicinesPage() {
                 <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
                   {loading ? (
                     <div className="text-center col-span-2 py-8">
-                      <IsLoader isFullScreen={false} />
+                      <IsLoader isFullScreen={false} size="6" text="Issued Medicines" />
                     </div>
                   ) : issuedMedicines.length > 0 ? (
                     issuedMedicines.map((item, i) => (
@@ -264,7 +264,7 @@ export default function MedicinesPage() {
               <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
                 {loading ? (
                   <div className="text-center col-span-2 py-8">
-                    <IsLoader isFullScreen={false} />
+                    <IsLoader isFullScreen={false} size="6" text="Prescription Medicines" />
                   </div>
                 ) : medicineData.length > 0 ? (
                   medicineData.map((item, i) => (

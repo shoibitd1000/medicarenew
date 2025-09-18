@@ -22,85 +22,13 @@ const ConsultationHistoryPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const patientId = getCurrentPatientId();
   const deviceID = localStorage.getItem("deviceId")
-  // Rest of your code remains the same...
-
-
-  /* const fetchConsultationHistory = useCallback(
-    async (pageNum = 1, append = false) => {
-      if (!deviceID || !patientId || (pageNum > 1 && !hasMore)) return;
-
-      try {
-        setLoading(pageNum === 1);
-        setLoadingMore(pageNum > 1);
-
-        const formData = new URLSearchParams();
-        formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
-        formData.append("UserType", "Patient");
-        formData.append("AccessScreen", "Pathology");
-        formData.append("AppVersion", "");
-        formData.append("Device_ID", deviceID);
-        formData.append("Page", pageNum);
-        formData.append("PageSize", 10);
-
-        const encodedPatientId = encodeURIComponent(encryptPassword(patientId));
-
-        const response = await axios.post(
-          `${apiUrls?.consualtationHistory}?PatientID=${encodedPatientId}`,
-          formData.toString(),
-          {
-            headers: {
-              ...getAuthorization(),
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          }
-        );
-
-        if (response.data?.status) {
-          const newData = response.data.response || [];
-          setConsultations((prev) => (append ? [...prev, ...newData] : newData));
-          setHasMore(newData.length === 10);
-        } else {
-          if (pageNum === 1) {
-            alert("No Data: No consultation history found.");
-          }
-          setHasMore(false);
-        }
-      } catch (error) {
-        console.error(
-          "Error fetching consultation history:",
-          error.response?.status,
-          error.response?.data || error.message
-        );
-        if (error.response?.status === 500) {
-          alert("Server Error: An internal server error occurred. Please try again later.");
-        } else {
-          alert("Error: Failed to load consultation history.");
-        }
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [deviceID, patientId, hasMore, getAuthorization]
-  ); */
-
-
   const fetchConsultationHistory = async (pageNum = 1, append = false) => {
     try {
-      // Set loading states properly
       setLoading(pageNum === 1);
       setLoadingMore(pageNum > 1);
 
       // Prepare FormData payload
       const formData = new FormData();
-      // formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
-      // formData.append("UserType", "Patient");
-      // formData.append("AccessScreen", "Pathology");
-      // formData.append("AppVersion", "");
-      // formData.append("Device_ID", deviceID);
-      // formData.append("Page", pageNum);
-      // formData.append("PageSize", 10);
-
       const encodedPatientId = encryptPassword(patientId);
       formData.append("PatientID", encodedPatientId);
       // ✅ Pass formData as the body, not null
@@ -159,15 +87,15 @@ const ConsultationHistoryPage = () => {
   }, [deviceID, token, patientId]);
 
   // Load more consultations
-  // const loadMore = () => {
-  //   if (!loadingMore && hasMore) {
-  //     setPage((prev) => {
-  //       const nextPage = prev + 1;
-  //       fetchConsultationHistory(nextPage, true);
-  //       return nextPage;
-  //     });
-  //   }
-  // };
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      setPage((prev) => {
+        const nextPage = prev + 1;
+        fetchConsultationHistory(nextPage, true);
+        return nextPage;
+      });
+    }
+  };
 
   const handleDownloadPDF = async (appId) => {
     try {
@@ -230,7 +158,7 @@ const ConsultationHistoryPage = () => {
               <div className="text-center">
                 {/* <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
                 <p>Loading...</p> */}
-                <IsLoader isFullScreen={false} size="6" text="Loading more..." />
+                <IsLoader isFullScreen={false} size="6" text="Consultation History..." />
               </div>
             ) : consultations.length > 0 ? (
               <>

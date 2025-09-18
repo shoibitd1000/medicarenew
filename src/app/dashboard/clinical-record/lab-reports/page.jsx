@@ -7,6 +7,7 @@ import CustomDatePicker from "../../../../components/components/ui/CustomDatePic
 import { AuthContext } from "../../../authtication/Authticate";
 import { apiUrls } from "../../../../components/Network/ApiEndpoint";
 import { encryptPassword } from "../../../../components/EncyptHooks/EncryptLib";
+import IsLoader from "../../../loading";
 
 const statusClasses = {
   Approved: "bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold",
@@ -131,8 +132,7 @@ export default function LabReportsPage() {
 
         {loading ? (
           <div className="text-center py-4">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-t-blue-500 border-gray-200 rounded-full"></div>
-            <p className="text-gray-500 mt-2">Loading reports...</p>
+            <IsLoader isFullScreen={false} size="6" text="Lab Investigation Reports..." />
           </div>
         ) : filteredReports.length > 0 ? (
           filteredReports.map((item, i) => (

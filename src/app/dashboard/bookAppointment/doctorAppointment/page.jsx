@@ -41,7 +41,6 @@ const AppointmentsPage = () => {
     const [cancelReason, setCancelReason] = useState('');
     const [newDate, setNewDate] = useState(null);
     const [newSlot, setNewSlot] = useState(null);
-    const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
     const [fromDate, setFromDate] = useState(() => {
         const date = new Date();
         date.setMonth(date.getMonth() - 1);
@@ -864,15 +863,15 @@ const AppointmentsPage = () => {
                                                 <div className="text-xs font-semibold text-green-600 py-4">{app.center}</div>
                                                 {app.cancel === 0 && (
                                                     <div className="text-xs font-semibold py-4 flex gap-2">
-                                                        <button
+                                                        <a
+                                                            href={`http://197.138.207.30/Tenwek2208/Design/CPOE/DoctorPrescription.aspx?App_ID=${app.AppID}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
                                                             className="px-2 py-1 text-xs text-primary font-medium bg-slate-200 rounded-md"
-                                                            onClick={() => {
-                                                                setSelectedAppointmentId(app.AppID);
-                                                                setDoctorNotesOpen(true);
-                                                            }}
                                                         >
                                                             <FileDown />
-                                                        </button>
+                                                        </a>
+
                                                     </div>
                                                 )}
                                             </div>

@@ -7,6 +7,7 @@ const CustomDatePicker = ({
   value,
   placeHolderText,
   handleDate,
+  disabled = false,
   icon,
   id,
   required = false,
@@ -23,7 +24,8 @@ const CustomDatePicker = ({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         dateFormat="dd/MM/yyyy"
-        placeholderText=" "
+        placeholderText={placeHolderText || " "}
+        disabled={disabled}
         wrapperClassName="w-full"
         className={`peer w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${repClass}`}
       />

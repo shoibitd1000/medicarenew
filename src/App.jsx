@@ -70,7 +70,7 @@ export function App() {
               <Route path="/investigations/book" element={<Investigations />} />
               <Route path="/investigations" element={<InvestigationsAppoin />} />
               <Route path="/packages" element={<PackageInformations />} />
-              <Route path="/packages/packages-details" element={<PackageDetail />} />
+              <Route path="/packages/packages-details/:id" element={<PackageDetail />} />
               <Route path="/ambulance" element={<AmbulancePage />} />
               <Route path="/my-document" element={<MyDocumentsPage />} />
               <Route path="/token" element={<TokenPage />} />

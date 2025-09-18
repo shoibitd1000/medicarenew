@@ -67,7 +67,7 @@ export default function BookAppointment() {
             <div className=" grid md:grid-cols-1 lg:grid-cols-2 gap-4">
                 {loading ? (
                     <div className="flex justify-center items-center col-span-full">
-                        <IsLoader isFullScreen={false} size="6" text="Loading discharge Summary..." />
+                        <IsLoader isFullScreen={false} size="6" text="Loading ..." />
                     </div>
                 ) : data?.length > 0 ? (
                     data.map((item, i) => (

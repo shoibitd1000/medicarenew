@@ -42,6 +42,12 @@ export const apiUrls = {
   patientFeedbackapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientFeedback`,
   patientFeedbackSubjectapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientFeedbackSubject`,
   patientFeedbackSaveapi: `${envUrl}/LoginAPIDynamic/ReactSavePatientFeedback`,
+  helthTrackRecordapi: `${envUrl}/LoginAPIDynamic/GetVitalSignDashBoardRecord`,
+  opdPackageapi: `${envUrl}/LoginAPIDynamic/ReactBindOPDPackage`,
+  opdPackageDetailapi: `${envUrl}/LoginAPIDynamic/BindOpdPackageDetail`,
+  ipdPackageDetailapi: `${envUrl}/LoginAPIDynamic/ReactBindIPDPackageDetail`,
+  sendMessageapi: `${envUrl}/LoginAPIDynamic/ReactSendSMS`,
+  viewMessageapi: `${envUrl}/LoginAPIDynamic/ReactPatientViewSMS`,
   // payment: 'http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
 
 };

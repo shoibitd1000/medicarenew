@@ -1,213 +1,283 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Printer } from "lucide-react";
+import { ChevronRight, Printer } from "lucide-react";
+import axios from "axios";
+import { AuthContext } from "../../authtication/Authticate"; // Adjust path as needed
+import { encryptPassword } from "../../../components/EncyptHooks/EncryptLib";
+import CustomDatePicker from "../../../components/components/ui/CustomDatePicker";
+import Toaster, { notify } from "../../../lib/notify";
 
-// Sample data
-const completedBills = [
-  {
-    billNo: "OPB/24/000225664",
-    date: "16-Sep-2024 12:29 PM",
-    patientName: "Neelam Singh",
-    amount: 1200.0,
-  },
-  {
-    billNo: "IPD/24/000118992",
-    date: "12-Aug-2024 03:45 PM",
-    patientName: "John Doe",
-    amount: 45000.0,
-  },
-  {
-    billNo: "LAB/24/000345112",
-    date: "25-Jul-2024 10:15 AM",
-    patientName: "Jane Doe",
-    amount: 3500.0,
-  },
-];
-
-const pendingBills = [
-  {
-    billNo: "OPB/24/000225987",
-    date: "28-Sep-2024 11:00 AM",
-    patientName: "Sam Doe",
-    amount: 500.0,
-  },
-  {
-    billNo: "OPB/24/000225999",
-    date: "29-Sep-2024 02:00 PM",
-    patientName: "Sam Doe",
-    amount: 1500.0,
-  },
-  {
-    billNo: "LAB/24/000345223",
-    date: "30-Sep-2024 09:30 AM",
-    patientName: "John Doe",
-    amount: 800.0,
-  },
-];
-
-export default function BillReportPage() {
+const BillReportPage = () => {
+  const [activeSection, setActiveSection] = useState(null);
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { token, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
+  const patientid = getCurrentPatientId();
+  const [fromDate, setFromDate] = useState(new Date("2024-01-01"));
+  const [toDate, setToDate] = useState(new Date("2025-09-09"));
   const navigate = useNavigate();
-  const [selectedBills, setSelectedBills] = useState([]);
-  const [activeTab, setActiveTab] = useState("pending");
 
-  const totalSelectedAmount = useMemo(() => {
-    return selectedBills.reduce((total, billNo) => {
-      const bill = pendingBills.find((b) => b.billNo === billNo);
-      return total + (bill?.amount || 0);
-    }, 0);
-  }, [selectedBills]);
-
-  const handlePrint = () => {
-    alert("Print functionality is not implemented in this demo.");
+  // Format date to DD-MM-YYYY (consistent with React Native)
+  const formatDate = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
-  const handleSelectBill = (billNo) => {
-    setSelectedBills((prev) =>
-      prev.includes(billNo)
-        ? prev.filter((no) => no !== billNo)
-        : [...prev, billNo]
-    );
+  // Fetch bills (merged logic from React Native: added console logs, standardized response handling)
+  useEffect(() => {
+    if (activeSection) {
+      const fetchBills = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+          if (!token) throw new notify("No token available");
+          if (!patientid) throw new notify("Patient ID is not available");
+
+          console.log('Patient ID:', patientid, 'Token:', token); // Debug log from RN
+          const encodedPatientId = encryptPassword(patientid);
+          const encodedFromDate = encryptPassword(formatDate(fromDate));
+          const encodedToDate = encryptPassword(formatDate(toDate));
+          const apiUrl = `http://197.138.207.30/MobileApp_API/API/LoginAPIDynamic/ReactGetPatientBills?PatientID=${encodedPatientId}&FromDate=${encodedFromDate}&ToDate=${encodedToDate}`;
+
+          console.log('Fetching bills with URL:', apiUrl); // Debug log from RN
+
+          const formData = new URLSearchParams();
+          formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
+          formData.append("UserType", "Patient");
+          formData.append("AccessScreen", "Pathology");
+          formData.append("AppVersion", "");
+          formData.append(
+            "Device_ID",
+            "eOwHMihcQQ2xHOrNdcPYxL:APA91bF1tIv5pqAcUSKM8QHb_uv0MTc29RPHgxHlPeh3LpA8Wp9NufGPGACUGk3QuwMGQRHbUpOhVFv8Ou0ssIC31xFE9Pw__ohd9LhU6u4_hTb3yunqjfk"
+          );
+
+          const response = await axios.get(apiUrl, {
+            headers: {
+              ...getAuthHeader(),
+              'Content-Type': 'application/x-www-form-urlencoded', // Added from RN
+            },
+            data: formData.toString(),
+            timeout: 10000,
+          });
+
+          console.log('API Response:', response.data); // Debug log from RN
+
+          if (response?.data?.status === true) {
+            console.log(response.data.response, 'response.data.response'); // Debug log from RN
+            const sortedBills = [...response.data.response]
+              .filter((bill) => bill.BillDate)
+              .sort((a, b) => {
+                const dateA = new Date(
+                  a.BillDate.replace(/(\d+)-(\d+)-(\d+)/, "$3-$2-$1")
+                );
+                const dateB = new Date(
+                  b.BillDate.replace(/(\d+)-(\d+)-(\d+)/, "$3-$2-$1")
+                );
+                return (dateB.getTime() || 0) - (dateA.getTime() || 0);
+              });
+            console.log(
+              'Bill TYPE values:',
+              sortedBills.map(bill => bill.TYPE),
+            ); // Debug log from RN
+            setBills(sortedBills);
+          } else {
+            console.error('Unexpected response format:', response.data); // From RN
+            setBills([]);
+            setError(response?.data?.message || "No bills found");
+          }
+        } catch (error) {
+          console.error('Error fetching bills:', {
+            message: error.message,
+            code: error.code,
+            response: error.response?.data,
+            status: error.response?.status,
+          }); // Enhanced logging from RN
+          notify("Sorry, please try again later")
+          if (error.code === "ECONNABORTED") {
+            notify("Request timed out. Please check your network connection.")
+
+          } else if (error.response?.status === 401) {
+            notify("Unauthorized. Please log in again")
+          } else if (error.message) {
+            notify(error.message)
+          }
+          setBills([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBills();
+    }
+  }, [token, activeSection, fromDate, toDate, patientid, navigate]);
+
+  const prefixes = {
+    OPD: "OPD",
+    IPD: "IPD",
+    Emergency: "EM",
   };
 
-  const handlePayNow = () => {
-    navigate(`/dashboard/bill-report/payment?amount=${totalSelectedAmount}`);
-  };
+  const filteredBills = activeSection
+    ? bills.filter((bill) => bill.TYPE?.startsWith(prefixes[activeSection]))
+    : [];
+
+  const billCategories = [
+    { billNo: "OPD", billName: "OPD Bills" },
+    { billNo: "IPD", billName: "IPD Bills" },
+    { billNo: "Emergency", billName: "Emergency Bills" },
+  ];
+
+  // Placeholder for PDF download (similar to RN's PDFDownloader)
+  /*  const handlePrintBill = (bill) => {
+     // Implement PDF download logic here, e.g., window.open(pdfUrl) or use a library like jsPDF
+     const pdfUrl = `http://197.138.207.30/Tenwek2208/Design/Common/CommonPrinterOPDThermal.aspx?ReceiptNo=&LedgerTransactionNo=${bill.Transaction_ID || ''
+       }&IsBill=1&Duplicate=1&Type=${activeSection === 'Emergency' ? 'EM' : activeSection
+       }`;
+     window.open(pdfUrl, '_blank');
+   }; */
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
-      {/* Page Header */}
+    <div className="space-y-8 p-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-blue-600">Bill History</h1>
-        <p className="text-gray-500">View your pending and completed bills.</p>
+        <h2 className="text-2xl font-bold text-primary mb-1">
+          My {activeSection || "Bills"}
+        </h2>
+        <p className="text-gray-500">
+          {activeSection
+            ? "View your selected bills below."
+            : "Please select a hospital center to proceed"}
+        </p>
       </div>
-
-      {/* Tabs */}
-      <div className="w-full">
-        <div className="grid grid-cols-2 shadow-md">
-          <button
-            onClick={() => setActiveTab("pending")}
-            className={`py-2 px-5 me-2 rounded-t-md border 
-            ${activeTab === "pending"
-                ? "bg-white font-semibold border-b-0 border-gray-300"
-                : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"}
-          `}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setActiveTab("completed")}
-            className={`py-2 px-5 me-2 rounded-t-md border 
-            ${activeTab === "completed"
-                ? "bg-white font-semibold border-b-0 border-gray-300"
-                : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"}
-          `}
-          >
-            Completed
-          </button>
-        </div>
-
-        {/* Pending Bills */}
-        {activeTab === "pending" && (
-          <div className="space-y-4">
-            {pendingBills.length > 0 ? (
-              <>
-                {pendingBills.map((bill) => (
-                  <div
-                    key={bill.billNo}
-                    className="border rounded-md shadow-md p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white"
-                  >
-                    <div className="flex items-center gap-4 flex-grow">
-                      <input
-                        type="checkbox"
-                        id={bill.billNo}
-                        checked={selectedBills.includes(bill.billNo)}
-                        onChange={() => handleSelectBill(bill.billNo)}
-                        className="h-6 w-6"
-                      />
-                      <label
-                        htmlFor={bill.billNo}
-                        className="cursor-pointer flex-grow"
-                      >
-                        <p className="font-bold text-lg text-blue-600">
-                          {bill.billNo}
-                        </p>
-                        <p className="text-sm text-gray-500">{bill.date}</p>
-                        <p className="mt-2">{bill.patientName}</p>
-                      </label>
-                    </div>
-                    <p className="text-lg font-semibold self-end sm:self-center">
-                      KES {bill.amount.toFixed(2)}
-                    </p>
-                  </div>
-                ))}
-
-                {/* Total Selected */}
-                {selectedBills.length > 0 && (
-                  <div className="mt-6 border rounded-md shadow-lg sticky bottom-4 bg-white">
-                    <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                      <div>
-                        <p className="text-lg font-bold">Total Selected:</p>
-                        <p className="text-2xl font-extrabold text-blue-600">
-                          KES {totalSelectedAmount.toFixed(2)}
-                        </p>
-                      </div>
-                      <button
-                        onClick={handlePayNow}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-md font-medium w-full sm:w-auto"
-                      >
-                        Pay Now
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center p-8 text-gray-500">
-                <p>No pending bills.</p>
+      <Toaster />
+      {activeSection === null ? (
+        <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
+          {billCategories.map((item, index) => (
+            <div
+              key={item.billNo}
+              className="flex items-center justify-between py-3 px-4 bg-white rounded-lg shadow-sm hover:shadow-md transition transform animate-slide-in"
+              style={{ animationDelay: `${index * 200}ms` }}
+              onClick={() => setActiveSection(item.billNo)}
+            >
+              <div className="flex items-center gap-4">
+                <span className="h-6 w-6 text-primary bg-slate-300 rounded-sm">
+                  💵
+                </span>
+                <div>
+                  <span className="text-md font-medium">{item.billName}</span>
+                  <span className="text-md font-medium block text-xs text-primary">
+                    View {item.billName}
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
-        )}
+              <ChevronRight className="h-5 w-5 text-gray-400" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="w-full m-auto md:w-1/2 my-3">
+          <button
+            className="mb-4  border-2 py-2 px-4 rounded-lg hover:bg-primary-dark transition"
+            onClick={() => setActiveSection(null)}
+          >
+            Back
+          </button>
 
-        {/* Completed Bills */}
-        {activeTab === "completed" && (
-          <div className="space-y-4">
-            {completedBills.length > 0 ? (
-              completedBills.map((bill) => (
+          {/* Date filters (using CustomDatePicker as in original) */}
+          <div className="mb-4 grid lg:grid-cols-2 gap-3 bg-white shadow-md p-4 rounded-md">
+            <CustomDatePicker value={fromDate} onChange={setFromDate} />
+            <CustomDatePicker value={toDate} onChange={setToDate} />
+          </div>
+
+          {/* Bills list (updated to match RN: added CentreName, BillAmount, clickable for details) */}
+          {loading ? (
+            <div className="text-center">
+              <div className="loader inline-block" />
+            </div>
+          
+          ) : filteredBills.length === 0 ? (
+            <p className="text-gray-500 text-center text-lg font-bold">
+              NO {activeSection?.toUpperCase()} BILLS
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {filteredBills.map((bill, idx) => (
                 <div
-                  key={bill.billNo}
-                  className="border rounded-md shadow-md p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white"
+                  key={idx}
+                  className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition flex justify-between items-center cursor-pointer"
+                  onClick={() => {/* Navigate to BillDetails */ navigate(`/bill-details/${bill.BillNo}`); }}
                 >
                   <div>
-                    <p className="font-bold text-lg text-blue-600">
-                      {bill.billNo}
+                    <p className="font-semibold">
+                      Bill No: {bill.BillNo || "N/A"}
                     </p>
-                    <p className="text-sm text-gray-500">{bill.date}</p>
-                    <p className="mt-2">{bill.patientName}</p>
-                    <p className="text-sm">
-                      Paid Amount:{" "}
-                      <span className="font-semibold">
-                        KES {bill.amount.toFixed(2)}
-                      </span>
+                    <p className="text-sm text-gray-600">
+                      Date: {bill.BillDate || "N/A"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Centre: {bill.CentreName || "N/A"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Amount: KES {(bill.BillAmount || 0).toFixed(2)} {/* Matching RN */}
                     </p>
                   </div>
-                  <button
-                    onClick={handlePrint}
-                    className="flex items-center justify-center gap-2 border px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 w-full sm:w-auto mt-2 sm:mt-0"
-                  >
-                    <Printer className="h-4 w-4" />
-                    Print
-                  </button>
+                  <Printer
+                    className="text-primary cursor-pointer"
+                    onClick={(e) => { e.stopPropagation(); handlePrintBill(bill); }}
+                  />
                 </div>
-              ))
-            ) : (
-              <div className="text-center p-8 text-gray-500">
-                <p>No completed bills found.</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
-}
+};
+
+// Basic BillDetails component (fixed from your incomplete snippet, using RN logic for fetching single bill if needed)
+const BillDetails = ({ billNo }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [bill, setBill] = useState(null);
+  const navigate = useNavigate();
+  // Add fetch logic for single bill here, similar to fetchBills but for one billNo
+
+  return (
+    <div className="">
+      <button
+        className="mb-4 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary-dark transition"
+        onClick={() => navigate(-1)} // Back to previous
+      >
+        Back to Bills
+      </button>
+      <div className="mb-4 flex gap-2">
+        <CustomDatePicker /> {/* Could be for filtering details */}
+        <CustomDatePicker />
+      </div>
+      {loading ? (
+        <div className="text-center">
+          <div className="loader inline-block" />
+        </div>
+      ) : error ? (
+        <p className="text-red-500 text-center">{error}</p>
+      ) : !bill ? (
+        <p className="text-gray-500 text-center text-lg font-bold">
+          NO BILL DETAILS
+        </p>
+      ) : (
+        <div className="p-4 bg-white rounded-lg shadow-sm">
+          {/* Display bill details */}
+          <p>Bill No: {bill.BillNo}</p>
+          {/* Add more fields */}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BillReportPage;
+export { BillDetails };

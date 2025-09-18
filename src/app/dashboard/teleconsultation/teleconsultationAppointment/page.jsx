@@ -87,19 +87,16 @@ const TeleconsultationAppointment = () => {
         return true;
     };
 
-    // Fetch appointments
     useEffect(() => {
         fetchAppointments();
     }, [token, tab, fromDate, toDate]);
 
-    // Fetch doctors when tab is "book"
     useEffect(() => {
         if (tab === "book") {
             fetchDoctors();
         }
     }, [tab, token]);
 
-    // Fetch time slots with debounce
     useEffect(() => {
         let timeoutId;
         if (selectedDoctor && selectedDate && !isNaN(new Date(selectedDate).getTime())) {

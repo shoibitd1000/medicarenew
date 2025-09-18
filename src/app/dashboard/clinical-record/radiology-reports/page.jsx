@@ -6,6 +6,7 @@ import axios from "axios";
 import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
 import CustomTable from "../../../../components/components/ui/customTabel";
 import { apiUrls } from "../../../../components/Network/ApiEndpoint";
+import IsLoader from "../../../loading";
 
 const IsResultClasses = {
   Approved: "bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold",
@@ -152,7 +153,7 @@ export default function LabReportsPage() {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="text-center py-8">
-              <div className="text-lg">Loading...</div>
+               <IsLoader isFullScreen={false} size="6" text="Radiology Investigation Reports..." />
             </div>
           ) : formattedData?.length > 0 ? (
             formattedData.map((item, i) => (

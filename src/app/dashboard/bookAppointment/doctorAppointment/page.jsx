@@ -400,7 +400,9 @@ const AppointmentsPage = () => {
 
         setLoading(true);
         try {
-            const formattedDate = new Date(newDate).toISOString().split('T')[0];
+            const formattedDate = new Date(new Date(newDate).setDate(new Date(newDate).getDate() + 1)).toISOString().split("T")[0];
+
+
             const fromTime = convertTo24Hour(newSlot.fromTime);
             const toTime = convertTo24Hour(newSlot.toTime);
 

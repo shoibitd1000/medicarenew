@@ -5,32 +5,39 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState({});
+
+
   const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deviceId, setDeviceId] = useState(null);
 
-  const TOKEN_EXPIRY_KEY = "tokenExpiry";
+  const TOKEN_EXPIRY_KEY = "token_expiry";
+  const FOUR_HOURS = 4 * 60 * 60 * 1000; // 4 hours in ms
 
+  localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + FOUR_HOURS);
   useEffect(() => {
     try {
       const storedToken = localStorage.getItem("token");   // APIToken
       const storedUserData = localStorage.getItem("userData");
       const storedDeviceId = localStorage.getItem("deviceId");
       const storedPatientId = localStorage.getItem("selectedPatientId");
-      /* const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+      const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
 
       if (expiry && Date.now() > parseInt(expiry, 10)) {
         clearAuth();
         setIsLoading(false);
         return;
-      } */
+      }
+
 
       if (storedToken) setToken(storedToken);
 
       if (storedUserData) {
         try {
           const parsedUserData = JSON.parse(storedUserData);
+          console.log(parsedUserData, "parsdata");
+
           if (parsedUserData && typeof parsedUserData === "object") {
             setUserData(parsedUserData);
 

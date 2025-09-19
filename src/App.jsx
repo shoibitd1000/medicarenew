@@ -68,7 +68,7 @@ export function App() {
               <Route path="/teleconsultation/book" element={<Teleconsultation />} />
               <Route path="/teleconsultation-appointment/:id/:center-name" element={<TeleconsultationAppointment />} />
               <Route path="/investigations/book" element={<Investigations />} />
-              <Route path="/investigations" element={<InvestigationsAppoin />} />
+              <Route path="/investigations/:id/:centername" element={<InvestigationsAppoin />} />
               <Route path="/packages" element={<PackageInformations />} />
               <Route path="/packages/packages-details/:id" element={<PackageDetail />} />
               <Route path="/ambulance" element={<AmbulancePage />} />

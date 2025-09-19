@@ -34,7 +34,7 @@ import { useContext } from "react";
 import { AuthContext } from "./../../../app/authtication/Authticate";
 
 export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile }) {
-  const { logout } = useContext(AuthContext)
+  const { logout, clearAuth } = useContext(AuthContext)
   const [currentDate, setCurrentDate] = useState("");
   const [isSwitchProfileOpen, setIsSwitchProfileOpen] = useState(false);
   const navigate = useNavigate();
@@ -50,11 +50,12 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
     );
   }, []);
 
-  
 
-const handleLogout = () => {
-  logout(navigate); // pass navigate so it redirects after clearing auth
-};
+
+  const handleLogout = () => {
+    clearAuth()
+    logout(navigate); // pass navigate so it redirects after clearing auth
+  };
 
 
   return (
@@ -179,7 +180,7 @@ const handleLogout = () => {
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      
+
                       className="bg-destructive hover:bg-destructive/90"
                     >
                       Logout

@@ -86,7 +86,7 @@ export default function LoginPage() {
           <div className="mx-auto bg-blue-100 p-3 rounded-full border border-blue-200 w-fit mb-3">
             <ShieldUser className="h-10 w-10 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-blue-600">Tenwek</h1>
+          <h1 className="text-3xl font-bold text-blue-600">Health Care</h1>
           <p className="text-gray-600">Secure Login</p>
         </div>
 
@@ -97,7 +97,7 @@ export default function LoginPage() {
             placeholder="UID / Mobile Number"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
+            className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2  focus:outline-none font-medium"
             leftIcon={<Mail className="h-5 w-5" />}
             required
           />
@@ -107,7 +107,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
+              className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2  focus:outline-none font-medium"
               required
               leftIcon={<KeyRound className="h-5 w-5" />}
             />

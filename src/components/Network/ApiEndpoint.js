@@ -48,6 +48,15 @@ export const apiUrls = {
   ipdPackageDetailapi: `${envUrl}/LoginAPIDynamic/ReactBindIPDPackageDetail`,
   sendMessageapi: `${envUrl}/LoginAPIDynamic/ReactSendSMS`,
   viewMessageapi: `${envUrl}/LoginAPIDynamic/ReactPatientViewSMS`,
+  // investigation api
+  testNameapi: `${envUrl}/LoginAPIDynamic/BindTestAndPackage?type=T`,
+  saveItemDetailsapi: `${envUrl}/LoginAPIDynamic/SaveItemDetails`,
+  bindServicesRequest: `${envUrl}/LoginAPIDynamic/BindServiceRequest`,
+  switchProfileapi: `${envUrl}/LoginAPIDynamic/ReactSwtichProfile`,
+  userprofileapiEditapi: `${envUrl}/LoginAPIDynamic/GetUserToEdit`,
+  updateProfileapi: `${envUrl}/LoginAPIDynamic/UpdateProfile`,
+  ResetProfilepasswordapi: `${envUrl}/LoginAPIDynamic/ResetProfilepassword`,
+  forgotPasswordapi: `${envUrl}/LoginAPIDynamic/Forgetpassword`,
   // payment: 'http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
 
 };

@@ -14,17 +14,19 @@ const CustomInput = ({
     <div className="relative w-full">
       {/* Input */}
       <input
-        type="text"
+        id={id}
+        type={type}
+        required={required}
         className={`peer w-full border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 
-      ${leftIcon ? "pl-10" : "pl-3"} pr-3 py-2 font-medium ${repClass}`}
-        placeholder=" "
+          ${leftIcon ? "pl-10" : "pl-3"} pr-3 py-2 font-medium ${repClass}`}
         value={value}
         onChange={onChange}
+        placeholder=" " // needed for floating effect
       />
 
       {/* Left Icon */}
       {leftIcon && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
           {leftIcon}
         </div>
       )}
@@ -32,16 +34,16 @@ const CustomInput = ({
       {/* Floating Label */}
       <label
         htmlFor={id}
-        className={`absolute transition-all duration-200 bg-white
-    ${leftIcon ? "left-10" : "left-3"}
-    ${value ? "-top-3 text-sm text-blue-600" : "top-2 text-gray-400 text-base"}
-    peer-focus:-top-3 peer-focus:text-sm peer-focus:text-blue-600 peer-focus:left-3`}
+        className={`absolute bg-white px-1 transition-all duration-200 pointer-events-none
+          ${leftIcon ? "left-10" : "left-3"}
+          top-2 text-gray-400 text-base
+          peer-placeholder-shown:top-2   peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base
+          peer-focus:-top-2 peer-focus:text-xs peer-focus:-left-[-20px] peer-focus:text-blue-600
+          peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:-left-[-20px] peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-blue-600`}
       >
         {placeholder}
       </label>
-
     </div>
-
   );
 };
 

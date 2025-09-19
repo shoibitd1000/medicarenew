@@ -1,346 +1,761 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Calendar, FileDown, X } from "lucide-react";
+import axios from "axios";
+import { Document, Page, pdfjs } from "react-pdf";
+import { AuthContext } from "../../../authtication/Authticate"; // Adjust path as needed
+import { apiUrls } from "../../../../components/Network/ApiEndpoint"; // Adjust path as needed
 import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
-import { Button } from "../../../../components/components/ui/button";
-import { Calendar, FileDown, Video } from "lucide-react";
-
 import CustomMultiSelect from "../../../../components/components/ui/CustomMultiSelect";
+import { Button } from "../../../../components/components/ui/button";
+import Toaster, { notify } from "../../../../lib/notify";
 
+// Set up pdfjs worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const doctoAppointmentSecList = [
-    /* {
-        name: "Dr. Dino Crognale",
-        hospitalName: "Tenwek Hospital",
-        appointmentDate: "12-Aug-2026",
-        appointmentTime: "09:45 AM",
-        status: "Confirmed",
+const InvestigationsAppoin = () => {
+    const state = useParams();
+    const navigate = useNavigate();
+    const { token, userData, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
+    const patientid = getCurrentPatientId();
+    const centerID = state?.id;
+    const centerName = state?.centername || "Tenwek Hospital";
+    const patientName = `${userData?.FirstName || ""} ${userData?.LastName || ""}`.trim() || "User Name Not Found ";
 
-    },
-    {
-        name: "Ngito",
-        hospitalName: "Tenwek Hospital",
-        appointmentDate: "12-Aug-2026",
-        appointmentTime: "09:45 AM",
-        status: "Confirmed",
-    },
-    {
-        name: "Tenwek Annex",
-        hospitalName: "Tenwek Hospital",
-        appointmentDate: "12-Aug-2026",
-        appointmentTime: "09:45 AM",
-        status: "Confirmed",
-    },
-    {
-        name: "Dr. Nathanael",
-        hospitalName: "Tenwek Hospital",
-        appointmentDate: "12-Aug-2026",
-        appointmentTime: "09:45 AM",
-        status: "Confirmed",
-    }, */
-];
-
-
-const pastAppointments = [
-   
-];
-
-
-const doctors = [
-    { value: "doc1", label: "Dr. Dino", specialty: "General Physician" },
-    { value: "doc2", label: "Dr. Amit", specialty: "Orthopedist" },
-    { value: "doc3", label: "Dr. Ibrahim", specialty: "ENT Specialist" },
-    { value: "doc4", label: "Dr. Juma", specialty: "Dentist" },
-];
-
-
-
-const options = [
-    { value: "11-Alpha-Hydroxyl progesteronen", label: "11-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "12-Alpha-Hydroxyl progesteronen", label: "12-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "13-Alpha-Hydroxyl progesteronen", label: "13-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "14-Alpha-Hydroxyl progesteronen", label: "14-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "15-Alpha-Hydroxyl progesteronen", label: "15-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "16-Alpha-Hydroxyl progesteronen", label: "16-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "17-Alpha-Hydroxyl progesteronen", label: "17-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "18-Alpha-Hydroxyl progesteronen", label: "18-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "19-Alpha-Hydroxyl progesteronen", label: "19-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "20-Alpha-Hydroxyl progesteronen", label: "20-Alpha-Hydroxyl progesteronen", rate: 5090 },
-    { value: "21-Alpha-Hydroxyl progesteronen", label: "21-Alpha-Hydroxyl progesteronen", rate: 5090 },
-];
-
-
-export default function InvestigationsAppoin() {
     const [tab, setTab] = useState("past");
-    const [selectedDepartment, setSelectedDepartment] = useState("");
-    const [selectedDoctor, setSelectedDoctor] = useState("");
-    const [selectedDate, setSelectedDate] = useState("");
-    const [selectedSlot, setSelectedSlot] = useState("");
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [fromDate, setFromDate] = useState(() => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - 1);
+        return date;
+    });
+    const [toDate, setToDate] = useState(new Date());
+    const [searchData, setSearchData] = useState([]);
+    const [selectedInvestigations, setSelectedInvestigations] = useState([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [pastAppointments, setPastAppointments] = useState([]);
+    const [upAppointments, setUpAppointments] = useState([]);
+    const [noDataMessage, setNoDataMessage] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
-    const [selected, setSelected] = useState([]);
-    const totalAmount = selected.reduce((sum, item) => sum + item.rate, 0);
-    const handleConfirm = () => setShowConfirm(true);
+    const [paymentUrl, setPaymentUrl] = useState("");
+    const [webViewVisible, setWebViewVisible] = useState(false);
+    const [pdfModalVisible, setPdfModalVisible] = useState(false);
+    const [latestTransactionNo, setLatestTransactionNo] = useState(null);
+    const [numPages, setNumPages] = useState(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const iframeRef = useRef(null);
+
+    const totalAmount = selectedInvestigations.reduce(
+        (sum, item) => sum + (item.rate || 0),
+        0
+    );
+
+    const formatDate = (dateValue) => {
+        if (!dateValue) return "N/A";
+        const parsedDate = new Date(dateValue);
+        if (isNaN(parsedDate)) return "Invalid Date";
+        return parsedDate.toLocaleDateString("en-GB", {
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+        });
+    };
+
+    const formatAppointmentDate = (date) => {
+        if (!date) return "04-Sep-2025";
+        const day = date.getDate().toString().padStart(2, "0");
+        const monthNames = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
+    const formateToFetchApp = (date) => {
+        if (!date) return "2025-02-02";
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const day = date.getDate().toString().padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+
+    const Search_Package = async () => {
+        setLoading(true);
+        try {
+            if (!token) {
+                console.error("No token available");
+                setTimeout(() => navigate("/login"), 10000);
+                return;
+            }
+            const response = await axios.post(
+                apiUrls.testNameapi,
+                {},
+                {
+                    headers: {
+                        ...getAuthHeader()
+                    },
+                }
+            );
+            if (response?.data?.status === true) {
+                setSearchData(response.data.response);
+            } else {
+                console.error("Unexpected response format:", response.data);
+                setSearchData([]);
+            }
+        } catch (error) {
+            console.error("Error fetching investigations:", error);
+            if (error.response?.status === 401) {
+                navigate("/login");
+            }
+            setSearchData([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchAppointments = async (centerID, selectedTab) => {
+        setLoading(true);
+        setNoDataMessage("");
+        try {
+            if (!token) {
+                console.error("No token available");
+                navigate("/login");
+                return;
+            }
+
+            if (!centerID) {
+                console.error("No center ID provided");
+                setNoDataMessage("Please select a center.");
+                return;
+            }
+
+            if (selectedTab === "past" && fromDate > toDate) {
+                setNoDataMessage("From date must be before To date.");
+                setPastAppointments([]);
+                return;
+            }
+
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const formattedFromDate =
+                selectedTab === "upcoming"
+                    ? formateToFetchApp(today)
+                    : formateToFetchApp(fromDate);
+            const formattedToDate =
+                selectedTab === "upcoming"
+                    ? formateToFetchApp(new Date(now.setFullYear(now.getFullYear() + 1)))
+                    : formateToFetchApp(toDate);
+
+            const encodedPatientId = encodeURIComponent(patientid || "");
+            const apiUrl = `${apiUrls.bindServicesRequest}?PatientID=${encodedPatientId}&MobileAppID=esLCtIuIS8Ci9QmQlI01mJ1MBqICiAwxbqSDrevOH6I%3D&FromDate=${encodeURIComponent(
+                formattedFromDate
+            )}&ToDate=${encodeURIComponent(formattedToDate)}&CentreID=${centerID}`;
+
+            const response = await axios.post(apiUrl, {}, { headers: getAuthHeader() });
+
+            if (response?.data?.status === true && response.data.response?.length > 0) {
+                const appointments = response.data.response.map((item) => {
+                    const dateParts = item.DATES.split("-");
+                    if (dateParts.length !== 3) return null;
+
+                    const day = parseInt(dateParts[0], 10);
+                    const monthStr = dateParts[1];
+                    const year = parseInt(dateParts[2], 10);
+                    const monthNames = [
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    ];
+                    const month = monthNames.indexOf(monthStr);
+                    if (month === -1) return null;
+
+                    const appointmentDate = new Date(year, month, day);
+                    if (isNaN(appointmentDate.getTime())) return null;
+
+                    return {
+                        id: `${item.ItemID}`,
+                        TestName: item.ItemName,
+                        PName: item.PatientName,
+                        dateTime: item.DATES,
+                        center: item.CentreName,
+                        cancel: item?.IsActive,
+                        appointmentDate: item.DATES,
+                        STATUS: item.STATUS,
+                        Department: item?.Department,
+                        parsedDate: appointmentDate.getTime(),
+                    };
+                }).filter(Boolean);
+
+                const past = [];
+                const upcoming = [];
+                appointments.forEach((appointment) => {
+                    if (appointment.parsedDate >= today.getTime()) {
+                        upcoming.push(appointment);
+                    } else {
+                        past.push(appointment);
+                    }
+                });
+
+                past.sort((a, b) => b.parsedDate - a.parsedDate);
+                upcoming.sort((a, b) => a.parsedDate - b.parsedDate);
+
+                setPastAppointments(past);
+                setUpAppointments(upcoming);
+            } else {
+                setNoDataMessage(response?.data?.message || "No appointments found.");
+                setPastAppointments([]);
+                setUpAppointments([]);
+            }
+        } catch (error) {
+            console.error("Error fetching appointments:", error);
+            setNoDataMessage("Failed to fetch appointments. Please try again.");
+            setPastAppointments([]);
+            setUpAppointments([]);
+            if (error.response?.status === 401) {
+                navigate("/login");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchSaveAppointment = async (referenceNo) => {
+        try {
+            const apiUrl =
+                `${apiUrls.saveItemDetailsapi}?MobileAppID=esLCtIuIS8Ci9QmQlI01mJ1MBqICiAwxbqSDrevOH6I%3D`;
+            const formattedDate = formatAppointmentDate(selectedDate);
+            const user = {
+                Address: userData?.Address || "",
+                Age: userData?.Age || "",
+                Email: userData?.Email || "",
+                FirstName: userData?.FirstName || "",
+                LastName: userData?.LastName || "",
+                Gender: userData?.Gender || "",
+                Mobile: userData?.Mobile || "",
+                Title: userData?.Title || "",
+            };
+            const body = {
+                investigation_Details: selectedInvestigations.map((item) => ({
+                    AppDate: formattedDate,
+                    AppTime: formattedDate,
+                    CentreID: centerID || 1,
+                    DiscountAmt: 0,
+                    DiscountPer: 0,
+                    EntryBy: "EMP009",
+                    ItemID: item.value,
+                    Address: user.Address,
+                    Age: user.Age,
+                    Rate: item.rate,
+                    Email: user.Email,
+                    PFirstName: user.FirstName,
+                    Gender: user.Gender,
+                    PLastName: user.LastName,
+                    MobileNo: user.Mobile,
+                    OnlineAppType: 1,
+                    PTitle: user.Title,
+                    PatientID: patientid,
+                    RequestID: 0,
+                })),
+                appointment_mobilepaymentdetail: [
+                    {
+                        Adjustment: totalAmount,
+                        ReffrenceNo: referenceNo,
+                        OrderID: referenceNo,
+                    },
+                ],
+            };
+            const response = await axios.post(apiUrl, body, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            if (response.data?.status === true) {
+                notify("Appointment saved successfully!");
+                setLatestTransactionNo(response.data.response);
+                setPdfModalVisible(true);
+                setWebViewVisible(false);
+                setShowConfirm(false);
+            } else {
+                notify(response.data?.message || "Failed to save appointment.");
+            }
+        } catch (error) {
+            console.error("Error saving appointment:", error);
+            notify("Failed to save appointment. Please try again.");
+            if (error.response?.status === 401) {
+                navigate("/login");
+            }
+        }
+    };
+
+    const handlePayment = () => {
+        const patientID = userData?.PatientASID || "";
+        const phoneNumber = userData?.Mobile || "";
+        const billNo = "";
+        const amount = totalAmount;
+        const url = "";
+        setPaymentUrl(url);
+        setWebViewVisible(true);
+        setShowConfirm(false);
+        const element = document.activeElement;
+        element.classList.add("animate-pulse");
+        setTimeout(() => element.classList.remove("animate-pulse"), 100);
+    };
+
+    const handleConfirm = () => {
+        if (selectedInvestigations.length === 0 || !selectedDate) {
+            notify("Please select an investigation and date.");
+            return;
+        }
+        setShowConfirm(true);
+    };
+
+    const handleIframeLoad = (event) => {
+        const url = event.currentTarget.contentWindow.location.href;
+        if (url.includes("/MobileMpesaSuccess.aspx")) {
+            const queryString = url.split("?")[1] || "";
+            const params = {};
+            queryString.split("&").forEach((param) => {
+                const [key, value] = param.split("=");
+                params[key] = value;
+            });
+            const receiptNumber = params["ReceiptNumber"];
+            if (receiptNumber) {
+                fetchSaveAppointment(receiptNumber);
+                notify("Payment received successfully!");
+            } else {
+                notify("Payment successful but no receipt number found.");
+                setWebViewVisible(false);
+            }
+        } else if (url.includes("/failure") || url.includes("payment=failed")) {
+            notify("Payment failed. Please try again.");
+            setWebViewVisible(false);
+        }
+    };
+
+    const onDocumentLoadSuccess = ({ numPages }) => {
+        setNumPages(numPages);
+    };
+
+    useEffect(() => {
+        if (centerID && tab) {
+            fetchAppointments(centerID, tab, fromDate, toDate);
+        }
+    }, [token, selectedDate, centerID, fromDate, toDate, tab]);
+
+    useEffect(() => {
+        Search_Package();
+    }, [token]);
+
+    const multiSelectOptions = searchData.map((item) => ({
+        value: item.ItemID,
+        label: item.TestName,
+        rate: item.ItemRate,
+        precaution: item?.precaution,
+    }));
+
+    const UpcomingRender = ({ item }) => {
+        const tests = item.TestName.split(",").map((t) => t.trim());
+        return (
+            <div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col w-full max-w-[600px] mx-auto"
+            >
+                <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-medium text-blue-600 truncate">{item.PName}</h3>
+                        <p className="text-sm text-gray-500 truncate">{item.center}</p>
+                    </div>
+                    
+                </div>
+                <div className="flex-1">
+                    <p className="font-semibold text-gray-800 text-sm">
+                        Tests: {tests.length}
+                    </p>
+                    <p className="font-semibold text-gray-800 text-sm">{item.Department}</p>
+                    <p className="text-gray-600 text-sm break-words">{tests.join(", ")}</p>
+                </div>
+                <div className="flex justify-between items-center mt-3">
+                    <p className="text-sm text-gray-600">{item.dateTime}</p>
+                    {item.STATUS === "Done" && (
+                        <span className="text-xs font-medium text-white bg-blue-400 px-2 py-1 rounded ml-2">
+                            Schedule
+                        </span>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    const PastRender = ({ item }) => (
+        <div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col w-full max-w-[600px] mx-auto"
+        >
+            <div className="flex justify-between items-start mb-3">
+                <h3 className="text-lg font-medium text-blue-600 truncate w-[calc(100%-20%)]">
+                    {item.TestName}
+                </h3>
+                <p className="text-xs text-gray-500 font-bold truncate">{item.center}</p>
+            </div>
+            <p className="text-sm font-semibold text-gray-800 truncate">{item.PName}</p>
+            <div className="flex justify-between items-center mt-3">
+                <p className="text-sm text-gray-600">{item.dateTime}</p>
+                <button
+                    className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition-colors"
+                    onClick={() => {
+                        setLatestTransactionNo(item.id || "4387151");
+                        setPdfModalVisible(true);
+                    }}
+                >
+                    <FileDown className="h-5 w-5 text-gray-600" />
+                </button>
+            </div>
+        </div>
+    );
 
     return (
-        <>
+        <div className="space-y-8 p-4 min-h-screen bg-blue-50">
+            <div className="text-center">
+                <p className="text-gray-500">
+                    Plan Your Upcoming and Past Investigations
+                </p>
+            </div>
+            <Toaster />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-7xl m-0">
+                {["book", "upcoming", "past"].map((t) => (
+                    <button
+                        key={t}
+                        className={`py-2 border rounded-t-md text-sm sm:text-base ${tab === t ? "bg-white font-semibold shadow-md" : "bg-gray-100"
+                            } transition-colors`}
+                        onClick={() => setTab(t)}
+                    >
+                        {t === "book" ? "Book New" : t === "upcoming" ? "Upcoming" : "Past"}
+                    </button>
+                ))}
+            </div>
 
-            <div className="space-y-8 p-4">
-                <div className="text-center">
-                    <p className="text-gray-500">
-                        Plan Your upcoming and  Past Investigations
-                    </p>
-                </div>
-
-                <div className="m-0">
-                    <div className="grid grid-cols-3 gap-2 ">
-                        <button
-                            className={`py-2 shadow-md border rounded-t-md   ${tab === "book" ? " rounded-t-md bg-white font-semibold shadow-md" : ""
-                                }`}
-                            onClick={() => setTab("book")}
+            {tab === "book" && (
+                <div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white border rounded-b-lg p-4 sm:p-6 shadow max-w-7xl mx-auto"
+                >
+                    {showConfirm ? (
+                        <div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3 }}
                         >
-                            Book New
-                        </button>
-                        <button
-                            className={`py-2 shadow-md border rounded-t-md  ${tab === "upcoming" ? "rounded-t-md bg-white font-semibold shadow-md" : ""
-                                }`}
-                            onClick={() => setTab("upcoming")}
-                        >
-                            Upcoming
-                        </button>
-                        <button
-                            className={`py-2 shadow-md border rounded-t-md  ${tab === "past" ? "rounded-t-md bg-white font-semibold shadow-md" : ""
-                                }`}
-                            onClick={() => setTab("past")}
-                        >
-                            Past
-                        </button>
-                    </div>
-
-
-                    {tab === "book" && (
-                        <>
-                            <div className="bg-white border rounded-b-lg p-4 shadow">
-                                {showConfirm ? (
-                                    <>
-                                        <div className="p-2 text-center my-2">
-                                            <h2 className="text-xl font-bold mb-4 text-primary">Confirm Teleconsultation</h2>
-                                        </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold mb-4 text-shadow-sm">Investgation  Details</h2>
-                                        </div>
-                                        <div className="space-y-6  grid md:grid-cols-2  lg:grid-cols-3 gap-6 border p-5 rounded">
-                                            <p><strong>Patient:</strong> {selectedDepartment}</p>
-                                            <p><strong>Center:</strong> {selectedDoctor}</p>
-                                            <p><strong>Doctor:</strong> {selectedDoctor}</p>
-                                            <p><strong>Date:</strong> {selectedDate}</p>
-                                            <p><strong>Time:</strong> {selectedSlot}</p>
-                                            <p><strong>Item:</strong> {selectedSlot}</p>
-                                            <p><strong>Rate:</strong> {selectedSlot}</p>
-                                            <div className="flex gap-4 mt-4">
-                                                <button
-                                                    className="px-4 py-2 bg-emerald-200 rounded w-full bg-"
-                                                    onClick={() => setShowConfirm(false)}
-                                                >
-                                                    Back
-                                                </button>
-                                                <button className="px-4 py-2 bg-blue-600 text-white rounded w-full">
-                                                    Proceed to Payment
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </>
-
-                                ) : (
-                                    <>
-                                        <div className="py-2 px-4 shadow-md my-2  flex justify-between">
-                                            <div>
-                                                <h2 className="text-2xl font-bold">Book a New Investigation(s)</h2>
-                                                <p className="text-xs text-cyan-500">Booking atest at Tewenk. change  center for the other locations</p>
-                                            </div>
-                                            <div className="">
-                                                <Button className="text-white btn">Change Center</Button>
-                                            </div>
-                                        </div>
-                                        <div className=" space-y-6  grid md:grid-cols-2 gap-6">
-                                            <CustomMultiSelect
-                                                options={options}
-                                                selectedValues={selected}
-                                                onChange={setSelected}
-                                                placeholder="Select an Investigation(s)"
-                                                placeholderText="Search Investigation..."
-                                                repClass="focus:outline-none focus:ring focus:ring-blue-500"
-                                            />
-                                            <div className="m-0">
-                                                <CustomDatePicker
-                                                    repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                                                    value={selectedDate}
-                                                    placeHolderText={"Select Date"}
-                                                    handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                                    icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-center mt-4">
-                                            <h2 className="text-2xl font-bold">Total Amount : KES {totalAmount}</h2>
-                                        </div>
-                                        <div className="flex justify-center mt-4">
-                                            <button
-                                                className="px-4 py-2  bg-primary text-white rounded uppercase"
-                                                onClick={handleConfirm}
-                                            >
-                                                Confirm Investigation
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-
+                            <div className="p-2 text-center my-2">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 text-blue-600">
+                                    Confirm Investigation
+                                </h2>
                             </div>
-
-                        </>
-                    )}
-
-                    {tab === "upcoming" && (
-                        <>
-                            <div className="bg-white border rounded-b-lg p-4 shadow">
-                                <div className="py-2 px-4 shadow-md my-2">
-                                    <h2 className="text-2xl font-bold  mb-1">Upcoming Teleconsultations</h2>
-                                </div>
-
-                                <div className={`${doctoAppointmentSecList.length > 0 ? "grid md:grid-cols-1 lg:grid-cols-2 gap-4" : ""} `}>
-                                    {doctoAppointmentSecList.length > 0 ? (
-                                        doctoAppointmentSecList.map((doctorAppoin, i) => (
-                                            <div
-                                                key={i}
-                                                className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div>
-                                                        <h3 className="text-lg font-medium text-primary">{doctorAppoin.name}</h3>
-                                                        <span className="text-xs font-semibold">
-                                                            {doctorAppoin?.appointmentDate}
-                                                            {doctorAppoin?.appointmentTime && (
-                                                                <> at {doctorAppoin.appointmentTime}</>
-                                                            )}
-                                                        </span>
-                                                        <div className="text-xs font-semibold text-green-900">
-                                                            {doctorAppoin?.status}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs font-semibold py-3">
-                                                        {doctorAppoin?.hospitalName}
-                                                    </div>
-                                                    <div className="text-xs font-semibold py-3 flex gap-2">
-                                                        <button className="px-2 py-1 text-xs font-medium bg-blue-300 text-gray-700 rounded hover:bg-blue-700 transition">
-                                                            <Video />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <h2 className="text-lg font-extrabold text-center">
-                                            Upcoming Investigations.
-                                        </h2>
-                                    )}
-
-                                </div>
+                            <div>
+                                <h2 className="text-xl font-bold mb-4">Investigation Details</h2>
                             </div>
-                        </>
-                    )}
-
-                    {tab === "past" && (
-                        <>
-                            {/* <DialogBox
-                                open={isOpen}
-                                onOpenChange={setIsOpen}
-                                title="Doctor Notes"
-                                size="xl"
-                                closeIcon={closeIcon}
-                                footer={
-                                    <button
-                                        className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
-                                        onClick={() => setIsOpen(false)}
+                            <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 border p-4 sm:p-5 rounded">
+                                <p>
+                                    <strong>Patient:</strong> {patientName}
+                                </p>
+                                <p>
+                                    <strong>Center:</strong> {centerName}
+                                </p>
+                                <p className="flex items-start gap-2">
+                                    <strong className="text-gray-700 min-w-[120px]">Investigation:</strong>
+                                    <span
+                                        className={`text-sm px-3 py-1 rounded-lg shadow-sm ${selectedInvestigations.length > 0
+                                                ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                                : "bg-gray-100 text-gray-500 border border-gray-300 italic"
+                                            }`}
                                     >
-                                        Close
+                                        {selectedInvestigations.length > 0
+                                            ? selectedInvestigations.map((d) => d.label).join(", ")
+                                            : "None selected"}
+                                    </span>
+                                </p>
+                                <p>
+                                    <strong>Date:</strong>{" "}
+                                    {selectedDate
+                                        ? selectedDate.toLocaleDateString("en-US", {
+                                            day: "numeric",
+                                            month: "long",
+                                            year: "numeric",
+                                        })
+                                        : "Not selected"}
+                                </p>
+                                <p>
+                                    <strong>Total Cost:</strong> KES {totalAmount}
+                                </p>
+                                <div className="flex gap-4 mt-4">
+                                    <button
+                                        className="px-4 py-2 bg-gray-200 rounded w-full text-sm sm:text-base"
+                                        onClick={() => setShowConfirm(false)}
+                                    >
+                                        Back
                                     </button>
-                                }
-                            >
-                                <p>Here are the doctor notes...</p>
-                            </DialogBox> */}
-
-                            <div className="bg-white border rounded-b-lg p-4 shadow">
-                                <div className="grid md:grid-cols-2 lg:grid-cols-3">
-                                    <div className="py-2 px-4">
-                                        <h2 className="text-2xl font-bold  mb-1">Past Teleconsultations</h2>
-                                    </div>
-                                    <div className="flex gap-3 gap-y-3">
-                                        <CustomDatePicker
-                                            repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                                            value={selectedDate}
-                                            placeHolderText={"From Date"}
-                                            handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                        />
-                                        <CustomDatePicker
-                                            repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                                            value={selectedDate}
-                                            placeHolderText={"To Date"}
-                                            handleDate={(selectedDate) => setSelectedDate(selectedDate)}
-                                        />
-                                    </div>
+                                    <button
+                                        className="px-4 py-2 bg-blue-600 text-white rounded w-full text-sm sm:text-base"
+                                        onClick={handlePayment}
+                                    >
+                                        Proceed to Payment
+                                    </button>
                                 </div>
-
-                                <div className={`${pastAppointments.length > 0 ? "grid md:grid-cols-1 lg:grid-cols-2 gap-4" : ""} `}>
-                                    {pastAppointments.length > 0 ? (
-                                        pastAppointments.map((pastAppoin, i) => (
-                                            <div
-                                                key={i}
-                                                className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div>
-                                                        <h3 className="text-lg font-medium text-primary">
-                                                            {pastAppoin?.doctor}
-                                                        </h3>
-                                                        <div className="text-xs font-semibold">
-                                                            {pastAppoin?.patientName}
-                                                        </div>
-                                                        <span className="text-xs font-semibold">
-                                                            {pastAppoin?.appointmentDate}
-                                                            {pastAppoin?.appointmentTime && (
-                                                                <> at {pastAppoin.appointmentTime}</>
-                                                            )}
-                                                        </span>
-                                                        <div className="text-xs font-extrabold text-green-900">
-                                                            {pastAppoin?.status}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs font-semibold text-green-600 py-4">
-                                                        {pastAppoin?.center}
-                                                    </div>
-                                                    <div className="text-xs font-semibold py-4 flex gap-2">
-                                                        <button
-                                                            className="px-2 py-1 text-xs text-primary font-medium bg-slate-200 rounded-md"
-                                                            onClick={() => setIsOpen(true)}
-                                                        >
-                                                            <FileDown />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <h2 className="text-lg font-extrabold text-center">No Past Investigatios Found.</h2>
-                                    )}
-
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="py-2 px-4 sm:px-6 shadow-md flex mb-1 justify-between items-start sm:items-center">
+                                <div className="">
+                                    <h2 className="text-xl sm:text-2xl font-bold">
+                                        Book a New Investigation(s)
+                                    </h2>
+                                    <p className="text-xs text-cyan-500">
+                                        Booking a test at {centerName}. Change center for other locations
+                                    </p>
                                 </div>
+                                <Button
+                                    className="text-white bg-blue-600 mt-2 sm:mt-0 text-sm sm:text-base"
+                                    onClick={() => navigate(-1)}
+                                >
+                                    Change Center
+                                </Button>
+                            </div>
+                            <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                <CustomMultiSelect
+                                    options={multiSelectOptions}
+                                    selectedValues={selectedInvestigations}
+                                    onChange={setSelectedInvestigations}
+                                    placeholder="Select an Investigation(s)"
+                                    placeholderText="Search Investigation..."
+                                    repClass="focus:outline-none focus:ring focus:ring-blue-500 w-full"
+                                    label="Select an Investigation(s)"
+                                    required
+                                />
+                                <CustomDatePicker
+                                    repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
+                                    value={selectedDate}
+                                    placeHolderText="Select Date"
+                                    handleDate={(date) => setSelectedDate(date)}
+                                    icon={
+                                        <Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />
+                                    }
+                                    minDate={new Date()}
+                                />
+                            </div>
+                            {loading && (
+                                <div className="flex justify-center my-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                                </div>
+                            )}
+                            <div className="flex justify-center mt-4">
+                                <h2 className="text-xl sm:text-2xl font-bold">
+                                    Total Amount: KES {totalAmount}
+                                </h2>
+                            </div>
+                            <div className="flex justify-center mt-4">
+                                <button
+                                    className={`px-4 py-2 bg-blue-600 text-white rounded uppercase text-sm sm:text-base ${!selectedInvestigations.length || !selectedDate
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : ""
+                                        }`}
+                                    onClick={handleConfirm}
+                                    disabled={!selectedInvestigations.length || !selectedDate}
+                                >
+                                    Confirm Investigation
+                                </button>
                             </div>
                         </>
                     )}
                 </div>
-            </div >
-        </>
+            )}
+
+            {tab === "upcoming" && (
+                <div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white border rounded-b-lg p-4 sm:p-6 shadow max-w-7xl mx-auto"
+                >
+                    <div className="py-2 px-4 sm:px-6 shadow-md my-2">
+                        <h2 className="text-xl sm:text-2xl font-bold mb-1">Upcoming Investigations</h2>
+                    </div>
+                    {loading ? (
+                        <div className="flex justify-center my-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    ) : upAppointments.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
+                            {upAppointments.map((item) => (
+                                <UpcomingRender key={item.id} item={item} />
+                            ))}
+                        </div>
+                    ) : (
+                        <h2 className="text-lg sm:text-xl font-extrabold text-center">
+                            {noDataMessage || "No Upcoming Investigations Found."}
+                        </h2>
+                    )}
+                </div>
+            )}
+
+            {tab === "past" && (
+                <div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white border rounded-b-lg p-4 sm:p-6 shadow max-w-7xl mx-auto"
+                >
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div className="py-2 px-4 sm:px-6">
+                            <h2 className="text-xl sm:text-2xl font-bold mb-1">Past Investigations</h2>
+                        </div>
+                        <div className="grid grid:lg-cols-2">
+                            <div className="flex gap-2">
+                                <CustomDatePicker
+                                    repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
+                                    value={fromDate}
+                                    placeHolderText="From Date"
+                                    handleDate={(date) => setFromDate(date)}
+                                />
+                                <CustomDatePicker
+                                    repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
+                                    value={toDate}
+                                    placeHolderText="To Date"
+                                    handleDate={(date) => setToDate(date)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    {loading ? (
+                        <div className="flex justify-center my-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                        </div>
+                    ) : pastAppointments.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
+                            {pastAppointments.map((item, i) => (
+                                <PastRender key={i} item={item} />
+                            ))}
+                        </div>
+                    ) : (
+                        <h2 className="text-lg sm:text-xl font-extrabold text-center">
+                            No Past Investigations Found.
+                        </h2>
+                    )}
+                </div>
+            )}
+
+            {webViewVisible && (
+                <div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                >
+                    <div className="bg-white w-full max-w-4xl h-[80vh] rounded-lg p-4 sm:p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg sm:text-xl font-bold text-blue-600">M-Pesa Payment</h2>
+                            <button onClick={() => setWebViewVisible(false)}>
+                                <X className="h-6 w-6 text-gray-600" />
+                            </button>
+                        </div>
+                        {paymentUrl ? (
+                            <iframe
+                                ref={iframeRef}
+                                src={paymentUrl}
+                                className="w-full h-full border-0"
+                                onLoad={handleIframeLoad}
+                                title="Payment"
+                            />
+                        ) : (
+                            <p className="text-center text-gray-600">Loading payment page...</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {pdfModalVisible && latestTransactionNo && (
+                <div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                >
+                    <div className="bg-white w-full max-w-4xl h-[80vh] rounded-lg p-4 sm:p-6 overflow-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg sm:text-xl font-bold text-blue-600">
+                                Investigation Receipt
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    setPdfModalVisible(false);
+                                    setSelectedDate(null);
+                                    setSelectedInvestigations([]);
+                                    setSearchData([]);
+                                    setSearchQuery("");
+                                    setLatestTransactionNo(null);
+                                    setNumPages(null);
+                                    setPageNumber(1);
+                                }}
+                            >
+                                <X className="h-6 w-6 text-gray-600" />
+                            </button>
+                        </div>
+                        <Document
+                            file={`http://197.138.207.30/Tenwek2208/Design/Common/CommonPrinterOPDThermal.aspx?ReceiptNo=&LedgerTransactionNo=${latestTransactionNo}&IsBill=1&Duplicate=1&Type=OPD`}
+                            onLoadSuccess={onDocumentLoadSuccess}
+                            onLoadError={(error) => {
+                                console.error("PDF Error:", error);
+                                notify("Failed to load PDF. Check console for details or verify the URL.");
+                                setPdfModalVisible(false);
+                                setLatestTransactionNo(null);
+                            }}
+                            loading={<div className="text-center py-4">Loading PDF...</div>}
+                        >
+                            <Page
+                                pageNumber={pageNumber}
+                                width={600}
+                                renderTextLayer={true}
+                                renderAnnotationLayer={true}
+                            />
+                            {numPages > 1 && (
+                                <p className="text-center mt-2">
+                                    Page {pageNumber} of {numPages}
+                                </p>
+                            )}
+                        </Document>
+                    </div>
+                </div>
+            )}
+        </div>
     );
-}
+};
+
+export default InvestigationsAppoin;

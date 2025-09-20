@@ -12,89 +12,111 @@ import Toaster, { notify } from "../../../lib/notify";
 import axios from "axios";
 import { AuthContext } from "../../../app/authtication/Authticate";
 import { apiUrls } from "../../Network/ApiEndpoint";
+import { useNavigate } from "react-router-dom";
+import { encryptPassword } from "../../EncyptHooks/EncryptLib";
 
-// SwitchProfileDialog Component
-export default function SwitchProfileDialog({ onClose }) {
+export default function SwitchProfileDialog({ onClose, allUsers, currentUser, onSwitchProfile }) {
   const { token, userData, selectedPatientId, saveSelectedPatientId, getAuthHeader, logout } = useContext(AuthContext);
-  const [allUsers, setAllUsers] = useState([]);
+  const [profiles, setProfiles] = useState([]);
+  const [selectedId, setSelectedId] = useState(selectedPatientId || "");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  // Fetch dependent users
-  const fetchDependents = async () => {
-    setIsLoading(true);
-    setError(null);
+  // Fetch dependent profiles
+  const fetchProfiles = async () => {
     try {
-      if (!token) {
-        notify("No authentication token available. Please log in.");
-        logout(); // Trigger logout if no token
+      const Mobile = userData?.Mobile;
+      if (!token || !Mobile) {
+        notify("No authentication token or mobile number available. Please log in.");
+        logout();
+        navigate("/login");
         return;
       }
 
-      if (!userData?.Mobile) {
-        notify("User mobile number not found. Please ensure your profile is complete.");
-        setError("User mobile number not found.");
-        return;
-      }
-
+      setIsLoading(true);
+      debugger
       const response = await axios.get(
-        `${apiUrls.switchProfileapi}?Mobile=${encodeURIComponent(userData.Mobile)}`,
+        `${apiUrls.switchProfileapi}?Mobile=${Mobile /* 0757270848 */}`,
         {
-          headers: getAuthHeader(),
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
 
-      if (response?.data?.status === true && Array.isArray(response.data.response) && response.data.response.length > 0) {
-        const users = response.data.response.map((item) => ({
-          id: item.PatientID || item.id || "", // Fallback for ID
-          name: `${item.Pname || item.FirstName || ""} ${item.LastName || ""}`.trim() || "Unknown User",
-          initials: `${item.Pname?.[0] || item.FirstName?.[0] || ""}${item.LastName?.[0] || ""}`.toUpperCase() || "UU",
+      const data = response.data;
+      if (data.status && Array.isArray(data.response)) {
+        const fetchedProfiles = data.response.map((item, index) => ({
+          id: item.PatientID || `${index + 1}`,
+          name: item.Pname || "Unknown",
           relation: item.Relation || "Self",
-          avatarUrl: item.PhotoImage || item.AvatarUrl || "", // Support both fields
+          photoImage: item.PhotoImage || "",
+          patientId: item.PatientID || "", // Ensure PatientID is included
         }));
-        setAllUsers(users);
+        setProfiles(fetchedProfiles);
+
+        // Set default selected profile based on selectedPatientId
+        if (selectedPatientId) {
+          const selectedProfile = fetchedProfiles.find(
+            (profile) => profile.patientId === selectedPatientId
+          );
+          if (selectedProfile) {
+            setSelectedId(selectedProfile.patientId);
+          }
+        }
       } else {
-        setAllUsers([]);
-        notify("No dependent profiles found.");
+        setProfiles([]);
+        notify(data.message || "No dependent profiles found.");
       }
     } catch (error) {
-      console.error("Error fetching dependents:", error);
-      setError("Failed to load profiles. Please try again.");
+      console.error("Error fetching profiles:", error);
       notify("Failed to load profiles. Please try again.");
       if (error.response?.status === 401) {
         notify("Session expired. Please log in again.");
-        logout(); // Trigger logout on 401
+        logout();
+        navigate("/login");
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Load dependents on mount or when token/userData changes
   useEffect(() => {
     if (token && userData?.Mobile) {
-      fetchDependents();
+      fetchProfiles();
+    } else {
+      setIsLoading(false);
     }
-  }, [token, userData]);
-
-  // Determine current user
-  const currentUser = allUsers.find((user) => user.id === selectedPatientId) || {
-    id: userData?.PatientID || "",
-    name: `${userData?.FirstName || ""} ${userData?.LastName || ""}`.trim() || "User Name Not Found",
-    initials: `${userData?.FirstName?.[0] || ""}${userData?.LastName?.[0] || ""}`.toUpperCase() || "UN",
-    relation: "Self",
-    avatarUrl: userData?.AvatarUrl || userData?.PhotoImage || "",
-  };
+  }, [token, userData, selectedPatientId]);
 
   // Handle profile switch
-  const handleSwitchProfile = (user) => {
-    if (!user.id) {
+  const handleSwitchProfile = (profile) => {
+    if (!profile.patientId) {
       notify("Invalid profile selected. Please try again.");
       return;
     }
-    saveSelectedPatientId(user.id);
-    notify(`Switched to profile: ${user.name}`, "success");
-    onClose(); // Close dialog after switching
+    setSelectedId(profile.patientId);
+    saveSelectedPatientId(profile.patientId); // Save PatientID to context and AsyncStorage
+    notify(`Switched to profile: ${profile.name}`, "success");
+
+    // Call onSwitchProfile with the selected profile to update DashboardHeader
+    const selectedUser = {
+      PatientID: profile.patientId,
+      FirstName: profile.name.split(" ")[0] || profile.name,
+      LastName: profile.name.split(" ").slice(1).join(" ") || "",
+      PatientASID: profile.patientId, // Adjust based on your API
+      ProfileImage: profile.photoImage,
+      initials: profile.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase() || "UU",
+    };
+    onSwitchProfile(selectedUser);
+
+    onClose(); // Close dialog
+    navigate("/dashboard"); // Navigate to dashboard
   };
 
   return (
@@ -117,60 +139,66 @@ export default function SwitchProfileDialog({ onClose }) {
           {isLoading ? (
             <div className="flex justify-center py-6">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <span className="ml-2 text-blue-600">Loading profiles...</span>
             </div>
-          ) : error ? (
-            <p className="text-center text-red-500 text-sm font-medium">{error}</p>
-          ) : allUsers.length === 0 ? (
+          ) : profiles.length === 0 ? (
             <p className="text-center text-gray-500 text-sm font-medium">
               No dependent profiles available.
             </p>
           ) : (
-            allUsers.map((user) => (
+            profiles.map((profile) => (
               <div
-                key={user.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                  currentUser.id === user.id
-                    ? "bg-blue-50 border border-blue-200"
-                    : "hover:bg-gray-100 cursor-pointer"
-                }`}
+                key={profile.id}
+                className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${selectedId === profile.patientId
+                  ? "bg-blue-50 border border-blue-200"
+                  : "hover:bg-gray-100 cursor-pointer"
+                  }`}
               >
                 {/* Left side (avatar + details) */}
                 <div className="flex items-center gap-3 min-w-0">
                   <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
                     <AvatarImage
-                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=40`}
-                      alt={user.name}
+                      src={
+                        profile.photoImage
+                          ? `data:image/jpeg;base64,${profile.photoImage}`
+                          : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&size=40`
+                      }
+                      alt={profile.name}
                       className="object-cover"
                     />
                     <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
-                      {user.initials}
+                      {profile.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase() || "UU"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
                     <p className="text-sm sm:text-base font-semibold text-gray-800 truncate">
-                      {user.name}
+                      {profile.name}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-500">{user.relation}</p>
+                    <p className="text-xs sm:text-sm text-gray-500">{profile.relation}</p>
                   </div>
                 </div>
 
                 {/* Right side (button) */}
                 <Button
-                  variant={currentUser.id === user.id ? "outline" : "default"}
+                  variant={selectedId === profile.patientId ? "outline" : "default"}
                   size="sm"
-                  className={`flex items-center gap-2 text-xs sm:text-sm ${
-                    currentUser.id === user.id
-                      ? "text-blue-600 border-blue-300 bg-blue-50 hover:bg-blue-100"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                  onClick={() => handleSwitchProfile(user)}
-                  disabled={currentUser.id === user.id}
-                  aria-label={currentUser.id === user.id ? `Selected: ${user.name}` : `Select ${user.name}`}
+                  className={`flex items-center gap-2 text-xs sm:text-sm ${selectedId === profile.patientId
+                    ? "text-blue-600 border-blue-300 bg-blue-50 hover:bg-blue-100"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                  onClick={() => handleSwitchProfile(profile)}
+                  disabled={selectedId === profile.patientId}
+                  aria-label={
+                    selectedId === profile.patientId
+                      ? `Selected: ${profile.name}`
+                      : `Select ${profile.name}`
+                  }
                 >
-                  {currentUser.id === user.id ? (
+                  {selectedId === profile.patientId ? (
                     <>
                       <CheckCircle className="h-4 w-4" />
                       Selected

@@ -48,7 +48,9 @@ const AppointmentsPage = () => {
     });
     const [toDate, setToDate] = useState(new Date());
     const [appointmentRate, setAppointmentRate] = useState(null);
-
+    const handleAppCancelReason = (val) => {
+        setCancelReason(val)
+    }
     // Error handler
     const handleApiError = (error) => {
         if (error.response?.status === 401) {
@@ -194,7 +196,7 @@ const AppointmentsPage = () => {
     const fetchAppointments = async () => {
         setLoading(true);
         try {
-            const encodedPatientId = encodeURIComponent(encryptPassword(patientid));
+            const encodedPatientId = encryptPassword(encryptPassword(patientid));
             let fromDateStr, toDateStr;
             fromDateStr = fromDate.toISOString().split('T')[0];
             toDateStr = toDate.toISOString().split('T')[0];
@@ -376,7 +378,7 @@ const AppointmentsPage = () => {
             const patientID = patientid;
             const phoneNumber = userData?.Mobile || '';
             const amount = appointmentRate?.Rate || 0;
-            const url = `${apiUrls.payment}?PatientID=${encodeURIComponent(patientID)}&PhoneNumber=${encodeURIComponent(phoneNumber)}&BillNo=&Amount=${encodeURIComponent(amount)}`;
+            const url = `${apiUrls.payment}?PatientID=${encryptPassword(patientID)}&PhoneNumber=${encryptPassword(phoneNumber)}&BillNo=&Amount=${encryptPassword(amount)}`;
             window.location.href = url;
         } catch (error) {
             notify('Failed to initiate payment', 'error');
@@ -439,7 +441,7 @@ const AppointmentsPage = () => {
             formData.append('mobileappid', 'gRWyl7xEbEiVQ3u397J1KQ==');
             formData.append('UserType', 'Patient');
             formData.append('AccessScreen', 'Pathology');
-            const apiUrl = `${apiUrls.cancelAppointment}?appid=${cancelAppointmentId}&CancelReason=${encodeURIComponent(cancelReason)}`;
+            const apiUrl = `${apiUrls.cancelAppointment}?appid=${cancelAppointmentId}&CancelReason=${cancelReason}`;
             const response = await axios.post(apiUrl, formData.toString(), {
                 headers: {
                     ...getAuthHeader(),
@@ -718,7 +720,7 @@ const AppointmentsPage = () => {
                                             className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
                                             onClick={cancelAppointment}
                                         >
-                                            Cancel Appointment
+                                            Cancel
                                         </button>
                                     </>
                                 }
@@ -729,7 +731,7 @@ const AppointmentsPage = () => {
                                         repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
                                         value={cancelReason}
                                         placeHolderText="Reasons..."
-                                        onChange={e => setCancelReason(e.target.value)}
+                                        handleChange={handleAppCancelReason}
                                     />
                                 </div>
                             </DialogBox>

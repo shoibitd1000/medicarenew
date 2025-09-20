@@ -41,6 +41,7 @@ const CustomInput = ({
           peer-focus:-top-2 peer-focus:text-xs peer-focus:-left-[-20px] peer-focus:text-blue-600
           peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:-left-[-20px] peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-blue-600`}
       >
+        
         {placeholder}
       </label>
     </div>

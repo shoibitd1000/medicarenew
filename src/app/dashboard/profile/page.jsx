@@ -9,14 +9,11 @@ import {
   Card,
   CardContent,
 } from "../../../components/components/ui/card";
-
 import { Camera, ArrowLeft, KeyRound, Calendar, Mail, Key } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DialogBox,
-
   DialogFooter,
-
 } from "../../../components/components/ui/dialog";
 import CustomTextArea from "../../../components/components/ui/CustomTextArea";
 import CustomInput from "../../../components/components/ui/CustomInput";
@@ -41,9 +38,7 @@ export default function ProfilePage() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [profileImage, setProfileImage] = useState(
-    "https://placehold.co/128x128.png"
-  );
+  const [profileImage, setProfileImage] = useState("https://placehold.co/128x128.png");
   const [base64Image, setBase64Image] = useState("");
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -53,6 +48,7 @@ export default function ProfilePage() {
     try {
       if (!token) {
         notify("No authentication token available. Please log in.");
+        navigate("/login");
         return;
       }
       setProfileLoading(true);
@@ -75,6 +71,7 @@ export default function ProfilePage() {
         setAddress(data?.Address || "");
         if (data?.ProfileImage) {
           setProfileImage(`data:image/jpeg;base64,${data.ProfileImage}`);
+          setBase64Image(data.ProfileImage); // Store raw Base64 for saving
         }
       } else {
         notify("No profile data found.");
@@ -98,15 +95,31 @@ export default function ProfilePage() {
   // Handle image upload
   const handleImagePick = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result.split(",")[1]; // Extract base64 data
-        setBase64Image(base64);
-        setProfileImage(reader.result); // Set preview
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file type and size
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (!validTypes.includes(file.type)) {
+      notify("Please upload a valid image (JPEG, PNG, or GIF).");
+      return;
     }
+    if (file.size > maxSize) {
+      notify("Image size must be less than 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      const base64 = dataUrl.split(",")[1]; // Extract raw Base64 string
+      setBase64Image(base64); // Store raw Base64 for backend
+      setProfileImage(dataUrl); // Set full data URL for preview
+    };
+    reader.onerror = () => {
+      notify("Failed to read the image file.");
+    };
+    reader.readAsDataURL(file);
   };
 
   // Handle password update
@@ -125,6 +138,7 @@ export default function ProfilePage() {
     try {
       if (!token) {
         notify("User is not authenticated.");
+        navigate("/login");
         return;
       }
 
@@ -132,21 +146,17 @@ export default function ProfilePage() {
       const encryptedNewPassword = encryptPassword(newPassword);
       const encryptedConfirmPassword = encryptPassword(confirmPassword);
 
-      const apiUrl = `${apiUrls.ResetProfilepasswordapi}?oldpassword=${encodeURIComponent(
+      const apiUrl = `${
+        apiUrls.ResetProfilepasswordapi
+      }?oldpassword=${encodeURIComponent(
         encryptedOldPassword
-      )}&newpassword=${(
+      )}&newpassword=${encodeURIComponent(
         encryptedNewPassword
-      )}&confirmedpassword=${(
+      )}&confirmedpassword=${encodeURIComponent(
         encryptedConfirmPassword
       )}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
 
-      const response = await axios.post(
-        apiUrl,
-        {},
-        {
-          headers: getAuthHeader(),
-        }
-      );
+      const response = await axios.post(apiUrl, {}, { headers: getAuthHeader() });
 
       if (response?.data?.status === true) {
         notify(response?.data?.message || "Password updated successfully!", "success");
@@ -175,20 +185,26 @@ export default function ProfilePage() {
       notify("Phone number and email cannot be empty.");
       return;
     }
+
     setLoading(true);
     try {
-      // const formData = new formData();
-      // formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
-      // formData.append("Mobile", phone);
-      // formData.append("Email", email);
-      // formData.append("ProfileImage", base64Image || "");
-      const response = await axios.post(`${apiUrls.updateProfileapi}?mobileappid=gRWyl7xEbEiVQ3u397J1KQ==`, {
+      const formData = new FormData();
+      formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
+      formData.append("Mobile", phone);
+      formData.append("Email", email);
+      if (base64Image) {
+        formData.append("ProfileImage", base64Image); 
+      }
+
+      const response = await axios.post(apiUrls.updateProfileapi, formData, {
         headers: {
-          ...getAuthHeader()
+          ...getAuthHeader(),
+          "Content-Type": "multipart/form-data",
         },
       });
 
       if (response?.data?.status === true) {
+        // Update userData in AuthContext with the new profile image
         saveUserData({
           ...userData,
           Mobile: phone,
@@ -201,7 +217,9 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      notify("Something went wrong. Please try again.");
+      notify(
+        error.response?.data?.message || "Something went wrong. Please try again."
+      );
       if (error.response?.status === 401) {
         notify("Session expired. Please log in again.");
         navigate("/login");
@@ -213,6 +231,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-2">
+      <Toaster/>
       {profileLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -246,7 +265,7 @@ export default function ProfilePage() {
                     <input
                       type="file"
                       accept="image/*"
-                      className="hidden"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       onChange={handleImagePick}
                     />
                     <span className="sr-only">Change profile photo</span>
@@ -338,11 +357,11 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     type="button"
-                    className="md:w-auto bg-accent text-accent-foreground hover:bg-accent/90"
+                    className="md:w-auto bg-primary text-white hover:bg-blue"
                     onClick={handleSaveChanges}
                     disabled={loading}
                   >
-                    {loading ? "Saving..." : "Save Changes"}
+                    {loading ? "Updating..." : "Update"}
                   </Button>
                 </div>
               </form>

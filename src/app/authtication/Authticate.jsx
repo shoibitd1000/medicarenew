@@ -6,8 +6,6 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [userData, setUserData] = useState({});
-
-
   const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deviceId, setDeviceId] = useState(null);
@@ -15,10 +13,11 @@ export const AuthProvider = ({ children }) => {
   const TOKEN_EXPIRY_KEY = "token_expiry";
   const FOUR_HOURS = 4 * 60 * 60 * 1000; // 4 hours in ms
 
-  localStorage.setItem(TOKEN_EXPIRY_KEY, Date.now() + FOUR_HOURS);
   useEffect(() => {
+    let timeoutId;
+
     try {
-      const storedToken = localStorage.getItem("token");   // APIToken
+      const storedToken = localStorage.getItem("token");
       const storedUserData = localStorage.getItem("userData");
       const storedDeviceId = localStorage.getItem("deviceId");
       const storedPatientId = localStorage.getItem("selectedPatientId");
@@ -30,8 +29,16 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      if (storedToken) {
+        setToken(storedToken);
 
-      if (storedToken) setToken(storedToken);
+        const timeUntilExpiry = parseInt(expiry, 10) - Date.now();
+        if (timeUntilExpiry > 0) {
+          timeoutId = setTimeout(() => {
+            logout();
+          }, timeUntilExpiry);
+        }
+      }
 
       if (storedUserData) {
         try {
@@ -60,11 +67,16 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   const isValidToken = (token) =>
     typeof token === "string" && token.trim().length > 0;
-
 
   const clearAuth = () => {
     localStorage.removeItem("token");
@@ -74,25 +86,32 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(TOKEN_EXPIRY_KEY);
 
     setToken(null);
-    setUserData(null);
+    setUserData({});
     setSelectedPatientId(null);
     setDeviceId(null);
+    setIsLoading(false);
   };
 
   const logout = (navigate) => {
     clearAuth();
-    if (navigate && typeof navigate === "function") {
+    /* if (navigate && typeof navigate === "function") {
       navigate("/", { replace: true });
-    } else {
+    }  *//* else {
       window.location.href = "/";
-    }
+    } */
   };
 
-  const saveToken = (newToken, ttlMs = 6 * 60 * 60 * 1000) => {
+  const saveToken = (newToken, ttlMs = FOUR_HOURS) => {
     if (!isValidToken(newToken)) return;
     localStorage.setItem("token", newToken);
     localStorage.setItem(TOKEN_EXPIRY_KEY, (Date.now() + ttlMs).toString());
     setToken(newToken);
+
+    const timeoutId = setTimeout(() => {
+      logout();
+    }, ttlMs);
+
+    return () => clearTimeout(timeoutId);
   };
 
   const saveUserData = (data) => {
@@ -125,7 +144,6 @@ export const AuthProvider = ({ children }) => {
     return selectedPatientId || userData?.PatientID || null;
   };
 
-
   const getAuthHeader = () => {
     if (token) {
       return {
@@ -137,8 +155,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
-  // Axios interceptor (inject token)
   useEffect(() => {
     const reqInterceptor = axios.interceptors.request.use((config) => {
       if (token) {

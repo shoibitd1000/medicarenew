@@ -38,16 +38,15 @@ import DischargeSummary from "./app/dashboard/clinical-record/dischargeSummary/D
 import IsLoader from "./app/loading";
 
 export function App() {
-  const [currentUser, setCurrentUser] = useState(allUsers[0]);
   const { token, isLoading, userData } = useContext(AuthContext);
-  
+  const [currentUser, setCurrentUser] = useState(userData);
   if (isLoading) return <div><IsLoader /></div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {token && userData && (
         <DashboardHeader
-          currentUser={currentUser}
+          currentUser={userData}
           allUsers={allUsers}
           onSwitchProfile={setCurrentUser}
         />
@@ -88,7 +87,7 @@ export function App() {
               <Route path="/send-message" element={<SendMessagePage />} />
               <Route path="/faq" element={<FaqPage />} />
               <Route path="/feedback" element={<FeedbackSection />} />
-              {/* <Route path="*" element={<Navigate to="/dashboard" />} /> */}
+              <Route path="*" element={<Navigate to="/dashboard" />} />
             </>
           )}
           <Route path="generate-password" element={<GeneratePasswordPage />} />

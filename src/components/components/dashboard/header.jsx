@@ -18,7 +18,13 @@ import { Sheet, SheetTrigger, SheetContent } from "../ui/sheet";
 import { DialogBox } from "../ui/dialog";
 import SwitchProfileDialog from "./switch-profile-dialog";
 import NotificationsPanel from "./notifications-panel";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,11 +40,13 @@ import { useContext } from "react";
 import { AuthContext } from "./../../../app/authtication/Authticate";
 
 export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile }) {
-  const { logout, clearAuth } = useContext(AuthContext)
+  const { logout, clearAuth } = useContext(AuthContext);
+  const [base64Image, setBase64Image] = useState("");
   const [currentDate, setCurrentDate] = useState("");
   const [isSwitchProfileOpen, setIsSwitchProfileOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Set current date
   useEffect(() => {
     setCurrentDate(
       new Date().toLocaleDateString("en-US", {
@@ -50,13 +58,16 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
     );
   }, []);
 
+  // Set Base64 image when currentUser changes
+  useEffect(() => {
+    setBase64Image(
+      currentUser?.ProfileImage
+        ? `data:image/jpeg;base64,${currentUser.ProfileImage}`
+        : "https://placehold.co/128x128.png"
+    );
+  }, [currentUser?.ProfileImage]); // Only re-run when currentUser.ProfileImage changes
 
-
-  const handleLogout = () => {
-    clearAuth()
-    logout(navigate); // pass navigate so it redirects after clearing auth
-  };
-
+  
 
   return (
     <header className="sticky top-0 z-10 bg-background backdrop-blur-sm border-b p-2 sm:p-4">
@@ -65,22 +76,22 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
         <div className="flex items-center gap-2 sm:gap-4">
           <Link to="/dashboard/profile">
             <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-primary">
-              <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-              <AvatarFallback>{currentUser.initials}</AvatarFallback>
+              <AvatarImage src={base64Image} alt={currentUser?.FirstName || "User"} />
+              <AvatarFallback>{currentUser?.initials || "U"}</AvatarFallback>
             </Avatar>
           </Link>
           <Link to="/dashboard/profile">
-            <>
+            <div>
               <h2 className="text-base sm:text-xl lg:text-lg font-bold text-primary font-headline italic uppercase">
-                {currentUser.name}
+                {currentUser?.FirstName || ""}  {currentUser?.LastName || ""}
               </h2>
               <p className="font-bold text-sm sm:text-base text-primary">
-                ID: {currentUser.id}
+                ID: {currentUser?.PatientASID || "N/A"}
               </p>
               <p className="text-xs text-muted-foreground hidden md:block font-semibold">
                 {currentDate}
               </p>
-            </>
+            </div>
           </Link>
         </div>
 
@@ -93,7 +104,11 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
         <div className="flex items-center gap-1 sm:gap-1">
           {/* Home Button */}
           <Link to="/dashboard">
-            <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 hover:bg-accent/90">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 sm:h-12 sm:w-12 hover:bg-accent/90"
+            >
               <Home className="h-5 w-5 sm:h-6 sm:w-6" />
               <span className="sr-only">Home</span>
             </Button>
@@ -165,7 +180,7 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
               {/* Logout Confirmation */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
                     <LogOut className="mr-2" />
                     Logout
                   </DropdownMenuItem>
@@ -178,10 +193,10 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
                     <AlertDialogAction
-
-                      className="bg-destructive hover:bg-destructive/90"
+                      onClick={logout}
+                      className="cursor-pointer"
                     >
                       Logout
                     </AlertDialogAction>

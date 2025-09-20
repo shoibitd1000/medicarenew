@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { KeyRound, Mail, ShieldUser } from "lucide-react";
 import CustomPasswordInput from "../components/components/ui/CustomPassInput";
 import CustomInput from "../components/components/ui/CustomInput";
-import { encryptPassword } from "../components/EncyptHooks/EncryptLib";
+import {  encryptPassword } from "../components/EncyptHooks/EncryptLib";
 import { AuthContext } from "./authtication/Authticate";
 import { apiUrls } from "../components/Network/ApiEndpoint";
 import axios from "axios";
@@ -46,19 +46,23 @@ export default function LoginPage() {
       const encryptedPassword = encryptPassword(password);
       const params = {
         username,
+        // password: "lFHJxe7m+hD37Caog0eCSA==",/
         password: encryptedPassword,
+        // password: "lFHJxe7m+hD37Caog0eCSA==",
+
         devicetype: "A",
         deviceid: deviceId,
       };
-
-      const res = await axios.post(apiUrls.login, null, { params });
+      debugger
+      // const res = await axios.post(apiUrls.login, null, { params });
+      const res = await axios.post("http://localhost:5173/MobileApp_API/API/LoginAPIDynamic/Getlogin?username=11295794&password=lFHJxe7m+hD37Caog0eCSA==&devicetype=A&deviceid=0ddac5d-7337-41e8-8d99-638bbf09b78a");
       const data = res.data;
 
       if (data.status) {
         debugger
         const user = data.response?.[0];
         if (user.APIToken) {
-          saveToken(user.APIToken);  
+          saveToken(user.APIToken);
         }
 
         saveUserData(user);

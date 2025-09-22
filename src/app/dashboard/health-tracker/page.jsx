@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/components/ui/card";
-import { ChevronRight, Thermometer, HeartPulse, Wind, Heart, Droplets, Weight, Percent, Ruler } from "lucide-react";
+import { ChevronsRight , Thermometer, HeartPulse, Wind, Heart, Droplets, Weight, Percent, Ruler } from "lucide-react";
 import CustomDatePicker from "../../../components/components/ui/CustomDatePicker";
 import { format } from "date-fns";
 import axios from "axios";
@@ -208,7 +208,7 @@ const HealthTrackerPage = () => {
             return (
               <Card
                 key={vital.name}
-                className="bg-blue-50 shadow-md h-full border border-blue-200 rounded-lg"
+                className="bg-blue-50 shadow-md h-full border border-blue-200 rounded-lg p-3"
                 aria-label={`Loading ${vital.name}`}
               >
                 <CardContent className="p-4 flex flex-col items-center text-center justify-between h-full">
@@ -219,7 +219,7 @@ const HealthTrackerPage = () => {
                     <p className="text-sm font-semibold text-gray-800">{vital.name}</p>
                     <p className="text-sm text-gray-600">Loading...</p>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
+                  <ChevronsRight  className="h-5 w-5 text-gray-600 mt-2 self-end" />
                 </CardContent>
               </Card>
             );
@@ -236,10 +236,10 @@ const HealthTrackerPage = () => {
                 aria-label={`View details for ${vital.name}`}
               >
                 <Card
-                  className="hover:bg-blue-50 hover:shadow-lg transition-all duration-300 cursor-pointer h-full border border-blue-200 rounded-lg"
+                  className="hover:bg-blue-50 hover:shadow-lg transition-all p-3 duration-300 cursor-pointer h-full border border-blue-200 rounded-lg"
                   aria-label={`Vital information for ${vital.name}`}
                 >
-                  <CardContent className="p-4 flex flex-col items-center text-center justify-between h-full">
+                  <CardContent className="pb-0 flex flex-col items-center text-center justify-between h-full">
                     <div className="flex-grow flex flex-col items-center justify-center">
                       <div className="p-3 bg-blue-100 rounded-full mb-3">
                         <Icon className="h-8 w-8 text-blue-600 bg-white border border-blue-300 rounded-lg shadow-md p-1" />
@@ -257,7 +257,7 @@ const HealthTrackerPage = () => {
                         <p className="text-sm text-gray-600">No data available</p>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
+                    <ChevronsRight  className="h-5 w-5 text-gray-600 mt-2 self-end" />
                   </CardContent>
                 </Card>
               </Link>

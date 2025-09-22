@@ -47,15 +47,15 @@ export default function LoginPage() {
       const params = {
         username,
         // password: "lFHJxe7m+hD37Caog0eCSA==",/
-        password: encryptedPassword,
+        password:encryptedPassword,
         // password: "lFHJxe7m+hD37Caog0eCSA==",
 
         devicetype: "A",
         deviceid: deviceId,
       };
       debugger
-      // const res = await axios.post(apiUrls.login, null, { params });
-      const res = await axios.post("http://localhost:5173/MobileApp_API/API/LoginAPIDynamic/Getlogin?username=11295794&password=lFHJxe7m+hD37Caog0eCSA==&devicetype=A&deviceid=0ddac5d-7337-41e8-8d99-638bbf09b78a");
+      const res = await axios.post(apiUrls.login, null, { params });
+      // const res = await axios.post("http://localhost:5173/MobileApp_API/API/LoginAPIDynamic/Getlogin?username=11295794&password=ED5wLgc3Mnw=&devicetype=A&deviceid=0ddac5d-7337-41e8-8d99-638bbf09b78a");
       const data = res.data;
 
       if (data.status) {

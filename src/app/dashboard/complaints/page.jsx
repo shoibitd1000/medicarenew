@@ -77,11 +77,12 @@ const FeedbackSection = () => {
         return;
       }
 
-      const url = `${apiUrls.patientFeedbackapi}?PateintID=${encodeURIComponent(patientId)}`;
+      const url = `${apiUrls.patientFeedbackapi}?PateintID=${patientId}`;
       const response = await axios.get(url, {
         headers: getAuthHeader(),
       });
 
+      debugger
       if (response?.data?.status) {
         setFeedbackHistory(response.data.response);
       } else {
@@ -91,7 +92,7 @@ const FeedbackSection = () => {
     } catch (error) {
       console.error("Error fetching feedback:", error);
       if (error.response?.status === 401) {
-        navigate("/enter-mpin");
+        navigate("/");
       } else {
         notify("Error fetching feedback history", "error");
       }
@@ -137,13 +138,12 @@ const FeedbackSection = () => {
     }
     setLoading(true);
     try {
-      const subjectValue = apisubject || formatDateToDDMMMYYYY(new Date());
       const abc = remarks.trim() ? remarks : apisubject;
-      const url = `${apiUrls.patientFeedbackSaveapi}?PatientId=${encryptPassword(patientId)}&PatientRating=${rating}&Remarks=${encryptPassword(abc)}&Subject=${encryptPassword(subjectValue)}`;
-
-
-
-      const response = await axios.post(url, {}, { headers: getAuthHeader() });
+      debugger
+      const response = await axios.post(`${apiUrls.patientFeedbackSaveapi}?PateintID=${patientId
+        }&PatientRating=${rating}&Remarks=${
+          apisubject
+        }&Subject=${abc}`, {}, { headers: getAuthHeader() });
 
       if (response?.data?.status) {
         notify(response?.data?.message || "Feedback submitted successfully", "success");

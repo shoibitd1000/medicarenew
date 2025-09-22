@@ -36,6 +36,8 @@ import GeneratePasswordPage from "./app/generate-password/page";
 import VerifyOtpPage from "./app/verify-otp/page";
 import DischargeSummary from "./app/dashboard/clinical-record/dischargeSummary/DischargeSummary";
 import IsLoader from "./app/loading";
+import ContactUsPage from "./app/dashboard/contact/page";
+import ContactUsScreen from "./app/dashboard/contact/pages";
 
 export function App() {
   const { token, isLoading, userData } = useContext(AuthContext);
@@ -87,7 +89,8 @@ export function App() {
               <Route path="/send-message" element={<SendMessagePage />} />
               <Route path="/faq" element={<FaqPage />} />
               <Route path="/feedback" element={<FeedbackSection />} />
-              <Route path="*" element={<Navigate to="/dashboard" />} />
+              <Route path="/contact-us" element={<ContactUsScreen />} />
+              {/* <Route path="*" element={<Navigate to="/dashboard" />} /> */}
             </>
           )}
           <Route path="generate-password" element={<GeneratePasswordPage />} />

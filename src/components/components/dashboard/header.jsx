@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Sheet, SheetTrigger, SheetContent } from "../ui/sheet";
 import { DialogBox } from "../ui/dialog";
 import SwitchProfileDialog from "./switch-profile-dialog";
-import NotificationsPanel from "./notifications-panel";
+import NotificationsPanel, { sampleNotifications } from "./notifications-panel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,7 +67,7 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
     );
   }, [currentUser?.ProfileImage]); // Only re-run when currentUser.ProfileImage changes
 
-  
+
 
   return (
     <header className="sticky top-0 z-10 bg-background backdrop-blur-sm border-b p-2 sm:p-4">
@@ -107,7 +107,7 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 sm:h-12 sm:w-12 hover:bg-accent/90"
+              className="flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 hover:shadow-lg transition-all duration-300 ease-in-out"
             >
               <Home className="h-5 w-5 sm:h-6 sm:w-6" />
               <span className="sr-only">Home</span>
@@ -120,23 +120,24 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative rounded-full h-10 w-10 bell-btn"
+                className="relative flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 hover:shadow-lg transition-all duration-300 ease-in-out"
+                aria-label="View notifications"
+                title="View notifications"
               >
-                <Bell />
-                <span className="absolute top-1 right-1 h-3 w-3 flex">
-                  <span className="absolute bg-white h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span className="absolute top-1 right-1 h-2 w-2 sm:h-4 sm:w-4">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-blue-500 text-white flex justify-center items-center">{sampleNotifications?.length}</span>
                 </span>
                 <span className="sr-only">View Notifications</span>
               </Button>
             </SheetTrigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 sm:h-12 sm:w-12 hover:bg-accent/90"
+            <Link
+              to="/contact-us"
+              className="flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 hover:shadow-lg transition-all duration-300 ease-in-out"
+              aria-label="Contact Us"
             >
-              <Phone className="h-5 w-5 sm:h-6 sm:w-6" />
-            </Button>
+              <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
+            </Link>
             <SheetContent className="w-full max-w-sm sm:max-w-md p-0">
               <NotificationsPanel />
             </SheetContent>

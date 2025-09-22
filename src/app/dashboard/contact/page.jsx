@@ -43,7 +43,7 @@ export default function ContactUsPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4">
       <div className="text-center">
         <h1 className="text-3xl font-bold font-headline text-primary">Contact Us</h1>
         <p className="text-muted-foreground">Find our hospital centers near you.</p>

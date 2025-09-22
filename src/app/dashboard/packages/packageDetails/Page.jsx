@@ -14,7 +14,7 @@ const PackageDetail = () => {
     const packageID = params?.id;
     const packageType = location.state?.activeTab || "OPD";
 
-    const { token, getAuthHeader } = useContext(AuthContext);
+    const { token, getAuthHeader,logout } = useContext(AuthContext);
 
     const [loading, setLoading] = useState(true);
     const [packageData, setPackageData] = useState([]);
@@ -63,7 +63,11 @@ const PackageDetail = () => {
                     0
                 );
                 setTotalCost(total);
-            } else {
+            }
+            if (response?.data?.status === "401") {
+                logout()
+            }
+            else {
                 notify("Error", response?.data?.message || "Failed to load package details.");
             }
         } catch (error) {

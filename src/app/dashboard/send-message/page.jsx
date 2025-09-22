@@ -191,8 +191,16 @@ export default function SendMessagePage() {
       return;
     }
 
-    if (!patientid || !selectedDoctorId || !selectedDoctorMobile) {
-      notify("Required information is missing.", "error");
+    if (!patientid ) {
+      notify("Patiend Id is Missing.", "error");
+      return;
+    }
+    if (!selectedDoctorId ) {
+      notify("Doctor Id is Missing.", "error");
+      return;
+    }
+    if (!selectedDoctorMobile ) {
+      notify("Contact No is Missing.", "error");
       return;
     }
 

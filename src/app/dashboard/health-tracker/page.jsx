@@ -12,18 +12,17 @@ import IsLoader from "../../loading";
 const HealthTrackerPage = () => {
   const { token, getAuthHeader } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [healthData, setHealthData] = useState({
-    temperature: "0",
-    pulse: "0",
-    respiration: "0",
-    bloodPressure: "0",
-    bloodSugar: "0",
-    spo2: "0",
-    weight: "0",
-    height: "0",
-    bmi: "27.8",
-    bsa: "0",
+    temperature: null,
+    pulse: null,
+    respiration: null,
+    bloodPressure: null,
+    bloodSugar: null,
+    spo2: null,
+    weight: null,
+    height: null,
+    bmi: null,
+    bsa: null,
     temperatureDate: null,
     pulseDate: null,
     respirationDate: null,
@@ -35,11 +34,11 @@ const HealthTrackerPage = () => {
   });
   const [tabSelected, setTabSelected] = useState([]);
 
-  // Function to format date (e.g., "2025-08-20T12:21:25" to "20-Aug-2025")
+  // Format date function
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return null;
     const date = new Date(dateString);
-    if (isNaN(date)) return "N/A";
+    if (isNaN(date)) return null;
     return format(date, "dd-MMM-yyyy");
   };
 
@@ -68,29 +67,29 @@ const HealthTrackerPage = () => {
 
         const getLatest = (type) => {
           const filtered = records.filter(
-            (item) =>
-              item.VitalSignType?.trim().toLowerCase() === type.toLowerCase()
+            (item) => item.VitalSignType?.trim().toLowerCase() === type.toLowerCase()
           );
           return filtered.length > 0
             ? {
-              value: filtered[filtered.length - 1].VitalSignValue,
-              enteredOn: filtered[filtered.length - 1].EnteredOn,
-            }
-            : { value: "0", enteredOn: null };
+                value: filtered[filtered.length - 1].VitalSignValue,
+                enteredOn: filtered[filtered.length - 1].EnteredOn,
+              }
+            : { value: null, enteredOn: null };
         };
 
-        const latestBSA = records?.BSA;
+        const latestBSA = records?.BSA || { BSA: null };
+        const latestBMI = records?.BMI || { BMI: null };
         setHealthData({
           temperature: getLatest("Temp").value,
           pulse: getLatest("Pulse").value,
-          respiration: getLatest("Respiration").value || "0",
-          bloodPressure: getLatest("Blood Pressure").value || "0",
-          bloodSugar: getLatest("Blood Sugar").value || "0",
-          spo2: getLatest("SpO2").value || "0",
-          weight: getLatest("Weight").value || "0",
-          height: getLatest("Height").value || "0",
-          bmi: "27.8", // Hardcoded as per original, update if API provides BMI
-          bsa: latestBSA ? latestBSA.BSA : "0",
+          respiration: getLatest("Respiration").value,
+          bloodPressure: getLatest("Blood Pressure").value,
+          bloodSugar: getLatest("Blood Sugar").value,
+          spo2: getLatest("SpO2").value,
+          weight: getLatest("Weight").value,
+          height: getLatest("Height").value,
+          bmi: latestBMI.BMI,
+          bsa: latestBSA.BSA,
           temperatureDate: getLatest("Temp").enteredOn,
           pulseDate: getLatest("Pulse").enteredOn,
           respirationDate: getLatest("Respiration").enteredOn,
@@ -110,12 +109,11 @@ const HealthTrackerPage = () => {
     }
   };
 
-  // Fetch data on mount and when token or selectedDate changes
   useEffect(() => {
     fetchHealthData();
-  }, [token, selectedDate]);
+  }, [token]);
 
-  // Define vitals array with dynamic data
+  // Vitals array
   const vitals = [
     {
       name: "Temperature",
@@ -192,87 +190,117 @@ const HealthTrackerPage = () => {
   ];
 
   return (
-    <div className="space-y-8 p-6 bg-gray-100 min-h-screen">
+    <div className="space-y-8 p-6 bg-blue-100 min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 max-w-4xl mx-auto">
         <div className="text-center sm:text-left">
-          <h1 className="text-3xl font-bold font-headline text-primary">My Health Tracker</h1>
-          <p className="text-muted-foreground">An overview of your key health metrics.</p>
+          <h1 className="text-3xl font-bold text-blue-600">My Health Tracker</h1>
+          <p className="text-gray-600">An overview of your key health metrics.</p>
         </div>
-        <div className="flex flex-col items-center sm:items-end">
-          <span className="text-md text-primary">
-            {new Date().toDateString()} {/* Dynamic date like React Native */}
-          </span>
-
+        <div className="text-md text-blue-600">
+          {format(new Date(), "dd-MMM-yyyy")}
         </div>
       </div>
 
-      {/* {loading ? (
-        <IsLoader isFullScreen={false} />
-      ) : vitals.length > 0 ? ( */}
+      {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
           {vitals.map((vital) => {
-            const Icon = vital.icon; // ✅ fix for rendering component
+            const Icon = vital.icon;
+            return (
+              <Card
+                key={vital.name}
+                className="bg-blue-50 shadow-md h-full border border-blue-200 rounded-lg"
+                aria-label={`Loading ${vital.name}`}
+              >
+                <CardContent className="p-4 flex flex-col items-center text-center justify-between h-full">
+                  <div className="flex-grow flex flex-col items-center justify-center">
+                    <div className="p-3 bg-blue-100 rounded-full mb-3">
+                      <Icon className="h-8 w-8 text-blue-600 bg-white border border-blue-300 rounded-lg shadow-md p-1" />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800">{vital.name}</p>
+                    <p className="text-sm text-gray-600">Loading...</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : vitals.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {vitals.map((vital) => {
+            const Icon = vital.icon;
             return (
               <Link
-                to={{
-                  pathname: `/health-tracker/details`,
-                  state: {
-                    metricName: vital.name,
-                    metricValue: vital.value,
-                    unit: vital.unit,
-                    vitalSignType: vital.vitalSignType,
-                    enteredOn: vital.date,
-                  },
-                }}
+                to={`/health-tracker/details/${vital.slug}`}
                 key={vital.name}
+                aria-label={`View details for ${vital.name}`}
               >
-                <Card className="hover:bg-accent/50 hover:shadow-md transition-all cursor-pointer h-full">
+                <Card
+                  className="hover:bg-blue-50 hover:shadow-lg transition-all duration-300 cursor-pointer h-full border border-blue-200 rounded-lg"
+                  aria-label={`Vital information for ${vital.name}`}
+                >
                   <CardContent className="p-4 flex flex-col items-center text-center justify-between h-full">
                     <div className="flex-grow flex flex-col items-center justify-center">
-                      <div className="p-3 bg-accent/20 rounded-full mb-2 inline-block">
-                        <Icon className="h-8 w-8 mx-auto text-primary bg-white border rounded-lg shadow-md p-1 animate-blink" />
+                      <div className="p-3 bg-blue-100 rounded-full mb-3">
+                        <Icon className="h-8 w-8 text-blue-600 bg-white border border-blue-300 rounded-lg shadow-md p-1" />
                       </div>
-                      <p className="text-sm font-semibold">{vital.name}</p>
-                      <p className="text-xl sm:text-2xl font-bold text-primary">
-                        {vital.value}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{vital.unit}</p>
-                      <p className="text-xs font-bold text-primary">{vital.date}</p>
+                      <p className="text-sm font-semibold text-gray-800">{vital.name}</p>
+                      {vital.value && vital.unit && vital.date ? (
+                        <>
+                          <p className="text-xl sm:text-2xl font-bold text-blue-600">
+                            {vital.value}
+                          </p>
+                          <p className="text-xs text-gray-600">{vital.unit}</p>
+                          <p className="text-xs font-bold text-blue-600">{vital.date}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-600">No data available</p>
+                      )}
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground mt-2 self-end" />
+                    <ChevronRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
                   </CardContent>
                 </Card>
               </Link>
             );
           })}
         </div>
-      {/* ) : (
-        <p className="text-center text-gray-500">No vitals found</p>
-      )} */}
+      ) : (
+        <p className="text-center text-gray-600">No vitals found</p>
+      )}
 
-
-      {/* BMI + BSA */}
-      <div className="max-w-4xl mx-auto">
-        <Card className="shadow-lg my-3">
+      <div className="max-w-4xl mx-auto space-y-4">
+        <Card className="shadow-lg border border-blue-200 rounded-lg" aria-label="BMI (Body Mass Index)">
           <CardHeader>
-            <CardTitle>BMI (Body Mass Index)</CardTitle>
+            <CardTitle className="text-blue-600">BMI (Body Mass Index)</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-5xl font-bold text-primary">{healthData.bmi}</p>
-            <p className="text-muted-foreground">kg/m²</p>
+            {loading ? (
+              <p className="text-sm text-gray-600">Loading...</p>
+            ) : (
+              <>
+                <p className="text-5xl font-bold text-blue-600">{healthData.bmi || "N/A"}</p>
+                <p className="text-gray-600">kg/m²</p>
+              </>
+            )}
           </CardContent>
         </Card>
-        <Card className="shadow-lg my-3">
+        <Card className="shadow-lg border border-blue-200 rounded-lg" aria-label="BSA (Body Surface Area)">
           <CardHeader>
-            <CardTitle>BSA (Body Surface Area)</CardTitle>
+            <CardTitle className="text-blue-600">BSA (Body Surface Area)</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-5xl font-bold text-primary">{healthData.bsa}</p>
-            <p className="text-muted-foreground">m²</p>
+            {loading ? (
+              <p className="text-sm text-gray-600">Loading...</p>
+            ) : (
+              <>
+                <p className="text-5xl font-bold text-blue-600">{healthData.bsa || "N/A"}</p>
+                <p className="text-gray-600">m²</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
-    </div >
+    </div>
   );
 };
 

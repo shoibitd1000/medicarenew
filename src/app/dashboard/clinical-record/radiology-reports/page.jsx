@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useContext } from "react";
 import { FileDown, ArrowLeft, Calendar, Scan } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import CustomDatePicker from "../../../../components/components/ui/CustomDatePic
 import CustomTable from "../../../../components/components/ui/customTabel";
 import { apiUrls } from "../../../../components/Network/ApiEndpoint";
 import IsLoader from "../../../loading";
+import { AuthContext } from "../../../authtication/Authticate";
 
 const IsResultClasses = {
   Approved: "bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold",
@@ -16,15 +17,14 @@ const IsResultClasses = {
 };
 
 export default function LabReportsPage() {
+  const { token, getCurrentPatientId, getAuthHeader, Logout } = useContext(AuthContext);
   const [labReports, setLabReports] = useState([]);
   const [fromDate, setFromDate] = useState();
   const [toDate, setToDate] = useState();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Simulated token and patient ID (replace with actual AuthContext or similar)
-  const token = "YOUR_BEARER_TOKEN"; // Replace with actual token from your auth context
-  const patientId = "YOUR_PATIENT_ID"; // Replace with actual patient ID from your auth context
+  const patientId = getCurrentPatientId(); // Replace with actual patient ID from your auth context
 
   useEffect(() => {
     const to = new Date();
@@ -55,7 +55,8 @@ export default function LabReportsPage() {
         },
       });
 
-      if (response.data?.IsResult === true) {
+      if (response.data?.status === true) {
+        debugger
         setLabReports(response.data.response);
       } else {
         setLabReports([]);
@@ -155,8 +156,8 @@ export default function LabReportsPage() {
             <div className="text-center py-8">
                <IsLoader isFullScreen={false} size="6" text="Radiology Investigation Reports..." />
             </div>
-          ) : formattedData?.length > 0 ? (
-            formattedData.map((item, i) => (
+          ) : labReports?.length > 0 ? (
+            labReports.map((item, i) => (
               <div
                 key={i}
                 className="border rounded-lg shadow-md p-4 bg-white my-3 "

@@ -26,7 +26,7 @@ import axios from "axios";
 import { encryptPassword } from "../../../components/EncyptHooks/EncryptLib";
 
 export default function ProfilePage() {
-  const { token, userData, saveUserData, getAuthHeader } = useContext(AuthContext);
+  const { token, userData, saveUserData, getAuthHeader,clearAuth } = useContext(AuthContext);
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
@@ -211,7 +211,7 @@ export default function ProfilePage() {
           Email: email,
           ProfileImage: base64Image || userData?.ProfileImage,
         });
-        notify(response?.data?.message || "Profile updated successfully!", "success");
+        notify("Profile updated successfully!", "success");
       } else {
         notify(response?.data?.message || "Failed to update profile.");
       }
@@ -222,7 +222,8 @@ export default function ProfilePage() {
       );
       if (error.response?.status === 401) {
         notify("Session expired. Please log in again.");
-        navigate("/login");
+        // navigate("/login");
+        clearAuth()
       }
     } finally {
       setLoading(false);

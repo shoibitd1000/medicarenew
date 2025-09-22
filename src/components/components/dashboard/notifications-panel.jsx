@@ -12,7 +12,7 @@ import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
 import { SheetTitle } from "../ui/sheet";
 
-const sampleNotifications = [
+export const sampleNotifications = [
   {
     id: "1",
     title: "Appointment Reminder",

@@ -57,6 +57,17 @@ export const apiUrls = {
   updateProfileapi: `${envUrl}/LoginAPIDynamic/UpdateProfile`,
   ResetProfilepasswordapi: `${envUrl}/LoginAPIDynamic/ResetProfilepassword`,
   forgotPasswordapi: `${envUrl}/LoginAPIDynamic/Forgetpassword`,
+  // contact Us Api
+  contactUsapi: `${envUrl}/LoginAPIDynamic/ContactUs`,
+  // ambulance Apis
+  ambulanceDetailsapi: `${envUrl}/LoginAPIDynamic/ReactGetAmbulanceDetails`,
+  ambulanceTypesapi: `${envUrl}/LoginAPIDynamic/ReactGetAmbulanceType`,
+  ambulancePatientHisapi: `${envUrl}/LoginAPIDynamic/ReactGetAmbulancePatientHistory`,
+  centreWiseEmergencyNoapi: `${envUrl}/LoginAPIDynamic/ReactGetCentreWiseEmergencyNo`,
+  patientAmmbulanceReqapi: `${envUrl}/LoginAPIDynamic/ReactSavePatientAmbulanceRequest`,
+  patientAmmbulanceReqapi: `${envUrl}/LoginAPIDynamic/ReactSavePatientAmbulanceRequest`,
+  // Bill Report api
+  patientBillapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientBills`,
   // payment: 'http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
 
 };

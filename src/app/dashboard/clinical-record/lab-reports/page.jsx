@@ -17,17 +17,27 @@ const statusClasses = {
 };
 
 export default function LabReportsPage() {
-  const { token, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
+  const { token, getCurrentPatientId, getAuthHeader, Logout } = useContext(AuthContext);
   const [labReports, setLabReports] = useState([]);
   const [fromDate, setFromDate] = useState(subDays(new Date(), 30));
   const [toDate, setToDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const patientId = getCurrentPatientId();
-
+  const formattedFromDate = format(fromDate, "dd-MM-yyyy");
+  const formattedToDate = format(toDate, "dd-MM-yyyy");
   const fetchLabRecord = async () => {
     if (!patientId || !token) {
       console.error("Missing patientId or token");
+      notify("Error", "Authentication details are missing");
+      setLabReports([]);
+      setLoading(false);
+      return;
+    }
+
+    if (!formattedToDate || !formattedFromDate) {
+      console.error("Missing fromDate or toDate");
+      notify("Error", "Please select valid date range");
       setLabReports([]);
       setLoading(false);
       return;
@@ -35,33 +45,46 @@ export default function LabReportsPage() {
 
     setLoading(true);
     try {
-      const formData = new URLSearchParams();
+      const formData = new FormData();
       formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
-      formData.append("UserType", "Patient");
-      formData.append("AccessScreen", "Pathology");
+      /* formData.append("UserType", "Patient");
+      formData.append("AccessScreen", "Pathology"); */
+      // formData.append("FromDate", fromDate); // ✅ only dates in payload
+      // formData.append("ToDate", toDate);
 
       const encodedPatientId = encodeURIComponent(encryptPassword(patientId));
+
       const response = await axios.post(
-        `${apiUrls.patientLabHistory}?PatientID=${encodedPatientId}&Fromdate=${format(
-          fromDate,
-          "yyyy-MM-dd"
-        )}&Todate=${format(toDate, "yyyy-MM-dd")}`,
-        formData.toString(),
+        apiUrls.patientLabHistory,
+        formData,
         {
           headers: {
             ...getAuthHeader(),
+          },
+          params: {
+            PatientID: encodedPatientId,
+            Fromdate: formattedFromDate,
+            Todate: formattedToDate,
           },
         }
       );
 
       if (response.data?.status === true) {
         setLabReports(response.data.response || []);
+        notify("Success", "Lab reports fetched successfully");
       } else {
         console.warn("API returned no data or invalid status");
         setLabReports([]);
+        notify("Error", "No lab reports found for the selected date range");
       }
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
+      if (error.response?.status === 401) {
+        notify("Error", "Session expired. Please log in again.");
+        Logout();
+      } else {
+        notify("Error", "Failed to fetch lab reports");
+      }
       setLabReports([]);
     } finally {
       setLoading(false);
@@ -70,20 +93,21 @@ export default function LabReportsPage() {
 
   useEffect(() => {
     fetchLabRecord();
-  }, [fromDate, toDate, patientId, token]);
+  }, [formattedFromDate, formattedToDate, patientId, token]);
+
 
   const filteredReports = useMemo(() => {
-    if (!fromDate || !toDate) return labReports;
+    if (!formattedFromDate || !formattedToDate) return labReports;
     return labReports.filter((report) => {
       const reportDate = new Date(report.DATE);
       if (isNaN(reportDate)) return false;
-      const from = new Date(fromDate);
+      const from = new Date(formattedFromDate);
       from.setHours(0, 0, 0, 0);
-      const to = new Date(toDate);
+      const to = new Date(formattedToDate);
       to.setHours(23, 59, 59, 999);
       return reportDate >= from && reportDate <= to;
     });
-  }, [labReports, fromDate, toDate]);
+  }, [labReports, formattedFromDate, formattedToDate]);
 
   const formatDate = (dateValue) => {
     if (!dateValue) return "N/A";

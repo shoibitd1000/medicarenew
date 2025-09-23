@@ -74,7 +74,7 @@ const PackageInformations = () => {
 
   return (
     <>
-    <Toaster/>
+      <Toaster />
       <div className="space-y-8 p-6 ">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-[#3287C2] mb-1">Health Package Information</h1>
@@ -130,14 +130,15 @@ const PackageInformations = () => {
                   className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
 
                 >
+                  {console.log(pkg)}
                   <h3 className="text-base font-bold text-[#3287C2] mb-2">{pkg.Name}</h3>
                   <p className="text-sm text-[#444] mb-4">{pkg.TestName}</p>
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-black text-sm">KES {pkg.Rate}</span>
-                    <div className="flex items-center text-[#3287C2] font-semibold text-xs">
+                    <Link to={`/packages/packages-details/${pkg.Type_ID}`} className='flex items-center text-[#3287C2] font-semibold text-xs'>
                       <span>Details</span>
-                      <Link to={`/packages/packages-details/${pkg.ItemID}`}><ChevronsRight className="ml-1 text-xs" /></Link>
-                    </div>
+                      <span><ChevronsRight className="ml-1 text-xs" /></span>
+                    </Link>
                   </div>
                 </div>
               ))

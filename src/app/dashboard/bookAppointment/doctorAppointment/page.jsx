@@ -531,7 +531,7 @@ const AppointmentsPage = () => {
                         {['book', 'upcoming', 'past'].map(tabName => (
                             <button
                                 key={tabName}
-                                className={`py-2 shadow-md border rounded-t-md ${tab === tabName ? 'bg-white font-semibold shadow-md' : ''}`}
+                                className={`py-2 shadow-md border rounded-t-md ${tab === tabName ? 'bg-blue-800 text-white font-semibold shadow-md transation-all duration-600' : ''}`}
                                 onClick={() => setTab(tabName)}
                             >
                                 {tabName === 'book' ? 'Book New' : tabName === 'upcoming' ? 'Upcoming' : 'Past'}
@@ -678,6 +678,7 @@ const AppointmentsPage = () => {
                                             placeHolderText="Select Date"
                                             handleDate={date => setNewDate(date)}
                                             icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
+                                            // availableSlots={timeSlots}
                                         />
                                     </div>
                                     <div>

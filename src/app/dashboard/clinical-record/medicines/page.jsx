@@ -180,7 +180,7 @@ export default function MedicinesPage() {
   return (
     <div className="space-y-8 p-4">
       {/* Page Header */}
-      <div className="text-center">
+      <div className="text-center mb-3">
         <Pill className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
         <h1 className="text-3xl font-bold text-blue-600 mt-2">Medicines</h1>
         <p className="text-gray-500">A list of your prescribed medications.</p>
@@ -188,18 +188,18 @@ export default function MedicinesPage() {
 
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Back Button */}
-        <button
+        {/* <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center border px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
         >
           <span className="mr-2">←</span> Back
-        </button>
+        </button> */}
         <div className="xl:m-auto">
           <button
             onClick={() => setTab("prescription Medicines")}
             className={`py-2 px-5 me-2 rounded-t-md border 
       ${tab === "prescription Medicines"
-                ? "bg-white font-semibold border-b-0 border-gray-300"
+                ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
                 : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"}`}
           >
             Prescription Medicines
@@ -208,7 +208,7 @@ export default function MedicinesPage() {
             onClick={() => setTab("issued")}
             className={`py-2 px-5 me-2 rounded-t-md border 
       ${tab === "issued"
-                ? "bg-white font-semibold border-b-0 border-gray-300"
+                ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
                 : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"}`}
           >
             Issued Medicines

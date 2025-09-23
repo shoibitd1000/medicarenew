@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/components/ui/card";
-import { ChevronsRight , Thermometer, HeartPulse, Wind, Heart, Droplets, Weight, Percent, Ruler } from "lucide-react";
-import CustomDatePicker from "../../../components/components/ui/CustomDatePicker";
+import { ChevronsRight, Thermometer, HeartPulse, Wind, Heart, Droplets, Weight, Percent, Ruler } from "lucide-react";
 import { format } from "date-fns";
 import axios from "axios";
 import { AuthContext } from "../../authtication/Authticate"; // Adjust path as needed
@@ -36,9 +35,9 @@ const HealthTrackerPage = () => {
 
   // Format date function
   const formatDate = (dateString) => {
-    if (!dateString) return null;
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
-    if (isNaN(date)) return null;
+    if (isNaN(date)) return "N/A";
     return format(date, "dd-MMM-yyyy");
   };
 
@@ -62,7 +61,7 @@ const HealthTrackerPage = () => {
       );
 
       if (response.data.status === true) {
-        const records = response.data.response;
+        const records = response.data.response || [];
         setTabSelected(records);
 
         const getLatest = (type) => {
@@ -77,8 +76,10 @@ const HealthTrackerPage = () => {
             : { value: null, enteredOn: null };
         };
 
+        // Fixed: Use actual BMI from API instead of hardcoded value
         const latestBSA = records?.BSA || { BSA: null };
         const latestBMI = records?.BMI || { BMI: null };
+
         setHealthData({
           temperature: getLatest("Temp").value,
           pulse: getLatest("Pulse").value,
@@ -109,11 +110,20 @@ const HealthTrackerPage = () => {
     }
   };
 
+  // Fixed: getLatestVitalType function
+  const getLatestVitalType = (type) => {
+    const normalizedType = type.replace('%20', ' ').trim().toLowerCase();
+    const filtered = tabSelected.filter(
+      (item) => item.VitalSignType?.trim().toLowerCase() === normalizedType
+    );
+    return filtered.length > 0 ? filtered[filtered.length - 1].VitalSignType : normalizedType;
+  };
+
   useEffect(() => {
     fetchHealthData();
   }, [token]);
 
-  // Vitals array
+  // Vitals array with vitalSignType using getLatestVitalType
   const vitals = [
     {
       name: "Temperature",
@@ -122,7 +132,7 @@ const HealthTrackerPage = () => {
       icon: Thermometer,
       slug: "temperature",
       date: formatDate(healthData.temperatureDate),
-      vitalSignType: "Temp",
+      vitalSignType: getLatestVitalType("Temp"),
     },
     {
       name: "Pulse",
@@ -131,7 +141,7 @@ const HealthTrackerPage = () => {
       icon: HeartPulse,
       slug: "pulse",
       date: formatDate(healthData.pulseDate),
-      vitalSignType: "Pulse",
+      vitalSignType: getLatestVitalType("Pulse"),
     },
     {
       name: "Respiration",
@@ -140,7 +150,7 @@ const HealthTrackerPage = () => {
       icon: Wind,
       slug: "respiration",
       date: formatDate(healthData.respirationDate),
-      vitalSignType: "Respiration",
+      vitalSignType: getLatestVitalType("Respiration"),
     },
     {
       name: "Blood Pressure",
@@ -149,7 +159,7 @@ const HealthTrackerPage = () => {
       icon: Heart,
       slug: "blood-pressure",
       date: formatDate(healthData.bloodPressureDate),
-      vitalSignType: "Blood Pressure",
+      vitalSignType: getLatestVitalType("Blood Pressure"),
     },
     {
       name: "Blood Sugar",
@@ -158,7 +168,7 @@ const HealthTrackerPage = () => {
       icon: Droplets,
       slug: "blood-sugar",
       date: formatDate(healthData.bloodSugarDate),
-      vitalSignType: "Blood Sugar",
+      vitalSignType: getLatestVitalType("Blood Sugar"),
     },
     {
       name: "SpO2",
@@ -167,7 +177,7 @@ const HealthTrackerPage = () => {
       icon: Percent,
       slug: "spo2",
       date: formatDate(healthData.spo2Date),
-      vitalSignType: "SpO2",
+      vitalSignType: getLatestVitalType("SpO2"),
     },
     {
       name: "Weight",
@@ -176,7 +186,7 @@ const HealthTrackerPage = () => {
       icon: Weight,
       slug: "weight",
       date: formatDate(healthData.weightDate),
-      vitalSignType: "Weight",
+      vitalSignType: getLatestVitalType("Weight"),
     },
     {
       name: "Height",
@@ -185,7 +195,7 @@ const HealthTrackerPage = () => {
       icon: Ruler,
       slug: "height",
       date: formatDate(healthData.heightDate),
-      vitalSignType: "Height",
+      vitalSignType: getLatestVitalType("Height"),
     },
   ];
 
@@ -217,9 +227,9 @@ const HealthTrackerPage = () => {
                       <Icon className="h-8 w-8 text-blue-600 bg-white border border-blue-300 rounded-lg shadow-md p-1" />
                     </div>
                     <p className="text-sm font-semibold text-gray-800">{vital.name}</p>
-                    <p className="text-sm text-gray-600">Loading...</p>
+                    <IsLoader size="3" text="" isFullScreen={false} />
                   </div>
-                  <ChevronsRight  className="h-5 w-5 text-gray-600 mt-2 self-end" />
+                  <ChevronsRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
                 </CardContent>
               </Card>
             );
@@ -231,7 +241,16 @@ const HealthTrackerPage = () => {
             const Icon = vital.icon;
             return (
               <Link
-                to={`/health-tracker/details/${vital.slug}`}
+                to={{
+                  pathname: `/health-tracker/details/${vital?.name}`,
+                  state: {
+                    metricName: vital.name,
+                    metricValue: vital.value,
+                    unit: vital.unit,
+                    vitalSignType: vital.vitalSignType,
+                    enteredOn: vital.date,
+                  },
+                }}
                 key={vital.name}
                 aria-label={`View details for ${vital.name}`}
               >
@@ -257,7 +276,7 @@ const HealthTrackerPage = () => {
                         <p className="text-sm text-gray-600">No data available</p>
                       )}
                     </div>
-                    <ChevronsRight  className="h-5 w-5 text-gray-600 mt-2 self-end" />
+                    <ChevronsRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
                   </CardContent>
                 </Card>
               </Link>

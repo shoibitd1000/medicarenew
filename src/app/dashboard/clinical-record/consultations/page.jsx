@@ -135,7 +135,7 @@ const ConsultationHistoryPage = () => {
       <Toaster />
       <div className="max-w-4xl mx-auto space-y-8 p-4">
         {/* Page Header */}
-        <div className="text-center">
+        <div className="text-center m-0">
           <ClipboardPlus className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
           <h1 className="text-xl font-bold font-headline text-primary mt-2">
             Consultation History
@@ -147,12 +147,12 @@ const ConsultationHistoryPage = () => {
 
         <div className="p-4">
           <div className="space-y-6">
-            <button
+            {/* <button
               onClick={() => navigate(-1)}
               className="inline-flex items-center border px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
             >
               <span className="mr-2">←</span> Back
-            </button>
+            </button> */}
 
             {loading ? (
               <div className="text-center">

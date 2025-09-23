@@ -24,8 +24,8 @@ export default function LabReportsPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const patientId = getCurrentPatientId();
-  const formattedFromDate = format(fromDate, "dd-MM-yyyy");
-  const formattedToDate = format(toDate, "dd-MM-yyyy");
+  const formattedFromDate = format(fromDate, "yyyy-MM-dd");
+  const formattedToDate = format(toDate, "yyyy-MM-dd");
   const fetchLabRecord = async () => {
     if (!patientId || !token) {
       console.error("Missing patientId or token");
@@ -47,24 +47,21 @@ export default function LabReportsPage() {
     try {
       const formData = new FormData();
       formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
-      /* formData.append("UserType", "Patient");
-      formData.append("AccessScreen", "Pathology"); */
-      // formData.append("FromDate", fromDate); // ✅ only dates in payload
-      // formData.append("ToDate", toDate);
+      formData.append("UserType", "Patient");
+      formData.append("AccessScreen", "Pathology");
 
       const encodedPatientId = encodeURIComponent(encryptPassword(patientId));
 
+      // ✅ Format dates properly for API
+      const formattedFromDate = format(fromDate, "dd-MM-yyyy");
+      const formattedToDate = format(toDate, "dd-MM-yyyy");
+
       const response = await axios.post(
-        apiUrls.patientLabHistory,
+        `${apiUrls.patientLabHistory}?PatientID=${encodedPatientId}&Fromdate=${formattedFromDate}&Todate=${formattedToDate}`,
         formData,
         {
           headers: {
             ...getAuthHeader(),
-          },
-          params: {
-            PatientID: encodedPatientId,
-            Fromdate: formattedFromDate,
-            Todate: formattedToDate,
           },
         }
       );
@@ -118,18 +115,18 @@ export default function LabReportsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-4">
-      <div className="text-center">
+      <div className="text-center m-0">
         <TestTubeDiagonal className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
         <h1 className="text-3xl font-bold text-primary">Lab Investigation Reports</h1>
         <p className="text-gray-500">Access your lab test results.</p>
       </div>
 
-      <button
+      {/* <button
         onClick={() => navigate(-1)}
         className="inline-flex items-center border px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
       >
         <span className="mr-2">←</span> Back
-      </button>
+      </button> */}
 
       <div className="border rounded-lg shadow-md p-4 bg-white">
         <h2 className="text-lg font-semibold">Your Lab Reports</h2>

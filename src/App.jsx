@@ -11,7 +11,6 @@ import DoctorAppointment from "./app/dashboard/bookAppointment/doctorAppointment
 import LoginPage from "./app/page";
 import ClinicalRecordPage from "./app/dashboard/clinical-record/page";
 import DashboardHeader from "./components/components/dashboard/header";
-import MyDocumentsPage from "./app/dashboard/my-document/page";
 import Teleconsultation from "./app/dashboard/teleconsultation/page";
 import TeleconsultationAppointment from "./app/dashboard/teleconsultation/teleconsultationAppointment/page";
 import Investigations from "./app/dashboard/investigations/page";
@@ -22,8 +21,8 @@ import AmbulancePage from "./app/dashboard/ambulance/page";
 import LabReportsPage from "./app/dashboard/clinical-record/lab-reports/page";
 import RadiologyReportsPage from "./app/dashboard/clinical-record/radiology-reports/page";
 import TokenPage from "./app/dashboard/token/page";
-import GenerateTokenPage from "./app/dashboard/token/generate/page";
-import TokenVerification from "./app/dashboard/token/generate/tokenVerification/page";
+// import GenerateTokenPage from "./app/dashboard/token/generate/page";
+// import TokenVerification from "./app/dashboard/token/generate/tokenVerification/page";
 import ConsultationHistoryPage from "./app/dashboard/clinical-record/consultations/page";
 import MedicinesPage from "./app/dashboard/clinical-record/medicines/page";
 import HealthTrackerPage from "./app/dashboard/health-tracker/page";
@@ -32,12 +31,16 @@ import BillReportPage from "./app/dashboard/bill-report/page";
 import SendMessagePage from "./app/dashboard/send-message/page";
 import FaqPage from "./app/dashboard/faq/page";
 import FeedbackSection from "./app/dashboard/complaints/page";
-import GeneratePasswordPage from "./app/generate-password/page";
+// import GeneratePasswordPage from "./app/forgotPass/page";
 import VerifyOtpPage from "./app/verify-otp/page";
 import DischargeSummary from "./app/dashboard/clinical-record/dischargeSummary/DischargeSummary";
 import IsLoader from "./app/loading";
 import ContactUsPage from "./app/dashboard/contact/page";
 import ContactUsScreen from "./app/dashboard/contact/pages";
+import KioskSelectionPage from "./app/dashboard/token/generate/selectKiosk/pages";
+import TokenVerification from "./app/dashboard/token/generate/tokenVerification/page";
+import ForgotPassword from "./app/forgotPass/page";
+import MyDocumentsPage from "./app/dashboard/my-document/page";
 
 export function App() {
   const { token, isLoading, userData } = useContext(AuthContext);
@@ -74,9 +77,15 @@ export function App() {
               <Route path="/packages/packages-details/:id" element={<PackageDetail />} />
               <Route path="/ambulance" element={<AmbulancePage />} />
               <Route path="/my-document" element={<MyDocumentsPage />} />
+              {/* <Route path="/token" element={<TokenPage />} /> */}
+              {/* <Route path="/token/generate" element={<GenerateTokenPage />} /> */}
+              {/* <Route path="/token/verification" element={<TokenVerification />} /> */}
               <Route path="/token" element={<TokenPage />} />
-              <Route path="/token/generate" element={<GenerateTokenPage />} />
-              <Route path="/token/verification" element={<TokenVerification />} />
+              <Route path="/token/kiosks/:centreId" element={<KioskSelectionPage />} />
+              <Route
+                path="/token/verification/:centreId/:kioskId"
+                element={<TokenVerification />}
+              />
               <Route path="/clinical-record" element={<ClinicalRecordPage />} />
               <Route path="/clinical-record/consultations" element={<ConsultationHistoryPage />} />
               <Route path="/clinical-record/lab-reports" element={<LabReportsPage />} />
@@ -84,7 +93,7 @@ export function App() {
               <Route path="/clinical-record/medicines" element={<MedicinesPage />} />
               <Route path="/clinical-record/discharge-summary" element={<DischargeSummary />} />
               <Route path="/health-tracker" element={<HealthTrackerPage />} />
-              <Route path="/health-tracker/details" element={<HealthTrackerDetails />} />
+              <Route path="/health-tracker/details/:slug" element={<HealthTrackerDetails />} />
               <Route path="/bill-history" element={<BillReportPage />} />
               <Route path="/send-message" element={<SendMessagePage />} />
               <Route path="/faq" element={<FaqPage />} />
@@ -93,7 +102,8 @@ export function App() {
               {/* <Route path="*" element={<Navigate to="/dashboard" />} /> */}
             </>
           )}
-          <Route path="generate-password" element={<GeneratePasswordPage />} />
+          {/* <Route path="generate-password" element={<GeneratePasswordPage />} /> */}
+          <Route path="forgot-password" element={<ForgotPassword />} />
           <Route path="/verify/otp" element={<VerifyOtpPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

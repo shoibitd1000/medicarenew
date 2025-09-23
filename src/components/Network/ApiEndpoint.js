@@ -42,7 +42,9 @@ export const apiUrls = {
   patientFeedbackapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientFeedback`,
   patientFeedbackSubjectapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientFeedbackSubject`,
   patientFeedbackSaveapi: `${envUrl}/LoginAPIDynamic/ReactSavePatientFeedback`,
+
   helthTrackRecordapi: `${envUrl}/LoginAPIDynamic/GetVitalSignDashBoardRecord`,
+  
   opdPackageapi: `${envUrl}/LoginAPIDynamic/ReactBindOPDPackage`,
   opdPackageDetailapi: `${envUrl}/LoginAPIDynamic/BindOpdPackageDetail`,
   ipdPackageDetailapi: `${envUrl}/LoginAPIDynamic/ReactBindIPDPackageDetail`,
@@ -68,6 +70,23 @@ export const apiUrls = {
   patientAmmbulanceReqapi: `${envUrl}/LoginAPIDynamic/ReactSavePatientAmbulanceRequest`,
   // Bill Report api
   patientBillapi: `${envUrl}/LoginAPIDynamic/ReactGetPatientBills`,
+
+
+  // generaTokenapis 
+  patientTokenGenerate: `${envUrl}/LoginAPIDynamic/ReactShowPatientTokenGenerated`,
+  kioskMachineapi: `${envUrl}/LoginAPIDynamic/ReactKioskMachine`,
+  kioskCategoryapi: `${envUrl}/LoginAPIDynamic/ReactkioskCategory`,
+  kioskLevelapi: `${envUrl}/LoginAPIDynamic/ReactkioskLevel`,
+  kioskServicesapi: `${envUrl}/LoginAPIDynamic/ReactkioskService`,
+  kioskpatientDetailsapi: `${envUrl}/LoginAPIDynamic/ReactKioskPatientDetail`,
+  kioskSaveTokenGenerateapi: `${envUrl}/LoginAPIDynamic/ReactSaveMobileAppTokenGenerate`,
+  // my document api 
+  getUloadedapi: `${envUrl}/LoginAPIDynamic/GetUploadedDocument`,
+  saveDocumentapi: `${envUrl}/LoginAPIDynamic/SaveDocument`,
+  removeDocumentApi: `${envUrl}/LoginAPIDynamic/RemoveDocument`,
+
+  
+
   // payment: 'http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
 
 };

@@ -55,7 +55,6 @@ export default function LoginPage() {
       };
       debugger
       const res = await axios.post(apiUrls.login, null, { params });
-      // const res = await axios.post("http://localhost:5173/MobileApp_API/API/LoginAPIDynamic/Getlogin?username=11295794&password=ED5wLgc3Mnw=&devicetype=A&deviceid=0ddac5d-7337-41e8-8d99-638bbf09b78a");
       const data = res.data;
 
       if (data.status) {
@@ -132,7 +131,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <Link
-            to="/generate-password"
+            to="/forgot-password"
             className="text-blue-600 hover:underline text-sm font-medium"
           >
             Generate / Forgot Password

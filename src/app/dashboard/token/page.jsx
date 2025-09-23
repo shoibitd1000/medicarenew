@@ -1,101 +1,94 @@
-import React, { useEffect, useState } from "react";
-import {  ChevronRight, SquarePlus } from "lucide-react";
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { AuthContext } from "../../authtication/Authticate"; 
+import { ChevronRight, SquarePlus } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { apiUrls } from "../../../components/Network/ApiEndpoint";
+import GenerateTokenPage from "./generate/page";
 
-import CustomMultiSelect from "../../../components/components/ui/CustomMultiSelect";
-import CustomDatePicker from "../../../components/components/ui/CustomDatePicker";
-import { Link } from "react-router-dom";
-const recordTypes = [
-  { name: "Kaboson" },
-  { name: "Ngito" },
-  { name: "Tenwek Annex" },
-  { name: "Tenwek Hospital" },
-];
-export default function TokenPage() {
-  const [tab, setTab] = useState("generateToken");
-  const [selected, setSelected] = useState([]);
+const TokenPage = () => {
+  const [tab, setTab] = useState("current");
+  const [availableToken, setAvailableToken] = useState([]);
+  const { token, userData,getCurrentPatientId } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setSelected(
-      new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    );
-  }, []);
+    if (tab === "current") {
+      fetchToken();
+    }
+  }, [tab]);
 
-  const generateNewToken = () => {
-    const newTokenNumber = Math.floor(100 + Math.random() * 900);
-    setToken(`T-${newTokenNumber}`);
+  const fetchToken = async () => {
+    const id = userData?.PatientASID;
+    try {
+      const response = await axios.get(
+        `${apiUrls.patientTokenGenerate}?patientId=${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response?.data?.status === true) {
+        setAvailableToken(response.data.response);
+      } else {
+        setAvailableToken([]);
+      }
+    } catch (error) {
+      console.error("Error fetching token:", error);
+      setAvailableToken([]);
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="xl:m-auto">
-        <button
-          onClick={() => setTab("generateToken")}
-          className={`py-2 px-5 me-2 rounded-t-md border 
-      ${tab === "generateToken"
-              ? "bg-white font-semibold border-b-0 border-gray-300" // active
-              : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"} // inactive
-    `}
-        >
-          Generate Token
-        </button>
+    <div className="max-w-4xl mx-auto space-y-8 p-6">
+      {/* Tabs */}
+      <div className="flex border-b border-gray-300 m-0">
         <button
           onClick={() => setTab("current")}
-          className={`py-2 px-5 me-2 rounded-t-md border 
-      ${tab === "current"
-              ? "bg-white font-semibold border-b-0 border-gray-300" // active
-              : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"} // inactive
-    `}
+          className={`py-2 px-5 rounded-t-md border ${
+            tab === "current"
+              ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
+              : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"
+          }`}
         >
           Current Token
         </button>
-
-
-
+        <button
+          onClick={() => setTab("generateToken")}
+          className={`py-2 px-5 rounded-t-md border ${
+            tab === "generateToken"
+              ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
+              : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"
+          }`}
+        >
+          Generate Token
+        </button>
       </div>
 
-
-      {tab === "current" && (
-        <>
-          <div className="bg-white  rounded-b-lg p-4 shadow">
-            <>
-              <div className="py-2 px-4 shadow-xl my-2">
-                <h2 className="text-2xl font-bold text-primary text-center">Generate New Token</h2>
-              </div>
-            </>
-          </div>
-        </>
+      {/* Content */}
+      {tab === "current" ? (
+        <div className="bg-white rounded-lg p-6 shadow text-center">
+          <h2 className="text-2xl font-bold text-blue-600">
+            {availableToken[0]?.TokenNo?.length > 0
+              ? `Token No: ${availableToken[0]?.TokenNo}`
+              : "No Active Token"}
+          </h2>
+          {availableToken.length === 0 && (
+            <button
+              onClick={() => setTab("generateToken")}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Generate New Token
+            </button>
+          )}
+        </div>
+      ) : (
+        <GenerateTokenPage />
       )}
-
-      {tab === "generateToken" && (
-        <>
-          <div className="space-y-8 p-6 bg-white rounded-lg  rounded-s-0">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-primary mb-1">Select The Center</h2>
-              <p className="text-gray-500">Please Select a hospital Center to Proceed</p>
-            </div>
-
-            <div className=" grid md:grid-cols-1 lg:grid-cols-2 gap-4">
-              {recordTypes.map((record) => (
-                <Link
-                  to={"/token/generate"}
-                  key={record.name}
-                  className="flex items-center justify-between p-4 shadow-sm hover:shadow-md transition"
-                >
-                  <div className="flex items-center gap-4">
-                    <SquarePlus className="h-6 w-6 text-primary bg-slate-300 rounded-sm" />
-                    <span className="text-lg font-medium">{record.name}</span>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div >
+    </div>
   );
-}
+};
+
+export default TokenPage;

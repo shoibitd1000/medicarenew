@@ -1,36 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Select from "react-select";
 
 const CustomSelect = ({
-  options = [],   // raw API data
-  value,
-  onChange,
-  placeholder,
+  options = [],       // raw API data
+  value,              // controlled value
+  onChange,           // change handler
+  placeholder = "--Select--", // default placeholder
+  defaultValue,       // default selected value
   id,
   required,
-  valueKey = "ID",       // API key for value
-  labelKey = "doctorname" // API key for label
+  valueKey = "ID",    // API key for value
+  labelKey = "doctorname", // API key for label
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const hasValue = !!value;
+  const selectRef = useRef(null);
 
-  // map raw API data → react-select options
+  // Map raw API data → react-select options
   const formattedOptions = options.map((item) => ({
     value: item[valueKey],
     label: item[labelKey],
-    ...item, // keep the full object in case you need it later
+    ...item,
   }));
+
+  // Determine selected option
+  const selectedOption = formattedOptions.find(
+    (option) =>
+      option.value ===
+      (value?.value !== undefined ? value.value : value || defaultValue)
+  );
 
   return (
     <div className="relative w-full">
       <Select
+        ref={selectRef}
         id={id}
         options={formattedOptions}
-        value={value}
+        value={selectedOption || null}   // controlled value
         onChange={onChange}
-        placeholder=" " 
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        placeholder={placeholder}        // normal placeholder
+        defaultValue={formattedOptions.find(opt => opt.value === defaultValue) || null} // initial default
         isSearchable
         className="w-full"
         classNamePrefix="custom-select"
@@ -44,12 +51,7 @@ const CustomSelect = ({
             padding: "2px 4px",
           }),
           placeholder: (base) => ({ ...base, color: "#9ca3af" }),
-          menu: (base) => ({
-            ...base,
-            borderRadius: "0.5rem",
-            marginTop: "4px",
-            zIndex: 50,
-          }),
+          menu: (base) => ({ ...base, borderRadius: "0.5rem", marginTop: "4px", zIndex: 50 }),
           option: (base, state) => ({
             ...base,
             backgroundColor: state.isFocused ? "#e5e7eb" : "white",
@@ -59,16 +61,9 @@ const CustomSelect = ({
         }}
       />
 
-      {/* Floating Label */}
-      <label
-        htmlFor={id}
-        className={`absolute left-3 px-1 bg-white transition-all duration-200
-          ${hasValue || isFocused ? "-top-3 text-sm text-blue-600" : "top-2 text-gray-400 text-base"}
-        `}
-      >
-        {placeholder}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
+      {required && !selectedOption && (
+        <span className="text-red-500 text-sm absolute right-0 top-2">*</span>
+      )}
     </div>
   );
 };

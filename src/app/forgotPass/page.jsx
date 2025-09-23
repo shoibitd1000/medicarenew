@@ -3,18 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/components/ui/card';
 import CustomInput from '../../components/components/ui/CustomInput';
-import { ArrowLeft, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Shield } from 'lucide-react';
 import axios from 'axios';
 import { apiUrls } from '../../components/Network/ApiEndpoint';
 import { encryptPassword } from '../../components/EncyptHooks/EncryptLib';
 import Toaster, { notify } from '../../lib/notify';
+import CustomAvDatePicker from '../../components/components/ui/CustomAvDatePicker';
 
-export default function GeneratePasswordPage() {
+export default function ForgotPassword() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [errorMessage, notify] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
 
+  /* const enabledDates = [
+    new Date(2025, 8, 23), 
+    new Date(2025, 8, 24),
+  ]; */
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    console.log("Selected date:", date);
+  };
   const handleSend = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -48,7 +59,7 @@ export default function GeneratePasswordPage() {
 
       if (response?.data?.status === true) {
         const token = response?.data?.response?.APIToken;
-        alert('Success: ' + response?.data?.message); // Using browser alert
+        notify('Success: ' + response?.data?.message); // Using browser notify
         navigate('/verify/otp', /* { state: { email, token } } */); // Navigate to OTP verification
         setEmail('');
       } else {
@@ -77,11 +88,11 @@ export default function GeneratePasswordPage() {
             <span className="sr-only">Back</span>
           </Button>
         </div>
-
+        <Toaster />
         <Card className="shadow-2xl border-none">
           <CardHeader className="text-center">
             <div className="mx-auto bg-primary/10 p-3 rounded-full mb-4 border border-primary/20 w-fit">
-              <ShieldAlert className="h-10 w-10 text-primary" />
+              <Shield className="h-10 w-10 text-primary" />
             </div>
             <CardTitle className="text-3xl font-bold font-headline text-primary">
               Forget Password
@@ -96,18 +107,29 @@ export default function GeneratePasswordPage() {
               <div className="space-y-2">
                 <CustomInput
                   id="patientId"
-                  type="text"
+                  type="mail"
                   placeholder="UID/Mobile Number"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
                   required
-                  leftIcon={<ShieldAlert className="h-5 w-5 text-gray-400" />}
+                  leftIcon={<Shield className="h-5 w-5 text-gray-400" />}
                 />
                 {errorMessage ? (
                   <p className="text-red-500 text-xs font-semibold mt-1">{errorMessage}</p>
                 ) : null}
               </div>
+              {/* <div className="p-4">
+                <CustomAvDatePicker
+                  id="my-datepicker"
+                  value={selectedDate}
+                  placeHolderText="Select a date"
+                  handleDate={handleDateChange}
+                  enabledDates={enabledDates} // Pass the array of enabled dates
+                  repClass="my-custom-class"
+                  required
+                />
+              </div> */}
               <Button
                 type="submit"
                 className="w-full text-lg h-12 bg-primary hover:bg-primary/90"

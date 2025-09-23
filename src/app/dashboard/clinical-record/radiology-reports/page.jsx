@@ -114,19 +114,19 @@ export default function LabReportsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-4">
-      <div className="text-center">
+      <div className="text-center mb-3">
         <Scan className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
         <h1 className="text-3xl font-bold text-primary">
           Radiology  Investigation Reports
         </h1>
         <p className="text-gray-500">View Your imaging Reports like X-rays and Scans.</p>
       </div>
-      <button
+      {/* <button
         onClick={() => navigate(-1)}
         className="inline-flex items-center border  px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
       >
         <span className="mr-2">←</span> Back
-      </button>
+      </button> */}
       <div className="border rounded-lg shadow-md p-4 bg-white">
         <h2 className="text-lg font-semibold">Your Radiology Reports</h2>
         <p className="text-sm text-gray-500 mb-4">

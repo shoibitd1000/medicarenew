@@ -143,8 +143,8 @@ const PackageDetail = () => {
                             </div>
                         </div>
 
-                        <h3 className="text-lg font-bold text-[#222] mb-4">Package Inclusions</h3>
-
+                        <div className="bg-white p-2 mb-3 shadow-md rounded">
+                            <h3 className="text-lg font-bold text-[#222] mb-4">Package Inclusions</h3>
                         {/* Lab */}
                         {labItems.length > 0 && (
                             <div className="mb-6">
@@ -197,6 +197,7 @@ const PackageDetail = () => {
                                 </ul>
                             </div>
                         )}
+                        </div>
 
                         {/* Footer */}
                         <div className="flex justify-between items-center p-4 bg-white rounded-lg mb-6">

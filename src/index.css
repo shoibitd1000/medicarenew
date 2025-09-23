@@ -177,3 +177,9 @@ body{
   transition: all 0.2s linear;
 }
 
+
+.available-slot {
+  background-color: #2563eb !important; /* blue */
+  color: white !important;
+  border-radius: 50% !important;
+}

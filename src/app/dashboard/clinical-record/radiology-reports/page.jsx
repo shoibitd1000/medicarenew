@@ -154,44 +154,61 @@ export default function LabReportsPage() {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="text-center py-8">
-               <IsLoader isFullScreen={false} size="6" text="Radiology Investigation Reports..." />
+              <IsLoader
+                isFullScreen={false}
+                size="6"
+                text="Radiology Investigation Reports..."
+              />
             </div>
-          ) : labReports?.length > 0 ? (
-            labReports.map((item, i) => (
+          ) : formattedData?.length > 0 ? (
+            formattedData.map((item, i) => (
               <div
                 key={i}
                 className="border rounded-lg shadow-md p-4 bg-white my-3 "
               >
                 <div className="flex justify-between">
-                  <h2 className="text-lg font-semibold text-primary">{item?.InvestigationName}</h2>
-                  <span className="text-sm text-gray-500 mb-4">
-                    {item?.DATE}
-                  </span>
+                  <h2 className="text-lg font-semibold text-primary">{item.ReportName}</h2>
+                  <span className="text-sm text-gray-500 mb-4">{item.barcode}</span>
                 </div>
-                <span className="text-sm font-semibold mb-4">
-                  {item?.DoctorName}
-                </span>
-                <div className="flex justify-between">
-                  <div className="flex items-center">
-                    {item?.IsResult}
-                  </div>
 
+                <p className="text-xs font-semibold">{item.date}</p>
+
+                <span className="text-sm font-semibold mb-4">{item.Radiology}</span>
+
+                <div className="flex justify-between">
+                  <div className="flex items-center">{item.IsResult}</div>
+
+                  {/* PDF open in new tab */}
                   <a
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    download={`RadiologyReport_${item.Test_ID}.pdf`}
                     className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
                   >
                     <FileDown className="h-4 w-4" />
+                    
                   </a>
 
+                  {/* OR PDF force download */}
+                  {/* 
+        <a
+          href={item.url}
+          download={`RadiologyReport_${item.Test_ID}.pdf`}
+          className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
+        >
+          <FileDown className="h-4 w-4" />
+          Download
+        </a>
+        */}
                 </div>
               </div>
             ))
           ) : (
-            <h2 className="text-lg font-extrabold text-center">No Radiology Investigation available.</h2>
+            <h2 className="text-lg font-extrabold text-center">
+              No Radiology Investigation available.
+            </h2>
           )}
+
         </div>
       </div>
     </div>

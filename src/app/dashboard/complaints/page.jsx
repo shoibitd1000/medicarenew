@@ -178,7 +178,7 @@ const FeedbackSection = () => {
         <div className="mb-4">
           <CustomDatePicker
             repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-            value={apisubject || formatDateToDDMMMYYYY(new Date())}
+            value={formatDateToDDMMMYYYY(new Date())}
             placeHolderText="Select Date"
             icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
             minDate={new Date()}

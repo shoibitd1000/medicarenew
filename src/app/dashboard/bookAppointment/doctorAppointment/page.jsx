@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { parse } from 'date-fns';
@@ -13,6 +13,7 @@ import { AuthContext } from '../../../../app/authtication/Authticate';
 import { apiUrls } from '../../../../components/Network/ApiEndpoint';
 import { encryptPassword } from '../../../../components/EncyptHooks/EncryptLib';
 import IsLoader from '../../../loading';
+import PDFDownloader from '../../../../components/components/pdfDownloader/PdfDowloader';
 
 const AppointmentsPage = () => {
     const navigate = useNavigate();
@@ -48,9 +49,15 @@ const AppointmentsPage = () => {
     });
     const [toDate, setToDate] = useState(new Date());
     const [appointmentRate, setAppointmentRate] = useState(null);
+    const [webViewVisible, setWebViewVisible] = useState(false);
+    const [paymentUrl, setPaymentUrl] = useState('');
+    const [selectedAppointmentId, setSelectedAppointmentId] = useState('');
+    const iframeRef = useRef(null);
+
     const handleAppCancelReason = (val) => {
-        setCancelReason(val)
-    }
+        setCancelReason(val);
+    };
+
     // Error handler
     const handleApiError = (error) => {
         if (error.response?.status === 401) {
@@ -200,17 +207,6 @@ const AppointmentsPage = () => {
             let fromDateStr, toDateStr;
             fromDateStr = fromDate.toISOString().split('T')[0];
             toDateStr = toDate.toISOString().split('T')[0];
-            /* if (tab === 'upcoming') {
-                const today = new Date().toISOString().split('T')[0];
-                fromDateStr = today;
-                const future = new Date();
-                // future.setFullYear(future.getFullYear() + 1);
-                future.setFullYear(future.getFullYear());
-                toDateStr = future.toISOString().split('T')[0];
-            } else {
-                fromDateStr = fromDate.toISOString().split('T')[0];
-                toDateStr = toDate.toISOString().split('T')[0];
-            } */
             const apiUrl = `${apiUrls.doctors}?patientid=${encodedPatientId}&IsTeleconsulation=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${fromDateStr}&Todate=${toDateStr}&DoctorID=&Status=`;
 
             const response = await axios.post(apiUrl, null, {
@@ -359,14 +355,28 @@ const AppointmentsPage = () => {
                 headers: getAuthHeader(),
             });
             if (response.data?.status) {
+                setSelectedAppointmentId(response.data.response?.[0]?.AppID || '');
                 notify('Appointment saved successfully!', 'success');
                 setShowConfirm(false);
+                setWebViewVisible(false);
+                // Reset fields as in React Native code
+                setDoctors([]);
+                setSelectedDepartment('');
+                setSelectedDoctor('');
+                setSelectedDate(null);
+                setSelectedSlot(null);
+                setTimeSlots([]);
+                setAppointmentRate(null);
+                // Refetch data
                 fetchAppointments();
+                fetchDoctors();
             } else {
                 notify(response.data?.message || 'Failed to save appointment', 'error');
+                setWebViewVisible(false);
             }
         } catch (error) {
             handleApiError(error);
+            setWebViewVisible(false);
         } finally {
             setLoading(false);
         }
@@ -374,17 +384,89 @@ const AppointmentsPage = () => {
 
     // Handle payment
     const handlePayment = async () => {
+        setLoading(true);
         try {
             const patientID = patientid;
             const phoneNumber = userData?.Mobile || '';
             const amount = appointmentRate?.Rate || 0;
-            const url = `${apiUrls.payment}?PatientID=${encryptPassword(patientID)}&PhoneNumber=${encryptPassword(phoneNumber)}&BillNo=&Amount=${encryptPassword(amount)}`;
-            window.location.href = url;
+            const BillNo = "";
+            const url = `http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx?PatientID=${encryptPassword(patientID)}&PhoneNumber=${phoneNumber}&BillNo=${BillNo}&Amount=${amount}`;
+            setPaymentUrl(url);
+            setWebViewVisible(true);
         } catch (error) {
             notify('Failed to initiate payment', 'error');
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
     };
 
+    // Handle iframe navigation for payment
+    const handleIframeNavigation = (event) => {
+        const url = event.target.src;
+        console.log('Iframe URL:', url); // Log URL for debugging
+
+        // Check for payment success
+        if (url.includes('/MobileMpesaSuccess.aspx')) {
+            try {
+                const queryString = url.split('?')[1] || '';
+                const params = new URLSearchParams(queryString);
+                const receiptNumber = params.get('ReceiptNumber');
+
+                if (receiptNumber) {
+                    fetchSaveAppointment(receiptNumber);
+                    notify('Payment received successfully!', 'success');
+                    setWebViewVisible(false);
+                } else {
+                    notify('Payment successful but no receipt number found.', 'error');
+                    setWebViewVisible(false);
+                }
+            } catch (error) {
+                console.error('Error parsing success URL:', error);
+                notify('Error processing payment response.', 'error');
+                setWebViewVisible(false);
+            }
+        } else if (url.includes('/failure') || url.includes('payment=failed')) {
+            notify('Payment failed. Please try again.', 'error');
+            setWebViewVisible(false);
+        }
+    };
+useEffect(() => {
+  let intervalId;
+
+  if (webViewVisible && iframeRef.current) {
+    intervalId = setInterval(() => {
+      try {
+        const iframe = iframeRef.current;
+        const url = iframe.src;
+        if (url && url.includes('/MobileMpesaSuccess.aspx')) {
+          const queryString = url.split('?')[1] || '';
+          const params = new URLSearchParams(queryString);
+          const receiptNumber = params.get('ReceiptNumber');
+
+          if (receiptNumber) {
+            fetchSaveAppointment(receiptNumber);
+            notify('Payment received successfully!', 'success');
+            setWebViewVisible(false);
+            clearInterval(intervalId);
+          }
+        } else if (url && (url.includes('/failure') || url.includes('payment=failed'))) {
+          notify('Payment failed. Please try again.', 'error');
+          setWebViewVisible(false);
+          clearInterval(intervalId);
+        }
+      } catch (error) {
+        console.error('Error in iframe URL polling:', error);
+      }
+    }, 1000); // Check every 1 second
+  }
+
+  return () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+  };
+}, [webViewVisible]);
     // Reschedule appointment
     const rescheduleAppointment = async () => {
         if (!newDate || !newSlot) {
@@ -403,7 +485,6 @@ const AppointmentsPage = () => {
         setLoading(true);
         try {
             const formattedDate = new Date(new Date(newDate).setDate(new Date(newDate).getDate() + 1)).toISOString().split("T")[0];
-
 
             const fromTime = convertTo24Hour(newSlot.fromTime);
             const toTime = convertTo24Hour(newSlot.toTime);
@@ -525,6 +606,43 @@ const AppointmentsPage = () => {
                     <h1 className="text-3xl font-bold text-blue-600">Doctor Appointments</h1>
                     <p className="text-gray-500">Manage your upcoming and past appointments.</p>
                 </div>
+
+                {/* Payment Dialog */}
+                <DialogBox
+                    open={webViewVisible}
+                    onOpenChange={setWebViewVisible}
+                    title="M-Pesa Payment"
+                    size="lg"
+                    closeIcon={closeIcon}
+                    footer={
+                        <button
+                            className="px-3 py-1 text-sm font-medium bg-red-100 rounded hover:bg-blue-500 transition"
+                            onClick={() => setWebViewVisible(false)}
+                        >
+                            Back
+                        </button>
+                    }
+                >
+                    {loading ? (
+                        <div className="flex justify-center items-center p-8">
+                            <IsLoader isFullScreen={false} size="6" text="Loading Payment Page..." />
+                        </div>
+                    ) : paymentUrl ? (
+                        <iframe
+                            ref={iframeRef}
+                            src={paymentUrl}
+                            style={{ width: '100%', height: '400px', border: 'none' }}
+                            title="M-Pesa Payment"
+                            onLoad={(e) => handleIframeNavigation(e)}
+                            onError={() => {
+                                notify('Failed to load payment page.', 'error');
+                                console.error('Iframe error: Failed to load payment page.');
+                            }}
+                        />
+                    ) : (
+                        <div className="text-center text-red-500">Loading payment page...</div>
+                    )}
+                </DialogBox>
 
                 <div className="m-0">
                     <div className="grid grid-cols-3 gap-2">
@@ -678,7 +796,6 @@ const AppointmentsPage = () => {
                                             placeHolderText="Select Date"
                                             handleDate={date => setNewDate(date)}
                                             icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
-                                            // availableSlots={timeSlots}
                                         />
                                     </div>
                                     <div>
@@ -868,15 +985,11 @@ const AppointmentsPage = () => {
                                                 <div className="text-xs font-semibold text-green-600 py-4">{app.center}</div>
                                                 {app.cancel === 0 && (
                                                     <div className="text-xs font-semibold py-4 flex gap-2">
-                                                        <a
-                                                            href={`http://197.138.207.30/Tenwek2208/Design/CPOE/DoctorPrescription.aspx?App_ID=${app.AppID}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="px-2 py-1 text-xs text-primary font-medium bg-slate-200 rounded-md"
-                                                        >
-                                                            <FileDown />
-                                                        </a>
-
+                                                        <PDFDownloader
+                                                            pdfUrl={`${apiUrls.pdfDoctorPrescription}?App_ID=${app?.AppID}`}
+                                                            fileName={`Past_Appoitment${app?.AppID}.pdf`}
+                                                            token={token}
+                                                        />
                                                     </div>
                                                 )}
                                             </div>

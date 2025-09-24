@@ -3,12 +3,13 @@ import axios from 'axios';
 import { Hospital, Phone, Mail, MapPin } from 'lucide-react';
 import { AuthContext } from '../../authtication/Authticate';
 import { apiUrls } from '../../../components/Network/ApiEndpoint';
+import { notify } from '../../../lib/notify';
 
 
 const ContactUsScreen = () => {
   const [data, setData] = useState([]);
   const [loader, setLoader] = useState(false);
-  const { token } = useContext(AuthContext);
+  const { token} = useContext(AuthContext);
 
   useEffect(() => {
     fetchContact();
@@ -21,8 +22,6 @@ const ContactUsScreen = () => {
     }
     try {
       setLoader(true);
-      
-
       const response = await axios.post(
         apiUrls.contactUsapi,
         {},
@@ -35,14 +34,14 @@ const ContactUsScreen = () => {
       );
       if (response?.data?.status === true) {
         setData(response?.data?.response);
+        setLoader(false)
       } else {
-        console.error('Unexpected response format:', response.data);
+        notify(response.data.message, "error");
       }
     } catch (error) {
-      console.error(
-        'Error fetching contact:',
+      notify(
         error.response?.status,
-        error.response?.data || error.message
+        error.response?.data || error.message, "error"
       );
     } finally {
       setLoader(false);

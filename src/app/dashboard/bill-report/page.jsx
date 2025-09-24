@@ -68,7 +68,7 @@ const BillReportPage = () => {
             setBills(sortedBills);
           } else {
             setBills([]);
-            notify(response?.data?.message || "No bills found");
+            // notify(response?.data?.message || "No bills found");
           }
         } catch (error) {
           console.error("Error fetching bills:", error);
@@ -129,11 +129,11 @@ const BillReportPage = () => {
       </div>
       <Toaster />
       {activeSection === null ? (
-        <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {billCategories.map((item, index) => (
             <div
               key={item.billNo}
-              className="flex items-center justify-between py-3 px-4 bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
+              className="flex items-center justify-between my-3 py-3 px-4 bg-white rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
               style={{ animationDelay: `${index * 200}ms` }}
               onClick={() => setActiveSection(item.billNo)}
             >
@@ -154,12 +154,12 @@ const BillReportPage = () => {
         </div>
       ) : (
         <div className="w-full m-auto md:w-1/2 my-3">
-          <button
+          {/* <button
             className="mb-4 border-2 py-2 px-4 rounded-lg hover:bg-primary-dark transition"
             onClick={() => setActiveSection(null)}
           >
             Back
-          </button>
+          </button> */}
 
           {/* Date filters */}
           <div className="mb-4 grid lg:grid-cols-2 gap-3 bg-white shadow-md p-4 rounded-md">

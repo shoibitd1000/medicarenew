@@ -1,323 +1,320 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/components/ui/card";
-import { ChevronsRight, Thermometer, HeartPulse, Wind, Heart, Droplets, Weight, Percent, Ruler } from "lucide-react";
-import { format } from "date-fns";
-import axios from "axios";
-import { AuthContext } from "../../authtication/Authticate"; // Adjust path as needed
-import { apiUrls } from "../../../components/Network/ApiEndpoint";
-import IsLoader from "../../loading";
+import React, { useEffect, useContext, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Thermometer, Heart, Wind, Droplet, HeartPulse, Scale, Ruler, ChevronsRight } from 'lucide-react';
+import { AuthContext } from '../../authtication/Authticate';
+import { apiUrls } from '../../../components/Network/ApiEndpoint';
+import IsLoader from '../../loading';
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const HealthTrackerPage = () => {
-  const { token, getAuthHeader } = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [healthData, setHealthData] = useState({
-    temperature: null,
-    pulse: null,
-    respiration: null,
-    bloodPressure: null,
-    bloodSugar: null,
-    spo2: null,
-    weight: null,
-    height: null,
-    bmi: null,
-    bsa: null,
-    temperatureDate: null,
-    pulseDate: null,
-    respirationDate: null,
-    bloodPressureDate: null,
-    bloodSugarDate: null,
-    spo2Date: null,
-    weightDate: null,
-    heightDate: null,
+    temperature: '0',
+    pulse: '0',
+    respiration: '0',
+    bloodPressure: '0',
+    bloodSugar: '0',
+    spo2: '0',
+    weight: '0',
+    height: '0',
+    bmi: '27.8',
+    bsa: '0',
   });
   const [tabSelected, setTabSelected] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('1Month');
+  const [chartData, setChartData] = useState({
+    labels: [],
+    datasets: [],
+  });
+  const [weightRecords, setWeightRecords] = useState([]);
 
-  // Format date function
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+  const API_URL = `${apiUrls.helthTrackRecordapi}?MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
+
+  // Function to format date (e.g., "2025-08-20T12:21:25" to "20-Aug-2025")
+  const formatDate = dateString => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    if (isNaN(date)) return "N/A";
-    return format(date, "dd-MMM-yyyy");
+    if (isNaN(date)) return 'N/A';
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options).replace(/ /g, '-');
   };
 
   // Fetch API
   const fetchHealthData = async () => {
     try {
       if (!token) {
-        console.error("No token available");
+        console.error('No token available');
         return;
       }
       setLoading(true);
       const response = await axios.post(
-        `${apiUrls.helthTrackRecordapi}?MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`,
+        API_URL,
         {},
         {
           headers: {
-            ...getAuthHeader(),
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       if (response.data.status === true) {
-        const records = response.data.response || [];
+        const records = response.data.response;
         setTabSelected(records);
 
-        const getLatest = (type) => {
+        const getLatest = type => {
           const filtered = records.filter(
-            (item) => item.VitalSignType?.trim().toLowerCase() === type.toLowerCase()
+            item => item.VitalSignType?.trim().toLowerCase() === type.toLowerCase(),
           );
           return filtered.length > 0
             ? {
                 value: filtered[filtered.length - 1].VitalSignValue,
                 enteredOn: filtered[filtered.length - 1].EnteredOn,
               }
-            : { value: null, enteredOn: null };
+            : { value: '0', enteredOn: null };
         };
 
-        // Fixed: Use actual BMI from API instead of hardcoded value
-        const latestBSA = records?.BSA || { BSA: null };
-        const latestBMI = records?.BMI || { BMI: null };
+        const latestBSA = records?.BSA;
+        const latestBMI = '27.8';
 
         setHealthData({
-          temperature: getLatest("Temp").value,
-          pulse: getLatest("Pulse").value,
-          respiration: getLatest("Respiration").value,
-          bloodPressure: getLatest("Blood Pressure").value,
-          bloodSugar: getLatest("Blood Sugar").value,
-          spo2: getLatest("SpO2").value,
-          weight: getLatest("Weight").value,
-          height: getLatest("Height").value,
-          bmi: latestBMI.BMI,
-          bsa: latestBSA.BSA,
-          temperatureDate: getLatest("Temp").enteredOn,
-          pulseDate: getLatest("Pulse").enteredOn,
-          respirationDate: getLatest("Respiration").enteredOn,
-          bloodPressureDate: getLatest("Blood Pressure").enteredOn,
-          bloodSugarDate: getLatest("Blood Sugar").enteredOn,
-          spo2Date: getLatest("SpO2").enteredOn,
-          weightDate: getLatest("Weight").enteredOn,
-          heightDate: getLatest("Height").enteredOn,
+          temperature: getLatest('Temp').value,
+          pulse: getLatest('Pulse').value,
+          respiration: getLatest('Respiration').value || '0',
+          bloodPressure: getLatest('Blood Pressure').value || '0',
+          bloodSugar: getLatest('Blood Sugar').value || '0',
+          spo2: getLatest('SpO2').value || '0',
+          weight: getLatest('Weight').value || '0',
+          height: getLatest('Height').value || '0',
+          bmi: latestBMI,
+          bsa: latestBSA ? latestBSA.BSA : '0',
+          temperatureDate: getLatest('Temp').enteredOn,
+          pulseDate: getLatest('Pulse').enteredOn,
+          respirationDate: getLatest('Respiration').enteredOn,
+          bloodPressureDate: getLatest('Blood Pressure').enteredOn,
+          bloodSugarDate: getLatest('Blood Sugar').enteredOn,
+          spo2Date: getLatest('SpO2').enteredOn,
+          weightDate: getLatest('Weight').enteredOn,
+          heightDate: getLatest('Height').enteredOn,
         });
-      } else {
-        console.error("API returned false status:", response.data);
       }
     } catch (error) {
-      console.error("Error fetching health data:", error.response?.data || error.message);
+      console.error('Error fetching health data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fixed: getLatestVitalType function
-  const getLatestVitalType = (type) => {
-    const normalizedType = type.replace('%20', ' ').trim().toLowerCase();
-    const filtered = tabSelected.filter(
-      (item) => item.VitalSignType?.trim().toLowerCase() === normalizedType
-    );
-    return filtered.length > 0 ? filtered[filtered.length - 1].VitalSignType : normalizedType;
-  };
-
+  // Fetch data on mount
   useEffect(() => {
     fetchHealthData();
   }, [token]);
 
-  // Vitals array with vitalSignType using getLatestVitalType
-  const vitals = [
-    {
-      name: "Temperature",
-      value: healthData.temperature,
-      unit: "°C",
-      icon: Thermometer,
-      slug: "temperature",
-      date: formatDate(healthData.temperatureDate),
-      vitalSignType: getLatestVitalType("Temp"),
-    },
-    {
-      name: "Pulse",
-      value: healthData.pulse,
-      unit: "bpm",
-      icon: HeartPulse,
-      slug: "pulse",
-      date: formatDate(healthData.pulseDate),
-      vitalSignType: getLatestVitalType("Pulse"),
-    },
-    {
-      name: "Respiration",
-      value: healthData.respiration,
-      unit: "Rate/Min",
-      icon: Wind,
-      slug: "respiration",
-      date: formatDate(healthData.respirationDate),
-      vitalSignType: getLatestVitalType("Respiration"),
-    },
-    {
-      name: "Blood Pressure",
-      value: healthData.bloodPressure,
-      unit: "mmHg",
-      icon: Heart,
-      slug: "blood-pressure",
-      date: formatDate(healthData.bloodPressureDate),
-      vitalSignType: getLatestVitalType("Blood Pressure"),
-    },
-    {
-      name: "Blood Sugar",
-      value: healthData.bloodSugar,
-      unit: "mmol/L",
-      icon: Droplets,
-      slug: "blood-sugar",
-      date: formatDate(healthData.bloodSugarDate),
-      vitalSignType: getLatestVitalType("Blood Sugar"),
-    },
-    {
-      name: "SpO2",
-      value: healthData.spo2,
-      unit: "%",
-      icon: Percent,
-      slug: "spo2",
-      date: formatDate(healthData.spo2Date),
-      vitalSignType: getLatestVitalType("SpO2"),
-    },
-    {
-      name: "Weight",
-      value: healthData.weight,
-      unit: "kg",
-      icon: Weight,
-      slug: "weight",
-      date: formatDate(healthData.weightDate),
-      vitalSignType: getLatestVitalType("Weight"),
-    },
-    {
-      name: "Height",
-      value: healthData.height,
-      unit: "cm",
-      icon: Ruler,
-      slug: "height",
-      date: formatDate(healthData.heightDate),
-      vitalSignType: getLatestVitalType("Height"),
-    },
-  ];
+  // Prepare chart and table data for weight (default chart on main page)
+  useEffect(() => {
+    if (tabSelected.length === 0) return;
+
+    let ago = new Date();
+    if (selectedPeriod === '1Week') {
+      ago.setDate(ago.getDate() - 7);
+    } else if (selectedPeriod === '1Month') {
+      ago.setMonth(ago.getMonth() - 1);
+    } else if (selectedPeriod === '3Months') {
+      ago.setMonth(ago.getMonth() - 3);
+    } else if (selectedPeriod === '6Months') {
+      ago.setMonth(ago.getMonth() - 6);
+    }
+
+    const allWeightRecords = tabSelected
+      .filter(item => item.VitalSignType?.trim().toLowerCase() === 'weight')
+      .sort((a, b) => new Date(a.EnteredOn) - new Date(b.EnteredOn));
+
+    const filteredWeightRecords = allWeightRecords.filter(
+      item => new Date(item.EnteredOn) >= ago,
+    );
+
+    setWeightRecords(filteredWeightRecords);
+
+    const labels = filteredWeightRecords.map(record => formatDate(record.EnteredOn));
+    const data = filteredWeightRecords.map(record => parseFloat(record.VitalSignValue) || 0);
+
+    setChartData({
+      labels: labels.length > 0 ? labels : ['No data'],
+      datasets: [
+        {
+          label: 'Weight',
+          data: data.length > 0 ? data : [0],
+          borderColor: 'rgba(30, 144, 255, 1)',
+          backgroundColor: 'rgba(30, 144, 255, 0.2)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBorderColor: '#1E90FF',
+          pointBackgroundColor: '#1E90FF',
+        },
+      ],
+    });
+  }, [tabSelected, selectedPeriod]);
+
+  const getLatestVitalType = type => {
+    const normalizedType = type.replace('%20', ' ');
+    const filtered = tabSelected.filter(
+      item => item.VitalSignType?.trim().toLowerCase() === normalizedType.toLowerCase(),
+    );
+    return filtered.length > 0 ? filtered[filtered.length - 1].VitalSignType : normalizedType;
+  };
+
+  // Get 1-month records for a specific vital sign type
+  const getOneMonthRecords = type => {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    return tabSelected
+      .filter(
+        item =>
+          item.VitalSignType?.trim().toLowerCase() === type.toLowerCase() &&
+          new Date(item.EnteredOn) >= oneMonthAgo,
+      )
+      .sort((a, b) => new Date(a.EnteredOn) - new Date(b.EnteredOn));
+  };
+
+  const HealthMetricCard = ({ icon: Icon, title, value, unit, vitalSignType, enteredOn }) => {
+    return (
+      <div className="bg-white rounded-lg p-4 flex flex-col items-center shadow-md relative">
+        <div className="bg-[#D1E8FF] w-8 h-8 flex items-center justify-center rounded-full">
+          <Icon size={20} className="opacity-25" />
+        </div>
+        <h3 className="text-base font-bold text-gray-800 mt-2 text-center">{title}</h3>
+        <p className="text-2xl font-bold text-blue-600">{value}</p>
+        <p className="text-sm text-gray-600">{unit}</p>
+        <p className="text-sm text-blue-600 font-bold">{formatDate(enteredOn)}</p>
+        <Link
+          to={`/health-tracker/details/${title}`}
+          className="absolute bottom-2 right-2"
+          state={{
+            metricName: title,
+            metricValue: value,
+            unit,
+            vitalSignType,
+            enteredOn: formatDate(enteredOn),
+            records: getOneMonthRecords(vitalSignType.toLowerCase()), // Pass 1-month records
+          }}
+        >
+          <ChevronsRight size={15} className="opacity-50" />
+        </Link>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <IsLoader isFullScreen={false} text='' />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 p-6 bg-blue-100 min-h-screen">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 max-w-4xl mx-auto">
-        <div className="text-center sm:text-left">
-          <h1 className="text-3xl font-bold text-blue-600">My Health Tracker</h1>
-          <p className="text-gray-600">An overview of your key health metrics.</p>
-        </div>
-        <div className="text-md text-blue-600">
-          {format(new Date(), "dd-MMM-yyyy")}
-        </div>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 className="text-2xl font-bold text-blue-600 mb-2">My Health Tracker</h1>
+      <p className="text-sm text-blue-600 font-bold mb-2 text-center">
+        {new Date().toDateString()}
+      </p>
+      <p className="text-base text-gray-700 mb-5 font-semibold">
+        An overview of your key health metrics.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <HealthMetricCard
+          icon={Thermometer}
+          title="Temperature"
+          value={healthData.temperature}
+          unit="°C"
+          vitalSignType={getLatestVitalType('Temp')}
+          enteredOn={healthData.temperatureDate}
+        />
+        <HealthMetricCard
+          icon={Heart}
+          title="Pulse"
+          value={healthData.pulse}
+          unit="bpm"
+          vitalSignType={getLatestVitalType('Pulse')}
+          enteredOn={healthData.pulseDate}
+        />
+        <HealthMetricCard
+          icon={Wind}
+          title="Respiration"
+          value={healthData.respiration}
+          unit="Rate/Min"
+          vitalSignType={getLatestVitalType('Respiration')}
+          enteredOn={healthData.respirationDate}
+        />
+        <HealthMetricCard
+          icon={Droplet}
+          title="Blood Pressure"
+          value={healthData.bloodPressure}
+          unit="mmHg"
+          vitalSignType={getLatestVitalType('Blood Pressure')}
+          enteredOn={healthData.bloodPressureDate}
+        />
+        <HealthMetricCard
+          icon={Droplet}
+          title="Blood Sugar"
+          value={healthData.bloodSugar}
+          unit="mmol/L"
+          vitalSignType={getLatestVitalType('Blood Sugar')}
+          enteredOn={healthData.bloodSugarDate}
+        />
+        <HealthMetricCard
+          icon={HeartPulse}
+          title="SpO2"
+          value={healthData.spo2}
+          unit="%"
+          vitalSignType={getLatestVitalType('SpO2')}
+          enteredOn={healthData.spo2Date}
+        />
+        <HealthMetricCard
+          icon={Scale}
+          title="Weight"
+          value={healthData.weight}
+          unit="kg"
+          vitalSignType={getLatestVitalType('Weight')}
+          enteredOn={healthData.weightDate}
+        />
+        <HealthMetricCard
+          icon={Ruler}
+          title="Height"
+          value={healthData.height}
+          unit="cm"
+          vitalSignType={getLatestVitalType('Height')}
+          enteredOn={healthData.heightDate}
+        />
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {vitals.map((vital) => {
-            const Icon = vital.icon;
-            return (
-              <Card
-                key={vital.name}
-                className="bg-blue-50 shadow-md h-full border border-blue-200 rounded-lg p-3"
-                aria-label={`Loading ${vital.name}`}
-              >
-                <CardContent className="p-4 flex flex-col items-center text-center justify-between h-full">
-                  <div className="flex-grow flex flex-col items-center justify-center">
-                    <div className="p-3 bg-blue-100 rounded-full mb-3">
-                      <Icon className="h-8 w-8 text-blue-600 bg-white border border-blue-300 rounded-lg shadow-md p-1" />
-                    </div>
-                    <p className="text-sm font-semibold text-gray-800">{vital.name}</p>
-                    <IsLoader size="3" text="" isFullScreen={false} />
-                  </div>
-                  <ChevronsRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
-                </CardContent>
-              </Card>
-            );
-          })}
+      <div className="flex flex-col gap-4 my-8">
+        <div className="w-full bg-white rounded-lg p-4 shadow-md">
+          <h2 className="text-xl font-bold text-blue-600">BMI (Body Mass Index)</h2>
+          <p className="text-2xl font-bold text-blue-600">{healthData.bmi}</p>
+          <p className="text-sm text-gray-600">kg/m²</p>
         </div>
-      ) : vitals.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {vitals.map((vital) => {
-            const Icon = vital.icon;
-            return (
-              <Link
-                to={{
-                  pathname: `/health-tracker/details/${vital?.name}`,
-                  state: {
-                    metricName: vital.name,
-                    metricValue: vital.value,
-                    unit: vital.unit,
-                    vitalSignType: vital.vitalSignType,
-                    enteredOn: vital.date,
-                  },
-                }}
-                key={vital.name}
-                aria-label={`View details for ${vital.name}`}
-              >
-                <Card
-                  className="hover:bg-blue-50 hover:shadow-lg transition-all p-3 duration-300 cursor-pointer h-full border border-blue-200 rounded-lg"
-                  aria-label={`Vital information for ${vital.name}`}
-                >
-                  <CardContent className="pb-0 flex flex-col items-center text-center justify-between h-full">
-                    <div className="flex-grow flex flex-col items-center justify-center">
-                      <div className="p-3 bg-blue-100 rounded-full mb-3">
-                        <Icon className="h-8 w-8 text-blue-600 bg-white border border-blue-300 rounded-lg shadow-md p-1" />
-                      </div>
-                      <p className="text-sm font-semibold text-gray-800">{vital.name}</p>
-                      {vital.value && vital.unit && vital.date ? (
-                        <>
-                          <p className="text-xl sm:text-2xl font-bold text-blue-600">
-                            {vital.value}
-                          </p>
-                          <p className="text-xs text-gray-600">{vital.unit}</p>
-                          <p className="text-xs font-bold text-blue-600">{vital.date}</p>
-                        </>
-                      ) : (
-                        <p className="text-sm text-gray-600">No data available</p>
-                      )}
-                    </div>
-                    <ChevronsRight className="h-5 w-5 text-gray-600 mt-2 self-end" />
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+        <div className="w-full bg-white rounded-lg p-4 shadow-md">
+          <h2 className="text-xl font-bold text-blue-600">BSA (Body Surface Area)</h2>
+          <p className="text-2xl font-bold text-blue-600">{healthData.bsa}</p>
+          <p className="text-sm text-gray-600">m²</p>
         </div>
-      ) : (
-        <p className="text-center text-gray-600">No vitals found</p>
-      )}
-
-      <div className="max-w-4xl mx-auto space-y-4">
-        <Card className="shadow-lg border border-blue-200 rounded-lg" aria-label="BMI (Body Mass Index)">
-          <CardHeader>
-            <CardTitle className="text-blue-600">BMI (Body Mass Index)</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            {loading ? (
-              <p className="text-sm text-gray-600">Loading...</p>
-            ) : (
-              <>
-                <p className="text-5xl font-bold text-blue-600">{healthData.bmi || "N/A"}</p>
-                <p className="text-gray-600">kg/m²</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg border border-blue-200 rounded-lg" aria-label="BSA (Body Surface Area)">
-          <CardHeader>
-            <CardTitle className="text-blue-600">BSA (Body Surface Area)</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            {loading ? (
-              <p className="text-sm text-gray-600">Loading...</p>
-            ) : (
-              <>
-                <p className="text-5xl font-bold text-blue-600">{healthData.bsa || "N/A"}</p>
-                <p className="text-gray-600">m²</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

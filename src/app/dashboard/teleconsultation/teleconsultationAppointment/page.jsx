@@ -505,7 +505,7 @@ const TeleconsultationAppointment = () => {
                         {["book", "upcoming", "past"].map((tabName) => (
                             <button
                                 key={tabName}
-                                className={`py-2 shadow-md border rounded-t-md ${tab === tabName ? "bg-white font-semibold shadow-md" : ""}`}
+                                className={`py-2 shadow-md border rounded-t-md ${tab === tabName ? "bg-blue-800 text-white transition-all duration-600 font-semibold shadow-md" : ""}`}
                                 onClick={() => setTab(tabName)}
                             >
                                 {tabName === "book" ? "Book New" : tabName === "upcoming" ? "Upcoming" : "Past"}

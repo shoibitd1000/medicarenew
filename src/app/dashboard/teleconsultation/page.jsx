@@ -53,7 +53,7 @@ export default function Teleconsultation() {
         <p className="text-gray-500">Please select a hospital center to proceed</p>
       </div>
       <Toaster />
-      <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {data?.map((item, index) => (
           <div
             key={item.CentreID}
@@ -63,7 +63,7 @@ export default function Teleconsultation() {
               to={{
                 pathname: `/teleconsultation-appointment/${item.CentreID}/${item.CentreName}`,
               }}
-              className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
+              className="flex items-center my-3 justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
             >
               <div className="flex items-center gap-4">
                 <SquarePlus className="h-6 w-6 text-primary bg-slate-300 rounded-sm" />

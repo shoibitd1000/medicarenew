@@ -452,7 +452,7 @@ const InvestigationsAppoin = () => {
                 {["book", "upcoming", "past"].map((t) => (
                     <button
                         key={t}
-                        className={`py-2 border rounded-t-md text-sm sm:text-base ${tab === t ? "bg-white font-semibold shadow-md" : "bg-gray-100"
+                        className={`py-2 border rounded-t-md text-sm sm:text-base transistion-all duration-600 ${tab === t ? "transistion-all duration-600 bg-blue-800 text-white font-semibold shadow-md" : "bg-gray-100"
                             } transition-colors`}
                         onClick={() => setTab(t)}
                     >

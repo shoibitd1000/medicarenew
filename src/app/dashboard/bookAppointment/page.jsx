@@ -64,7 +64,7 @@ export default function BookAppointment() {
                 <p className="text-gray-500">Please Select a hospital Center to Proceed</p>
             </div>
             <Toaster />
-            <div className=" grid md:grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 {loading ? (
                     <div className="flex justify-center items-center col-span-full">
                         <IsLoader isFullScreen={false} size="6" text="Loading ..." />
@@ -74,7 +74,7 @@ export default function BookAppointment() {
                         <Link
                             to={`/doctor-appointment/${item?.CentreID}`}
                             key={i}
-                            className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
+                            className="flex my-3 items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
                         >
                             <div className="flex items-center gap-4">
                                 <SquarePlus className="h-6 w-6 text-primary bg-slate-300 rounded-sm" />

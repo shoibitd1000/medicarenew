@@ -50,14 +50,14 @@ export default function LabReportsPage() {
       formData.append("UserType", "Patient");
       formData.append("AccessScreen", "Pathology");
 
-      const encodedPatientId = encodeURIComponent(encryptPassword(patientId));
+      const encodedPatientId = encryptPassword(patientId);
 
       // ✅ Format dates properly for API
-      const formattedFromDate = format(fromDate, "dd-MM-yyyy");
-      const formattedToDate = format(toDate, "dd-MM-yyyy");
+      const formattedFromDate = format(fromDate, "yyyy-MM-dd");
+      const formattedToDate = format(toDate, "yyyy-MM-dd");
 
       const response = await axios.post(
-        `${apiUrls.patientLabHistory}?PatientID=${encodedPatientId}&Fromdate=${formattedFromDate}&Todate=${formattedToDate}`,
+        `${apiUrls.patientLabHistory}?PatientID=${patientId}&Fromdate=${formattedFromDate}&Todate=${formattedToDate}`,
         formData,
         {
           headers: {
@@ -171,15 +171,14 @@ export default function LabReportsPage() {
                   {item.IsResult || "Pending"}
                 </span>
                 <a
-                  href={`http://197.138.207.15/Tenwek/Design/Lab/OnlineprintLabReport_pdf.aspx?IsPrev=1&TestID=${encryptPassword(
+                  href={`http://197.138.207.15/Tenwek/Design/Lab/OnlineprintLabReport_pdf.aspx?IsPrev=1&TestID=${
                     item.Test_ID || ""
-                  )}&Phead=0`}
+                  }&Phead=0`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
                 >
                   <FileDown className="h-4 w-4" />
-                  Download
                 </a>
               </div>
             </div>

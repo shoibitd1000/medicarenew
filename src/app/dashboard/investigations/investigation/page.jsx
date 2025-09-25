@@ -9,6 +9,7 @@ import CustomDatePicker from "../../../../components/components/ui/CustomDatePic
 import CustomMultiSelect from "../../../../components/components/ui/CustomMultiSelect";
 import { Button } from "../../../../components/components/ui/button";
 import Toaster, { notify } from "../../../../lib/notify";
+import IsLoader from "../../../loading";
 
 // Set up pdfjs worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -390,7 +391,7 @@ const InvestigationsAppoin = () => {
                         <h3 className="text-lg font-medium text-blue-600 truncate">{item.PName}</h3>
                         <p className="text-sm text-gray-500 truncate">{item.center}</p>
                     </div>
-                    
+
                 </div>
                 <div className="flex-1">
                     <p className="font-semibold text-gray-800 text-sm">
@@ -412,12 +413,15 @@ const InvestigationsAppoin = () => {
     };
 
     const PastRender = ({ item }) => (
+
         <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col w-full max-w-[600px] mx-auto"
         >
+            {console.log(item)
+            }
             <div className="flex justify-between items-start mb-3">
                 <h3 className="text-lg font-medium text-blue-600 truncate w-[calc(100%-20%)]">
                     {item.TestName}
@@ -448,12 +452,16 @@ const InvestigationsAppoin = () => {
                 </p>
             </div>
             <Toaster />
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-7xl m-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-7xl m-auto">
                 {["book", "upcoming", "past"].map((t) => (
                     <button
                         key={t}
-                        className={`py-2 border rounded-t-md text-sm sm:text-base transistion-all duration-600 ${tab === t ? "transistion-all duration-600 bg-blue-800 text-white font-semibold shadow-md" : "bg-gray-100"
+                        className={`py-2 border rounded-t-md text-sm sm:text-base font-semibold transition-all duration-800
+ ${tab === t
+                                ? "bg-blue-800 text-white  shadow-md "
+                                : "bg-gray-100 "
                             } transition-colors`}
+
                         onClick={() => setTab(t)}
                     >
                         {t === "book" ? "Book New" : t === "upcoming" ? "Upcoming" : "Past"}
@@ -493,8 +501,8 @@ const InvestigationsAppoin = () => {
                                     <strong className="text-gray-700 min-w-[120px]">Investigation:</strong>
                                     <span
                                         className={`text-sm px-3 py-1 rounded-lg shadow-sm ${selectedInvestigations.length > 0
-                                                ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                                : "bg-gray-100 text-gray-500 border border-gray-300 italic"
+                                            ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                            : "bg-gray-100 text-gray-500 border border-gray-300 italic"
                                             }`}
                                     >
                                         {selectedInvestigations.length > 0
@@ -573,7 +581,7 @@ const InvestigationsAppoin = () => {
                             </div>
                             {loading && (
                                 <div className="flex justify-center my-4">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                                    <IsLoader isFullScreen={false} size="6" />
                                 </div>
                             )}
                             <div className="flex justify-center mt-4">
@@ -584,8 +592,8 @@ const InvestigationsAppoin = () => {
                             <div className="flex justify-center mt-4">
                                 <button
                                     className={`px-4 py-2 bg-blue-600 text-white rounded uppercase text-sm sm:text-base ${!selectedInvestigations.length || !selectedDate
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : ""
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
                                         }`}
                                     onClick={handleConfirm}
                                     disabled={!selectedInvestigations.length || !selectedDate}
@@ -610,7 +618,7 @@ const InvestigationsAppoin = () => {
                     </div>
                     {loading ? (
                         <div className="flex justify-center my-4">
-                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                            <IsLoader isFullScreen={false} size="6" />
                         </div>
                     ) : upAppointments.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -656,7 +664,7 @@ const InvestigationsAppoin = () => {
                     </div>
                     {loading ? (
                         <div className="flex justify-center my-4">
-                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                            <IsLoader isFullScreen={false} size="6" />
                         </div>
                     ) : pastAppointments.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">

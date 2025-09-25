@@ -5,9 +5,9 @@ import CustomDatePicker from "../../../components/components/ui/CustomDatePicker
 import CustomTextArea from "../../../components/components/ui/CustomTextArea";
 import { AuthContext } from "../../authtication/Authticate";
 import { apiUrls } from "../../../components/Network/ApiEndpoint";
-import { notify } from "../../../lib/notify";
+import Toaster, { notify } from "../../../lib/notify";
 import { useNavigate } from "react-router-dom";
-import { encryptPassword } from "../../../components/EncyptHooks/EncryptLib";
+import IsLoader from "../../loading";
 
 const FeedbackSection = () => {
   const formatDateToDDMMMYYYY = (date) => {
@@ -16,18 +16,25 @@ const FeedbackSection = () => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
-    return `${day}${month}${year}`; // e.g., 18Sep2025
+    return `${day}${month}${year}`;
   };
 
-  const [remarks, setRemarks] = useState("");
+  const [state, setState] = useState({
+    remarks: "",
+    rating: 0,
+    feedbackHistory: [],
+    loadingSubmit: false,
+    loadingHistory: false,
+    apisubject: ""
+  });
 
-  const [rating, setRating] = useState(0);
-  const [feedbackHistory, setFeedbackHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [apisubject, setApiSubject] = useState("");
   const { token, userData, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
   const patientId = getCurrentPatientId();
   const navigate = useNavigate();
+
+  const updateState = (key, value) => {
+    setState((prev) => ({ ...prev, [key]: value }));
+  };
 
   const getStarColor = (ratingValue, index) => {
     if (ratingValue > index) {
@@ -66,9 +73,9 @@ const FeedbackSection = () => {
   };
 
   const fetchFeedbackHistory = async () => {
+    updateState("loadingHistory", true);
     try {
       if (!token) {
-        console.error("No token available");
         notify("Authentication required", "error");
         return;
       }
@@ -77,25 +84,24 @@ const FeedbackSection = () => {
         return;
       }
 
-      const url = `${apiUrls.patientFeedbackapi}?PateintID=${patientId}`;
-      const response = await axios.get(url, {
-        headers: getAuthHeader(),
-      });
+      const response = await axios.get(`${apiUrls.patientFeedbackapi}?PateintID=${patientId}`,
+        {
+          headers: getAuthHeader()
+        });
 
-      debugger
       if (response?.data?.status) {
-        setFeedbackHistory(response.data.response);
+        updateState("feedbackHistory", response.data.response);
       } else {
-        console.error("Unexpected feedback response:", response.data);
         notify("Failed to fetch feedback history", "error");
       }
     } catch (error) {
-      console.error("Error fetching feedback:", error);
       if (error.response?.status === 401) {
         navigate("/");
       } else {
         notify("Error fetching feedback history", "error");
       }
+    } finally {
+      updateState("loadingHistory", false);
     }
   };
 
@@ -103,6 +109,7 @@ const FeedbackSection = () => {
     fetchFeedbackHistory();
   }, [token, userData, patientId]);
 
+  // Fetch subject
   useEffect(() => {
     const fetchSubject = async () => {
       try {
@@ -114,12 +121,9 @@ const FeedbackSection = () => {
         const response = await axios.get(url, { headers: getAuthHeader() });
 
         if (response?.data?.status && response.data.response[0]?.DateOfVisit) {
-          setApiSubject(response.data.response[0].DateOfVisit);
-        } else {
-          console.error("Unexpected subject response:", response.data);
+          updateState("apisubject", response.data.response[0].DateOfVisit);
         }
       } catch (error) {
-        console.error("Error fetching subject:", error);
         if (error.response?.status === 401) {
           navigate("/enter-mpin");
         }
@@ -128,47 +132,51 @@ const FeedbackSection = () => {
 
     fetchSubject();
   }, [token, patientId]);
-  const handleReamarks = (val) => {
-    setRemarks(val)
-  }
+
+  // Submit feedback
   const handleSubmitFeedback = async () => {
-    if (rating === 0) {
+    if (state.rating === 0) {
       notify("Please provide a rating", "error");
       return;
     }
-    setLoading(true);
+    updateState("loadingSubmit", true);
     try {
-      const abc = remarks.trim() ? remarks : apisubject;
-      debugger
-      const response = await axios.post(`${apiUrls.patientFeedbackSaveapi}?PateintID=${patientId
-        }&PatientRating=${rating}&Remarks=${
-          apisubject
-        }&Subject=${abc}`, {}, { headers: getAuthHeader() });
+      const abc = state.remarks.trim() ? state.remarks : state.apisubject;
+
+      const response = await axios.post(
+        `${apiUrls.patientFeedbackSaveapi}?PateintID=${patientId}&PatientRating=${state.rating}&Remarks=${state.apisubject}&Subject=${abc}`,
+        {},
+        { headers: getAuthHeader() }
+      );
 
       if (response?.data?.status) {
         notify(response?.data?.message || "Feedback submitted successfully", "success");
-        setRemarks("");
-        setRating(0);
+        setState((prev) => ({
+          ...prev,
+          remarks: "",
+          rating: 0
+        }));
         fetchFeedbackHistory();
       } else {
         notify("Failed to submit feedback", "error");
       }
     } catch (error) {
-      console.error("Error submitting feedback:", error);
       if (error.response?.status === 401) {
         navigate("/enter-mpin");
       } else {
         notify(error.response?.data?.message || "Error submitting feedback", "error");
       }
     } finally {
-      setLoading(false);
+      updateState("loadingSubmit", false);
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto mt-6 bg-white shadow-md rounded-lg p-4">
       <h1 className="text-xl font-semibold mb-4">We value your opinion. Please let us know how we're doing.</h1>
+      <Toaster />
 
+      {/* Submit new feedback */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-4 ">
         <h2 className="font-medium text-lg">Submit New Feedback</h2>
         <p className="text-sm text-gray-500 mb-4">
@@ -182,9 +190,8 @@ const FeedbackSection = () => {
             placeHolderText="Select Date"
             icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
             minDate={new Date()}
-            disabled={true}
+            disabled
             readOnly
-            aria-label="Submission date (read-only)"
           />
         </div>
 
@@ -192,25 +199,21 @@ const FeedbackSection = () => {
           <CustomTextArea
             repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
             name="remarks"
-            value={remarks}
+            value={state.remarks}
             placeHolderText="Provide more details here..."
-            handleChange={handleReamarks}
-            aria-required="true"
+            handleChange={(val) => updateState("remarks", val)}
           />
         </div>
 
         <div className="mb-4">
-          <label className="font-medium text-sm" id="rating-label">Overall Rating</label>
-          <div className="flex space-x-1 mt-2" role="radiogroup" aria-labelledby="rating-label">
+          <label className="font-medium text-sm">Overall Rating</label>
+          <div className="flex space-x-1 mt-2">
             {[...Array(5)].map((_, index) => (
               <Star
                 key={index}
-                onClick={() => setRating(index + 1)}
+                onClick={() => updateState("rating", index + 1)}
                 size={20}
-                className={`cursor-pointer ${getStarColor(rating, index)}`}
-                role="radio"
-                aria-checked={rating === index + 1}
-                aria-label={`Rate ${index + 1} star${index + 1 === 1 ? "" : "s"}`}
+                className={`cursor-pointer ${getStarColor(state.rating, index)}`}
               />
             ))}
           </div>
@@ -218,12 +221,11 @@ const FeedbackSection = () => {
 
         <button
           onClick={handleSubmitFeedback}
-          disabled={loading}
-          aria-busy={loading}
-          className={`w-full py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 text-white"
+          disabled={state.loadingSubmit}
+          className={`w-full py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${state.loadingSubmit ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 text-white"
             }`}
         >
-          {loading ? (
+          {state.loadingSubmit ? (
             <span className="flex items-center justify-center">
               <svg
                 className="animate-spin h-5 w-5 mr-2 text-white"
@@ -242,20 +244,30 @@ const FeedbackSection = () => {
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-md h-100 overflow-y-scroll">
+      {/* Feedback history */}
+      <div
+        className={`bg-white p-4 rounded-lg shadow-md ${state.feedbackHistory.length > 5 ? "h-100 overflow-y-scroll smooth" : ""
+          }`}
+      >
         <h2 className="font-medium text-lg">Feedback History</h2>
-        {feedbackHistory.length > 0 ? (
-          feedbackHistory.map((feedback, index) => (
+
+        {state.loadingHistory ? (
+          <div className="flex justify-center items-center py-6">
+            <IsLoader isFullScreen={false} />
+          </div>
+        ) : state.feedbackHistory.length > 0 ? (
+          state.feedbackHistory.map((feedback, index) => (
             <div key={index} className="mt-4 border-b pb-4 last:border-b-0">
               <div className="text-sm text-gray-700">
-                <strong>{decodeURIComponent(feedback.Subjects)}</strong> - {feedback.PatientRating}/5 -{" "}
-                {getRatingLabel(feedback.PatientRating)}
+                <strong>{decodeURIComponent(feedback.Subjects)}</strong> -{" "}
+                {feedback.PatientRating}/5 - {getRatingLabel(feedback.PatientRating)}
               </div>
-              <div className="flex space-x-1 mt-1">{renderStars(feedback.PatientRating)}</div>
-              {feedback.Remark && (
-                <div className="text-xs text-gray-500 mt-1">{decodeURIComponent(feedback.Remark)}</div>
-              )}
-              <div className="text-xs text-gray-500">Submitted on: {decodeURIComponent(feedback.EnquiryDate)}</div>
+              <div className="flex space-x-1 mt-1">
+                {renderStars(feedback.PatientRating)}
+              </div>
+              <div className="text-xs text-gray-500 font-semibold py-2">
+                Submitted on: {decodeURIComponent(feedback.EnquiryDate)}
+              </div>
             </div>
           ))
         ) : (

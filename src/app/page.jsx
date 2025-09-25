@@ -55,6 +55,7 @@ export default function LoginPage() {
       };
       debugger
       const res = await axios.post(apiUrls.login, null, { params });
+      // const res = await axios.post(`http://197.138.207.30/MobileApp_API/API/LoginAPIDynamic/Getlogin`, null, { params });
       const data = res.data;
 
       if (data.status) {

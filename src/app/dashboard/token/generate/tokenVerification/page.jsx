@@ -282,7 +282,7 @@ const TokenVerification = () => {
             )}
 
             {selectedPatient && (
-                <div className="bg-white p-4 shadow-sm rounded-md">
+                <div className="bg-white p-4 shadow-sm rounded-md h-[280px] mb-5">
                     <h3 className="text-md text-blue-600 mb-2">Service Selection</h3>
                     <div className="mb-3">
                         <CustomSelect
@@ -366,13 +366,15 @@ const TokenVerification = () => {
                         </div>
                     )}
                     {selectedService && (
-                        <Button
-                            onClick={handleSave}
-                            className="mt-4 bg-blue-600 text-white hover:bg-blue-700"
-                            disabled={loading}
-                        >
-                            {loading ? "Saving..." : "Save"}
-                        </Button>
+                        <div className="text-end">
+                            <Button
+                                onClick={handleSave}
+                                className="mt-4 bg-blue-600 text-white hover:bg-blue-700"
+                                disabled={loading}
+                            >
+                                {loading ? "Saving..." : "Save"}
+                            </Button>
+                        </div>
                     )}
                 </div>
             )}

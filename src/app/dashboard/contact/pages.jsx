@@ -4,12 +4,13 @@ import { Hospital, Phone, Mail, MapPin } from 'lucide-react';
 import { AuthContext } from '../../authtication/Authticate';
 import { apiUrls } from '../../../components/Network/ApiEndpoint';
 import { notify } from '../../../lib/notify';
+import IsLoader from '../../loading';
 
 
 const ContactUsScreen = () => {
   const [data, setData] = useState([]);
   const [loader, setLoader] = useState(false);
-  const { token} = useContext(AuthContext);
+  const { token } = useContext(AuthContext);
 
   useEffect(() => {
     fetchContact();
@@ -60,14 +61,14 @@ const ContactUsScreen = () => {
   };
 
   return (
-    <div className="flex-1 bg-blue-100 p-4 overflow-auto">
+    <div className="flex-1  p-4 overflow-auto">
       <h2 className="text-xl md:text-2xl font-bold text-center text-blue-600 my-4">
         Find our hospital centers near you.
       </h2>
 
       {loader ? (
-        <div className="flex justify-center items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600"></div>
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
+          <IsLoader isFullScreen={false} text="" size="6" />
         </div>
       ) : (
         <div className="flex flex-wrap justify-between gap-4">

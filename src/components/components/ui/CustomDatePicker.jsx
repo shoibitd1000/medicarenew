@@ -11,6 +11,7 @@ const CustomDatePicker = ({
   icon,
   id,
   required = false,
+  disablePastDates = false, // ✅ new prop
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const hasValue = !!value;
@@ -27,6 +28,7 @@ const CustomDatePicker = ({
         placeholderText={placeHolderText || " "}
         disabled={disabled}
         wrapperClassName="w-full"
+        minDate={disablePastDates ? new Date() : null} 
         className={`peer w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${repClass}`}
       />
 

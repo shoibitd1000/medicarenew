@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { notify } from "../../../../lib/notify";
+import { useLocation, useParams } from "react-router-dom";
+import Toaster, { notify } from "../../../../lib/notify";
 import { AuthContext } from "../../../authtication/Authticate";
 import { apiUrls } from "../../../../components/Network/ApiEndpoint";
 import IsLoader from "../../../loading";
 import { FlaskConical, UserRound, Package } from "lucide-react";
+import { closeIcon, DialogBox } from "../../../../components/components/ui/dialog";
 
 const PackageDetail = () => {
     const location = useLocation();
@@ -14,11 +15,12 @@ const PackageDetail = () => {
     const packageID = params?.id;
     const packageType = location.state?.activeTab || "OPD";
 
-    const { token, getAuthHeader,logout } = useContext(AuthContext);
+    const { token, getAuthHeader, logout } = useContext(AuthContext);
 
     const [loading, setLoading] = useState(true);
     const [packageData, setPackageData] = useState([]);
     const [totalCost, setTotalCost] = useState(0);
+    const [showDialog, setShowDialog] = useState(false); // modal state
 
     const fetchPackageDetails = async () => {
         if (!packageType || !["OPD", "IPD"].includes(packageType)) {
@@ -38,7 +40,6 @@ const PackageDetail = () => {
             const apiUrl = `${endpoint}?PackageID=${packageID}`;
 
             let response;
-            debugger
             if (packageType === "OPD") {
                 response = await axios.post(apiUrl, {}, { headers: { ...getAuthHeader() } });
             } else {
@@ -63,11 +64,9 @@ const PackageDetail = () => {
                     0
                 );
                 setTotalCost(total);
-            }
-            if (response?.data?.status === "401") {
-                logout()
-            }
-            else {
+            } else if (response?.data?.status === "401") {
+                logout();
+            } else {
                 notify("Error", response?.data?.message || "Failed to load package details.");
             }
         } catch (error) {
@@ -76,7 +75,6 @@ const PackageDetail = () => {
         } finally {
             setLoading(false);
         }
-
     };
 
     useEffect(() => {
@@ -108,116 +106,159 @@ const PackageDetail = () => {
     const { labItems, consultationItems, otherItems } = groupItemsByCategory();
 
     const handleBuyNow = () => {
-        notify("Purchase Confirmation", "Are you sure you want to buy now?");
+        setShowDialog(true); // open modal
+    };
+
+    const handleConfirmPurchase = () => {
+        setShowDialog(false);
+        notify("Success", "Package purchased successfully!");
+        // 👉 You can trigger API call here for final purchase
     };
 
     return (
-        <div className='p-5'>
-            <div className=" w-full m-auto md:w-1/2 my-3">
-                {loading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <IsLoader isFullScreen={false} size="6" text="package details..." />
-                    </div>
-                ) : (
-                    <>
-                        {/* Header */}
-                        <div className="bg-[#D6ECFB] p-4 rounded-lg mb-6">
-                            <div>
-                                <div className="flex justify-between">
-                                    <span className="text-xs font-bold uppercase text-[#3287C2]">
-                                        {packageType}
-                                    </span>
-                                    <h2 className="text-xl font-bold text-[#3287C2]">
+        <>
+            {/* <Toaster /> */}
+            <div className="p-5">
+                <div className="w-full m-auto md:w-1/2 my-3">
+                    {loading ? (
+                        <div className="flex justify-center items-center h-64">
+                            <IsLoader isFullScreen={false} size="6" text="package details..." />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Header */}
+                            <div className="bg-[#D6ECFB] p-4 rounded-lg mb-6">
+                                <div>
+                                    <div className="flex justify-between">
+                                        <span className="text-xs font-bold uppercase text-[#3287C2]">
+                                            {packageType}
+                                        </span>
+                                        <h2 className="text-xl font-bold text-[#3287C2]">
+                                            KES {totalCost.toLocaleString()}
+                                        </h2>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <h2 className="text-xl font-bold text-[#3287C2]">Basic Health Checkup</h2>
+                                        <span className="text-xs text-[#777]">Total Package Cost</span>
+                                    </div>
+                                    <p className="text-sm text-[#444] mt-2 ">
+                                        A comprehensive package covering essential health parameters
+                                        for a routine check.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="bg-white p-2 mb-3 shadow-md rounded">
+                                <h3 className="text-lg font-bold text-[#222] mb-4">Package Inclusions</h3>
+                                {/* Lab */}
+                                {labItems.length > 0 && (
+                                    <div className="mb-6">
+                                        <div className="flex items-center mb-2">
+                                            <FlaskConical size={20} color="#3287C2" />
+                                            <h4 className="text-lg font-bold ml-2 text-[#000]">Lab</h4>
+                                        </div>
+                                        <ul className="list-disc pl-5">
+                                            {labItems.map((item, index) => (
+                                                <li key={index} className="text-sm text-[#444] mb-1">
+                                                    {item.Item} {item.Quantity > 1 ? `(x${item.Quantity})` : ""}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {/* Consultation */}
+                                {consultationItems.length > 0 && (
+                                    <div className="mb-6">
+                                        <div className="flex items-center mb-2">
+                                            <UserRound size={20} color="#3287C2" />
+                                            <h4 className="text-lg font-bold ml-2 text-[#000]">Consultation</h4>
+                                        </div>
+                                        <ul className="list-disc pl-5">
+                                            {consultationItems.map((item, index) => (
+                                                <li key={index} className="text-sm text-[#444] mb-1">
+                                                    {item.Item} {item.Quantity > 1 ? `(x${item.Quantity})` : ""}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {/* Other */}
+                                {otherItems.length > 0 && (
+                                    <div className="mb-6">
+                                        <div className="flex items-center mb-2">
+                                            <Package size={20} color="#3287C2" />
+                                            <h4 className="text-lg font-bold ml-2 text-[#000]">
+                                                Supplies & Miscellaneous
+                                            </h4>
+                                        </div>
+                                        <ul className="list-disc pl-5">
+                                            {otherItems.map((item, index) => (
+                                                <li key={index} className="text-sm text-[#444] mb-1">
+                                                    {item.Item} {item.Quantity > 1 ? `(x${item.Quantity})` : ""}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer */}
+                            <div className="flex justify-between items-center p-4 bg-white rounded-lg mb-6">
+                                <div>
+                                    <span className="font-bold text-black">Total Price:</span>
+                                    <span className="font-bold text-[#2196F3] ml-2 text-lg">
                                         KES {totalCost.toLocaleString()}
-                                    </h2>
+                                    </span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <h2 className="text-xl font-bold text-[#3287C2]">Basic Health Checkup</h2>
-
-                                    <span className="text-xs text-[#777]">Total Package Cost</span>
-                                </div>
-                                <p className="text-sm text-[#444] mt-2 ">
-                                    A comprehensive package covering essential health parameters
-                                    for a routine check.
-                                </p>
+                                <button
+                                    className="bg-[#2196F3] text-white font-bold py-2 px-4 rounded-lg"
+                                    onClick={handleBuyNow}
+                                >
+                                    Buy Now
+                                </button>
                             </div>
-                        </div>
+                        </>
+                    )}
+                </div>
+            </div>
 
-                        <div className="bg-white p-2 mb-3 shadow-md rounded">
-                            <h3 className="text-lg font-bold text-[#222] mb-4">Package Inclusions</h3>
-                        {/* Lab */}
-                        {labItems.length > 0 && (
-                            <div className="mb-6">
-                                <div className="flex items-center mb-2">
-                                    <FlaskConical size={20} color="#3287C2" />
-                                    <h4 className="text-lg font-bold ml-2 text-[#000]">Lab</h4>
-                                </div>
-                                <ul className="list-disc pl-5">
-                                    {labItems.map((item, index) => (
-                                        <li key={index} className="text-sm text-[#444] mb-1">
-                                            {item.Item} {item.Quantity > 1 ? `(x${item.Quantity})` : ""}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {/* Consultation */}
-                        {consultationItems.length > 0 && (
-                            <div className="mb-6">
-                                <div className="flex items-center mb-2">
-                                    <UserRound size={20} color="#3287C2" />
-                                    <h4 className="text-lg font-bold ml-2 text-[#000]">Consultation</h4>
-                                </div>
-                                <ul className="list-disc pl-5">
-                                    {consultationItems.map((item, index) => (
-                                        <li key={index} className="text-sm text-[#444] mb-1">
-                                            {item.Item} {item.Quantity > 1 ? `(x${item.Quantity})` : ""}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {/* Other */}
-                        {otherItems.length > 0 && (
-                            <div className="mb-6">
-                                <div className="flex items-center mb-2">
-                                    <Package size={20} color="#3287C2" />
-                                    <h4 className="text-lg font-bold ml-2 text-[#000]">
-                                        Supplies & Miscellaneous
-                                    </h4>
-                                </div>
-                                <ul className="list-disc pl-5">
-                                    {otherItems.map((item, index) => (
-                                        <li key={index} className="text-sm text-[#444] mb-1">
-                                            {item.Item} {item.Quantity > 1 ? `(x${item.Quantity})` : ""}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="flex justify-between items-center p-4 bg-white rounded-lg mb-6">
-                            <div>
-                                <span className="font-bold text-black">Total Price:</span>
-                                <span className="font-bold text-[#2196F3] ml-2 text-lg">
-                                    KES {totalCost.toLocaleString()}
-                                </span>
-                            </div>
+            {/* Dialog Modal */}
+            {showDialog && (
+                <DialogBox
+                    open={showDialog}
+                    onOpenChange={setShowDialog}
+                    title="Confirm Purchase"
+                    size="lg"
+                    closeIcon={""}
+                    footer={
+                        <div className="flex justify-end space-x-3">
                             <button
-                                className="bg-[#2196F3] text-white font-bold py-2 px-4 rounded-lg"
-                                onClick={handleBuyNow}
+                                onClick={() => setShowDialog(false)}
+                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                             >
-                                Buy Now
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmPurchase}
+                                className="px-4 py-2 bg-[#2196F3] text-white rounded hover:bg-blue-600"
+                            >
+                                Confirm
                             </button>
                         </div>
-                    </>
-                )}
-            </div>
-        </div>
+                    }
+                >
+                    <p className="mb-6 text-gray-700">
+                        Are you sure you want to purchase this package for{" "}
+                        <span className="font-bold text-[#2196F3]">
+                            KES {totalCost.toLocaleString()}
+                        </span>
+                        ?
+                    </p>
+                </DialogBox>
+            )}
+        </>
     );
 };
 

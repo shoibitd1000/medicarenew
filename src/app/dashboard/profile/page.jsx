@@ -24,9 +24,10 @@ import { apiUrls } from "../../../components/Network/ApiEndpoint";
 import Toaster, { notify } from "../../../lib/notify";
 import axios from "axios";
 import { encryptPassword } from "../../../components/EncyptHooks/EncryptLib";
+import IsLoader from "../../loading";
 
 export default function ProfilePage() {
-  const { token, userData, saveUserData, getAuthHeader,clearAuth } = useContext(AuthContext);
+  const { token, userData, saveUserData, getAuthHeader, clearAuth } = useContext(AuthContext);
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
@@ -146,15 +147,14 @@ export default function ProfilePage() {
       const encryptedNewPassword = encryptPassword(newPassword);
       const encryptedConfirmPassword = encryptPassword(confirmPassword);
 
-      const apiUrl = `${
-        apiUrls.ResetProfilepasswordapi
-      }?oldpassword=${encodeURIComponent(
-        encryptedOldPassword
-      )}&newpassword=${encodeURIComponent(
-        encryptedNewPassword
-      )}&confirmedpassword=${encodeURIComponent(
-        encryptedConfirmPassword
-      )}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
+      const apiUrl = `${apiUrls.ResetProfilepasswordapi
+        }?oldpassword=${encodeURIComponent(
+          encryptedOldPassword
+        )}&newpassword=${encodeURIComponent(
+          encryptedNewPassword
+        )}&confirmedpassword=${encodeURIComponent(
+          encryptedConfirmPassword
+        )}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
 
       const response = await axios.post(apiUrl, {}, { headers: getAuthHeader() });
 
@@ -193,7 +193,7 @@ export default function ProfilePage() {
       formData.append("Mobile", phone);
       formData.append("Email", email);
       if (base64Image) {
-        formData.append("ProfileImage", base64Image); 
+        formData.append("ProfileImage", base64Image);
       }
 
       const response = await axios.post(apiUrls.updateProfileapi, formData, {
@@ -232,11 +232,10 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-2">
-      <Toaster/>
+      <Toaster />
       {profileLoading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          <span className="ml-2 text-blue-600">Loading Profile...</span>
+          <IsLoader isFullScreen={false} size="6" />
         </div>
       ) : (
         <>
@@ -349,11 +348,10 @@ export default function ProfilePage() {
                 </div>
                 <div className="md:col-span-2 flex justify-between">
                   <Button
-                    className="md:w-auto bg-slate-200 text-primary hover:bg-accent/90"
+                    className="md:w-auto border text-white"
                     onClick={() => setIsOpen(true)}
                     type="button"
                   >
-                    <Key className="text-primary h-5 w-5" />
                     Change Password
                   </Button>
                   <Button

@@ -74,7 +74,7 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Left Side Profile Info */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link to="/dashboard/profile">
+          <Link to="/">
             <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-primary">
               <AvatarImage src={base64Image} alt={currentUser?.FirstName || "User"} />
               <AvatarFallback>{currentUser?.initials || "U"}</AvatarFallback>
@@ -169,14 +169,12 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
                 Switch Profile
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/my-document">
                   <FileText className="mr-2" />
                   My Document
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
 
               {/* Logout Confirmation */}
               <AlertDialog>

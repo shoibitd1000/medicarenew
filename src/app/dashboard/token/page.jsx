@@ -47,7 +47,7 @@ const TokenPage = () => {
       <div className="flex border-b border-gray-300 m-0">
         <button
           onClick={() => setTab("current")}
-          className={`py-2 px-5 rounded-t-md border ${
+          className={`py-2 px-5 rounded-t-md border transition-all duration-600 ${
             tab === "current"
               ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
               : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"
@@ -57,19 +57,18 @@ const TokenPage = () => {
         </button>
         <button
           onClick={() => setTab("generateToken")}
-          className={`py-2 px-5 rounded-t-md border ${
+          className={`py-2 px-5 rounded-t-md border transition-all duration-600 ${
             tab === "generateToken"
-              ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
-              : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"
+              ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300 "
+              : "bg-gray-100 text-gray-600 border-gray-300 border-b-0 "
           }`}
         >
           Generate Token
         </button>
       </div>
 
-      {/* Content */}
       {tab === "current" ? (
-        <div className="bg-white rounded-lg p-6 shadow text-center">
+        <div className="bg-white rounded-b-lg p-6 shadow text-center transition-all duration-600">
           <h2 className="text-2xl font-bold text-blue-600">
             {availableToken[0]?.TokenNo?.length > 0
               ? `Token No: ${availableToken[0]?.TokenNo}`

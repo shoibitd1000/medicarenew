@@ -41,7 +41,7 @@ const GenerateTokenPage = () => {
   };
 
   return (
-    <div className="space-y-8 p-6 bg-white rounded-lg">
+    <div className="space-y-8 p-6 bg-white rounded-b-lg transition-all duration-600">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-blue-600 mb-1">
           Select The Center
@@ -56,12 +56,12 @@ const GenerateTokenPage = () => {
           <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="">
           {centers.map((center) => (
             <Link
               to={`/token/kiosks/${center.CentreID}`}
               key={center.CentreID}
-              className="flex items-center justify-between p-4 bg-white shadow-sm hover:shadow-md transition rounded-md"
+              className="flex items-center my-3 justify-between p-4 bg-white shadow-sm hover:shadow-md transition rounded-md"
             >
               <div className="flex items-center gap-4">
                 <SquarePlus className="h-6 w-6 text-blue-600 bg-gray-200 rounded-sm" />

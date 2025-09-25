@@ -505,7 +505,7 @@ const TeleconsultationAppointment = () => {
                         {["book", "upcoming", "past"].map((tabName) => (
                             <button
                                 key={tabName}
-                                className={`py-2 shadow-md border rounded-t-md ${tab === tabName ? "bg-blue-800 text-white transition-all duration-600 font-semibold shadow-md" : ""}`}
+                                className={`py-2 shadow-md border rounded-t-md transition-all duration-600 ${tab === tabName ? "bg-blue-800 text-white transition-all duration-600 font-semibold shadow-md" : ""}`}
                                 onClick={() => setTab(tabName)}
                             >
                                 {tabName === "book" ? "Book New" : tabName === "upcoming" ? "Upcoming" : "Past"}
@@ -596,6 +596,7 @@ const TeleconsultationAppointment = () => {
                                             value={selectedDate}
                                             placeHolderText="Select Date"
                                             handleDate={setSelectedDate}
+                                            disablePastDates={true}
                                             icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
                                             minDate={new Date()}
                                         />

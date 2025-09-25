@@ -197,19 +197,19 @@ export default function MedicinesPage() {
         <div className="xl:m-auto">
           <button
             onClick={() => setTab("prescription Medicines")}
-            className={`py-2 px-5 me-2 rounded-t-md border 
+            className={`py-2 px-5 me-2 rounded-t-md border font-semibold transition-all duration-800
       ${tab === "prescription Medicines"
-                ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
-                : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"}`}
+                ? "bg-blue-800 text-white  border-b-0 border-gray-300"
+                : "bg-gray-100  border-gray-300 border-b-0"}`}
           >
             Prescription Medicines
           </button>
           <button
             onClick={() => setTab("issued")}
-            className={`py-2 px-5 me-2 rounded-t-md border 
+            className={`py-2 px-5 me-2 rounded-t-md border font-semibold transition-all duration-800  
       ${tab === "issued"
                 ? "bg-blue-800 text-white font-semibold border-b-0 border-gray-300"
-                : "bg-gray-100 text-gray-600 border-gray-300 border-b-0"}`}
+                : "bg-gray-100  border-gray-300 border-b-0"}`}
           >
             Issued Medicines
           </button>

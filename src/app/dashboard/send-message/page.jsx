@@ -14,12 +14,20 @@ export default function SendMessagePage() {
   const navigate = useNavigate();
   const { token, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
   const patientid = getCurrentPatientId();
-  const [isOpenDialog, setIsOpenDialog] = useState(false);
-  const [pastAppointments, setPastAppointments] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [description, setDescription] = useState("");
-  const [selectedDoctorId, setSelectedDoctorId] = useState("");
-  const [selectedDoctorMobile, setSelectedDoctorMobile] = useState("");
+
+  // single state for everything
+  const [state, setState] = useState({
+    isOpenDialog: false,
+    pastAppointments: [],
+    loading: false,
+    description: "",
+    selectedDoctorId: "",
+    selectedDoctorMobile: "",
+  });
+
+  // update helper
+  const updateState = (updates) =>
+    setState((prev) => ({ ...prev, ...updates }));
 
   useEffect(() => {
     if (token && patientid) {
@@ -30,7 +38,6 @@ export default function SendMessagePage() {
     }
   }, [token, patientid]);
 
-  // Convert time to 24-hour format
   const convertTo24Hour = (timeStr) => {
     const [time, modifier] = timeStr.split(" ");
     let [hours, minutes] = time.split(":");
@@ -39,7 +46,6 @@ export default function SendMessagePage() {
     return `${hours}:${minutes}`;
   };
 
-  // Parse appointment date
   const parseAppointmentDate = (bookingDate, bookingTime) => {
     const dateParts = bookingDate.split("-");
     const day = parseInt(dateParts[0], 10);
@@ -47,34 +53,19 @@ export default function SendMessagePage() {
     const year = parseInt(dateParts[2], 10);
 
     const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
     ];
     const month = monthNames.indexOf(monthStr);
-
-    if (month === -1) {
-      console.error(`Invalid month format in BookingDate: ${bookingDate}`);
-      return null;
-    }
+    if (month === -1) return null;
 
     const [hours, minutes] = convertTo24Hour(bookingTime).split(":");
     return new Date(year, month, day, hours, minutes);
   };
 
-  // Fetch message delivery statuses for all doctor mobile numbers
   const fetchMessageDeliveryStatuses = async (doctorMobiles) => {
     const deliveryMap = {};
-    const batchSize = 5; // Limit concurrent requests to avoid overwhelming the server
+    const batchSize = 5;
 
     try {
       const encodedPatientId = encryptPassword(patientid);
@@ -92,8 +83,7 @@ export default function SendMessagePage() {
                 response?.data?.status === true &&
                 response.data.response.some((obj) => obj.IsDelivered === "0"),
             };
-          } catch (error) {
-            console.error(`Error checking delivery for ${mobile}:`, error);
+          } catch {
             return { mobile, isDelivered: false };
           }
         });
@@ -103,8 +93,7 @@ export default function SendMessagePage() {
           deliveryMap[mobile] = isDelivered;
         });
       }
-    } catch (error) {
-      console.error("Error fetching message delivery statuses:", error);
+    } catch {
       notify("Failed to check message delivery statuses.", "error");
     }
 
@@ -112,7 +101,7 @@ export default function SendMessagePage() {
   };
 
   const fetchAppointments = async () => {
-    setLoading(true);
+    updateState({ loading: true });
     try {
       const encodedPatientId = encryptPassword(patientid);
       const response = await axios.post(
@@ -122,7 +111,7 @@ export default function SendMessagePage() {
       );
 
       if (response?.data?.status !== true) {
-        setPastAppointments([]);
+        updateState({ pastAppointments: [] });
         notify("No past appointments found.", "info");
         return;
       }
@@ -135,7 +124,7 @@ export default function SendMessagePage() {
         if (!appointmentDate) return;
 
         const appointmentData = {
-          id: `${item.App_ID}`,
+          id: item.App_ID,
           doctor: item.DrName,
           PName: item.PName,
           specialty: item.DoctorSpeciality,
@@ -158,53 +147,36 @@ export default function SendMessagePage() {
         }
       });
 
-      // Sort appointments by date (latest first)
       past.sort((a, b) => b.appointmentDate - a.appointmentDate);
 
-      // Fetch delivery statuses for all doctor mobiles
       const deliveryMap = await fetchMessageDeliveryStatuses([...doctorMobiles]);
-
-      // Update appointments with delivery status
-      const updatedAppointments = past.map((appointment) => ({
-        ...appointment,
-        isDelivered: deliveryMap[appointment.doctorMobile] || false,
+      const updatedAppointments = past.map((a) => ({
+        ...a,
+        isDelivered: deliveryMap[a.doctorMobile] || false,
       }));
 
-      setPastAppointments(updatedAppointments);
+      updateState({ pastAppointments: updatedAppointments });
     } catch (error) {
-      console.error("Fetch appointments error:", error.response?.status, error.response?.data);
       if (error.response?.status === 401) {
         notify("Session expired. Please log in again.", "error");
         navigate("/enter-mpin");
       } else {
         notify("Failed to fetch appointments.", "error");
       }
-      setPastAppointments([]);
+      updateState({ pastAppointments: [] });
     } finally {
-      setLoading(false);
+      updateState({ loading: false });
     }
   };
 
   const sendMessageToDoctor = async () => {
-    if (!description.trim()) {
-      notify("Please enter a message.", "error");
-      return;
-    }
+    const { description, selectedDoctorId, selectedDoctorMobile } = state;
+    if (!description.trim()) return notify("Please enter a message.", "error");
+    if (!patientid) return notify("Patient Id is Missing.", "error");
+    if (!selectedDoctorId) return notify("Doctor Id is Missing.", "error");
+    if (!selectedDoctorMobile) return notify("Contact No is Missing.", "error");
 
-    if (!patientid ) {
-      notify("Patiend Id is Missing.", "error");
-      return;
-    }
-    if (!selectedDoctorId ) {
-      notify("Doctor Id is Missing.", "error");
-      return;
-    }
-    if (!selectedDoctorMobile ) {
-      notify("Contact No is Missing.", "error");
-      return;
-    }
-
-    setLoading(true);
+    updateState({ loading: true });
     try {
       const encodedPatientId = encryptPassword(patientid);
       const encodedMessage = encryptPassword(description);
@@ -216,29 +188,25 @@ export default function SendMessagePage() {
 
       if (response?.data?.status === true) {
         notify(response?.data?.message || "Message sent successfully.", "success");
-        setDescription("");
-        setIsOpenDialog(false);
-        // Optimistically update isDelivered
-        setPastAppointments((prev) =>
-          prev.map((appointment) =>
-            appointment.doctorMobile === selectedDoctorMobile
-              ? { ...appointment, isDelivered: true }
-              : appointment
-          )
-        );
+        updateState({
+          description: "",
+          isOpenDialog: false,
+          pastAppointments: state.pastAppointments.map((a) =>
+            a.doctorMobile === selectedDoctorMobile ? { ...a, isDelivered: true } : a
+          ),
+        });
       } else {
         notify(response?.data?.message || "Failed to send message.", "error");
       }
-    } catch (error) {
-      console.error("Send message error:", error.response?.data);
+    } catch {
       notify("An error occurred while sending the message.", "error");
     } finally {
-      setLoading(false);
+      updateState({ loading: false });
     }
   };
 
   const AppointmentRow = ({ item, onSelect }) => (
-    <div className="p-4 shadow-sm hover:shadow-md transition bg-white rounded-lg">
+    <div className="p-4 shadow-lg hover:shadow-md transition bg-white rounded-lg">
       <div className="flex items-center justify-between">
         <span className="text-md font-extrabold text-blue-600">{item.doctor}</span>
         <span className="text-xs font-bold text-gray-600">{item.center}</span>
@@ -257,7 +225,9 @@ export default function SendMessagePage() {
           className={`text-xs font-bold ${
             item.isDelivered ? "text-gray-400 cursor-not-allowed" : "text-blue-500 hover:text-blue-700"
           }`}
-          onClick={() => onSelect(item)}
+          onClick={() =>
+            onSelect(item)
+          }
           disabled={item.isDelivered}
         >
           {item.isDelivered ? "Message Sent" : "Send Message"}
@@ -267,7 +237,7 @@ export default function SendMessagePage() {
   );
 
   return (
-    <div className="space-y-8 p-4">
+    <div className="space-y-5 p-2">
       <Toaster />
       <div className="text-center">
         <Mail className="h-12 w-12 mx-auto text-blue-600 bg-white border rounded-lg shadow-md p-2" />
@@ -275,24 +245,26 @@ export default function SendMessagePage() {
         <p className="text-gray-500">Send a message to your doctor</p>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         <div className="bg-white rounded-lg p-4 shadow">
           <div className="space-y-6 p-6">
             <h2 className="text-2xl font-bold text-blue-600 text-center">Past Appointments</h2>
-            {loading ? (
+            {state.loading ? (
               <div className="flex justify-center items-center">
                 <IsLoader isFullScreen={false} size="6" />
               </div>
-            ) : pastAppointments.length > 0 ? (
-              <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-4">
-                {pastAppointments.map((item) => (
+            ) : state.pastAppointments.length > 0 ? (
+              <div className="grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {state.pastAppointments.map((item) => (
                   <AppointmentRow
                     key={item.id}
                     item={item}
                     onSelect={(item) => {
-                      setSelectedDoctorId(item.doctorId);
-                      setSelectedDoctorMobile(item.doctorMobile);
-                      setIsOpenDialog(true);
+                      updateState({
+                        selectedDoctorId: item.doctorId,
+                        selectedDoctorMobile: item.doctorMobile,
+                        isOpenDialog: true,
+                      });
                     }}
                   />
                 ))}
@@ -305,10 +277,10 @@ export default function SendMessagePage() {
       </div>
 
       <DialogBox
-        open={isOpenDialog}
+        open={state.isOpenDialog}
         onOpenChange={(open) => {
-          setIsOpenDialog(open);
-          if (!open) setDescription("");
+          updateState({ isOpenDialog: open });
+          if (!open) updateState({ description: "" });
         }}
         title="Send Message"
         description="You can send only one message to your selected doctor."
@@ -317,18 +289,17 @@ export default function SendMessagePage() {
           <>
             <button
               className={`px-4 py-2 text-sm font-medium rounded transition ${
-                loading ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 text-white"
+                state.loading ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 text-white"
               }`}
               onClick={sendMessageToDoctor}
-              disabled={loading}
+              disabled={state.loading}
             >
-              {loading ? "Sending..." : "Send Message"}
+              {state.loading ? "Sending..." : "Send Message"}
             </button>
             <button
               className="px-4 py-2 text-sm font-medium bg-red-100 rounded hover:bg-red-200 transition text-gray-700"
               onClick={() => {
-                setIsOpenDialog(false);
-                setDescription("");
+                updateState({ isOpenDialog: false, description: "" });
               }}
             >
               Cancel
@@ -340,8 +311,8 @@ export default function SendMessagePage() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Type Your Message</label>
           <CustomTextArea
             repClass="w-full focus:outline-none focus:ring focus:ring-blue-500 rounded-lg p-2"
-            value={description}
-            handleChange={setDescription}
+            value={state.description}
+            handleChange={(val) => updateState({ description: val })}
             placeHolderText="Send a message to your doctor."
           />
         </div>

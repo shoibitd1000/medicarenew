@@ -178,7 +178,7 @@ export default function DashboardPage() {
     getDashboardData();
   }, []);
 
-  if (loading) return <IsLoader />;
+  if (loading) return <IsLoader text="" />;
 
   return (
     <div className="space-y-8 bg-background p-2">

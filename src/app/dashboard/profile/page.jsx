@@ -304,6 +304,7 @@ export default function ProfilePage() {
                     value={formData.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
                     placeholder="Enter Mobile Number"
+                    
                   />
                 </div>
                 <div className="my-4">

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Calendar, FileDown, X } from "lucide-react";
 import axios from "axios";
-import { Document, Page, pdfjs } from "react-pdf";
 import { AuthContext } from "../../../authtication/Authticate"; // Adjust path as needed
 import { apiUrls } from "../../../../components/Network/ApiEndpoint"; // Adjust path as needed
 import CustomDatePicker from "../../../../components/components/ui/CustomDatePicker";
@@ -10,18 +9,14 @@ import CustomMultiSelect from "../../../../components/components/ui/CustomMultiS
 import { Button } from "../../../../components/components/ui/button";
 import Toaster, { notify } from "../../../../lib/notify";
 import IsLoader from "../../../loading";
-
-// Set up pdfjs worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import { encryptPassword } from "../../../../components/EncyptHooks/EncryptLib";
 
 const InvestigationsAppoin = () => {
-    const state = useParams();
+    const { id: centerID, centername = "Tenwek Hospital" } = useParams();
     const navigate = useNavigate();
     const { token, userData, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
     const patientid = getCurrentPatientId();
-    const centerID = state?.id;
-    const centerName = state?.centername || "Tenwek Hospital";
-    const patientName = `${userData?.FirstName || ""} ${userData?.LastName || ""}`.trim() || "User Name Not Found ";
+    const patientName = `${userData?.FirstName || ""} ${userData?.LastName || ""}`.trim() || "User Name Not Found";
 
     const [tab, setTab] = useState("past");
     const [selectedDate, setSelectedDate] = useState(null);
@@ -41,10 +36,7 @@ const InvestigationsAppoin = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const [paymentUrl, setPaymentUrl] = useState("");
     const [webViewVisible, setWebViewVisible] = useState(false);
-    const [pdfModalVisible, setPdfModalVisible] = useState(false);
     const [latestTransactionNo, setLatestTransactionNo] = useState(null);
-    const [numPages, setNumPages] = useState(null);
-    const [pageNumber, setPageNumber] = useState(1);
     const iframeRef = useRef(null);
 
     const totalAmount = selectedInvestigations.reduce(
@@ -67,18 +59,8 @@ const InvestigationsAppoin = () => {
         if (!date) return "04-Sep-2025";
         const day = date.getDate().toString().padStart(2, "0");
         const monthNames = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
         ];
         const month = monthNames[date.getMonth()];
         const year = date.getFullYear();
@@ -93,6 +75,8 @@ const InvestigationsAppoin = () => {
         return `${year}-${month}-${day}`;
     };
 
+    
+
     const Search_Package = async () => {
         setLoading(true);
         try {
@@ -104,11 +88,7 @@ const InvestigationsAppoin = () => {
             const response = await axios.post(
                 apiUrls.testNameapi,
                 {},
-                {
-                    headers: {
-                        ...getAuthHeader()
-                    },
-                }
+                { headers: getAuthHeader() }
             );
             if (response?.data?.status === true) {
                 setSearchData(response.data.response);
@@ -168,46 +148,38 @@ const InvestigationsAppoin = () => {
             const response = await axios.post(apiUrl, {}, { headers: getAuthHeader() });
 
             if (response?.data?.status === true && response.data.response?.length > 0) {
-                const appointments = response.data.response.map((item) => {
-                    const dateParts = item.DATES.split("-");
-                    if (dateParts.length !== 3) return null;
+                const appointments = response.data.response
+                    .map((item) => {
+                        const dateParts = item.DATES.split("-");
+                        if (dateParts.length !== 3) return null;
 
-                    const day = parseInt(dateParts[0], 10);
-                    const monthStr = dateParts[1];
-                    const year = parseInt(dateParts[2], 10);
-                    const monthNames = [
-                        "Jan",
-                        "Feb",
-                        "Mar",
-                        "Apr",
-                        "May",
-                        "Jun",
-                        "Jul",
-                        "Aug",
-                        "Sep",
-                        "Oct",
-                        "Nov",
-                        "Dec",
-                    ];
-                    const month = monthNames.indexOf(monthStr);
-                    if (month === -1) return null;
+                        const day = parseInt(dateParts[0], 10);
+                        const monthStr = dateParts[1];
+                        const year = parseInt(dateParts[2], 10);
+                        const monthNames = [
+                            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                        ];
+                        const month = monthNames.indexOf(monthStr);
+                        if (month === -1) return null;
 
-                    const appointmentDate = new Date(year, month, day);
-                    if (isNaN(appointmentDate.getTime())) return null;
+                        const appointmentDate = new Date(year, month, day);
+                        if (isNaN(appointmentDate.getTime())) return null;
 
-                    return {
-                        id: `${item.ItemID}`,
-                        TestName: item.ItemName,
-                        PName: item.PatientName,
-                        dateTime: item.DATES,
-                        center: item.CentreName,
-                        cancel: item?.IsActive,
-                        appointmentDate: item.DATES,
-                        STATUS: item.STATUS,
-                        Department: item?.Department,
-                        parsedDate: appointmentDate.getTime(),
-                    };
-                }).filter(Boolean);
+                        return {
+                            id: `${item.ItemID}`,
+                            TestName: item.ItemName,
+                            PName: item.PatientName,
+                            dateTime: item.DATES,
+                            center: item.CentreName,
+                            cancel: item?.IsActive,
+                            appointmentDate: item.DATES,
+                            STATUS: item.STATUS,
+                            Department: item?.Department,
+                            parsedDate: appointmentDate.getTime(),
+                        };
+                    })
+                    .filter(Boolean);
 
                 const past = [];
                 const upcoming = [];
@@ -244,8 +216,7 @@ const InvestigationsAppoin = () => {
 
     const fetchSaveAppointment = async (referenceNo) => {
         try {
-            const apiUrl =
-                `${apiUrls.saveItemDetailsapi}?MobileAppID=esLCtIuIS8Ci9QmQlI01mJ1MBqICiAwxbqSDrevOH6I%3D`;
+            const apiUrl = `${apiUrls.saveItemDetailsapi}?MobileAppID=esLCtIuIS8Ci9QmQlI01mJ1MBqICiAwxbqSDrevOH6I%3D`;
             const formattedDate = formatAppointmentDate(selectedDate);
             const user = {
                 Address: userData?.Address || "",
@@ -296,9 +267,20 @@ const InvestigationsAppoin = () => {
             if (response.data?.status === true) {
                 notify("Appointment saved successfully!");
                 setLatestTransactionNo(response.data.response);
-                setPdfModalVisible(true);
                 setWebViewVisible(false);
                 setShowConfirm(false);
+                // Open PDF in new tab
+                const pdfUrl = getPdfUrl(response.data.response);
+                if (pdfUrl) {
+                    window.open(pdfUrl, "_blank");
+                } else {
+                    notify("Failed to generate PDF URL.");
+                }
+                // Reset states after opening PDF
+                setSelectedDate(null);
+                setSelectedInvestigations([]);
+                setSearchQuery("");
+                setLatestTransactionNo(null);
             } else {
                 notify(response.data?.message || "Failed to save appointment.");
             }
@@ -312,11 +294,16 @@ const InvestigationsAppoin = () => {
     };
 
     const handlePayment = () => {
+        if (selectedInvestigations.length === 0 || !selectedDate) {
+            notify("Please select an investigation and date.");
+            return;
+        }
         const patientID = userData?.PatientASID || "";
         const phoneNumber = userData?.Mobile || "";
         const billNo = "";
         const amount = totalAmount;
-        const url = "";
+        // Replace with actual payment URL
+        const url = `https://example.com/payment?patientID=${patientID}&amount=${amount}`;
         setPaymentUrl(url);
         setWebViewVisible(true);
         setShowConfirm(false);
@@ -356,13 +343,9 @@ const InvestigationsAppoin = () => {
         }
     };
 
-    const onDocumentLoadSuccess = ({ numPages }) => {
-        setNumPages(numPages);
-    };
-
     useEffect(() => {
         if (centerID && tab) {
-            fetchAppointments(centerID, tab, fromDate, toDate);
+            fetchAppointments(centerID, tab);
         }
     }, [token, selectedDate, centerID, fromDate, toDate, tab]);
 
@@ -381,9 +364,6 @@ const InvestigationsAppoin = () => {
         const tests = item.TestName.split(",").map((t) => t.trim());
         return (
             <div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
                 className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col w-full max-w-[600px] mx-auto"
             >
                 <div className="flex justify-between items-start mb-3">
@@ -391,12 +371,9 @@ const InvestigationsAppoin = () => {
                         <h3 className="text-lg font-medium text-blue-600 truncate">{item.PName}</h3>
                         <p className="text-sm text-gray-500 truncate">{item.center}</p>
                     </div>
-
                 </div>
                 <div className="flex-1">
-                    <p className="font-semibold text-gray-800 text-sm">
-                        Tests: {tests.length}
-                    </p>
+                    <p className="font-semibold text-gray-800 text-sm">Tests: {tests.length}</p>
                     <p className="font-semibold text-gray-800 text-sm">{item.Department}</p>
                     <p className="text-gray-600 text-sm break-words">{tests.join(", ")}</p>
                 </div>
@@ -413,17 +390,11 @@ const InvestigationsAppoin = () => {
     };
 
     const PastRender = ({ item }) => (
-
         <div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
             className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col w-full max-w-[600px] mx-auto"
         >
-            {console.log(item)
-            }
             <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-medium text-blue-600 truncate w-[calc(100%-20%)]">
+                <h3 className="text-lg font-medium text-blue-600  w-[calc(100%-20%)]">
                     {item.TestName}
                 </h3>
                 <p className="text-xs text-gray-500 font-bold truncate">{item.center}</p>
@@ -431,15 +402,14 @@ const InvestigationsAppoin = () => {
             <p className="text-sm font-semibold text-gray-800 truncate">{item.PName}</p>
             <div className="flex justify-between items-center mt-3">
                 <p className="text-sm text-gray-600">{item.dateTime}</p>
-                <button
+                <a
+                    href={"http://197.138.207.30/Tenwek2208/Design/Common/CommonPrinterOPDThermal.aspx?ReceiptNo=&LedgerTransactionNo=4387151&IsBill=1&Duplicate=1&Type=OPD"}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition-colors"
-                    onClick={() => {
-                        setLatestTransactionNo(item.id || "4387151");
-                        setPdfModalVisible(true);
-                    }}
                 >
                     <FileDown className="h-5 w-5 text-gray-600" />
-                </button>
+                </a>
             </div>
         </div>
     );
@@ -456,12 +426,11 @@ const InvestigationsAppoin = () => {
                 {["book", "upcoming", "past"].map((t) => (
                     <button
                         key={t}
-                        className={`py-2 border rounded-t-md text-sm sm:text-base font-semibold transition-all duration-800
- ${tab === t
-                                ? "bg-blue-800 text-white  shadow-md "
-                                : "bg-gray-100 "
-                            } transition-colors`}
-
+                        className={`py-2 border rounded-t-md text-sm sm:text-base font-semibold ${
+                            tab === t
+                                ? "bg-blue-800 text-white shadow-md"
+                                : "bg-gray-100"
+                        } transition-colors`}
                         onClick={() => setTab(t)}
                     >
                         {t === "book" ? "Book New" : t === "upcoming" ? "Upcoming" : "Past"}
@@ -471,17 +440,10 @@ const InvestigationsAppoin = () => {
 
             {tab === "book" && (
                 <div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
                     className="bg-white border rounded-b-lg p-4 sm:p-6 shadow max-w-7xl mx-auto"
                 >
                     {showConfirm ? (
-                        <div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.3 }}
-                        >
+                        <div>
                             <div className="p-2 text-center my-2">
                                 <h2 className="text-xl sm:text-2xl font-bold mb-4 text-blue-600">
                                     Confirm Investigation
@@ -495,15 +457,16 @@ const InvestigationsAppoin = () => {
                                     <strong>Patient:</strong> {patientName}
                                 </p>
                                 <p>
-                                    <strong>Center:</strong> {centerName}
+                                    {/* <strong>Center:</strong> {CenterName} */}
                                 </p>
                                 <p className="flex items-start gap-2">
                                     <strong className="text-gray-700 min-w-[120px]">Investigation:</strong>
                                     <span
-                                        className={`text-sm px-3 py-1 rounded-lg shadow-sm ${selectedInvestigations.length > 0
-                                            ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                            : "bg-gray-100 text-gray-500 border border-gray-300 italic"
-                                            }`}
+                                        className={`text-sm px-3 py-1 rounded-lg shadow-sm ${
+                                            selectedInvestigations.length > 0
+                                                ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                                : "bg-gray-100 text-gray-500 border border-gray-300 italic"
+                                        }`}
                                     >
                                         {selectedInvestigations.length > 0
                                             ? selectedInvestigations.map((d) => d.label).join(", ")
@@ -514,10 +477,10 @@ const InvestigationsAppoin = () => {
                                     <strong>Date:</strong>{" "}
                                     {selectedDate
                                         ? selectedDate.toLocaleDateString("en-US", {
-                                            day: "numeric",
-                                            month: "long",
-                                            year: "numeric",
-                                        })
+                                              day: "numeric",
+                                              month: "long",
+                                              year: "numeric",
+                                          })
                                         : "Not selected"}
                                 </p>
                                 <p>
@@ -542,12 +505,12 @@ const InvestigationsAppoin = () => {
                     ) : (
                         <>
                             <div className="py-2 px-4 sm:px-6 shadow-md flex mb-1 justify-between items-start sm:items-center">
-                                <div className="">
+                                <div>
                                     <h2 className="text-xl sm:text-2xl font-bold">
                                         Book a New Investigation(s)
                                     </h2>
                                     <p className="text-xs text-cyan-500">
-                                        Booking a test at {centerName}. Change center for other locations
+                                        Booking a test at Tenwek. Change center for other locations
                                     </p>
                                 </div>
                                 <Button
@@ -591,10 +554,11 @@ const InvestigationsAppoin = () => {
                             </div>
                             <div className="flex justify-center mt-4">
                                 <button
-                                    className={`px-4 py-2 bg-blue-600 text-white rounded uppercase text-sm sm:text-base ${!selectedInvestigations.length || !selectedDate
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
-                                        }`}
+                                    className={`px-4 py-2 bg-blue-600 text-white rounded uppercase text-sm sm:text-base ${
+                                        !selectedInvestigations.length || !selectedDate
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : ""
+                                    }`}
                                     onClick={handleConfirm}
                                     disabled={!selectedInvestigations.length || !selectedDate}
                                 >
@@ -608,9 +572,6 @@ const InvestigationsAppoin = () => {
 
             {tab === "upcoming" && (
                 <div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
                     className="bg-white border rounded-b-lg p-4 sm:p-6 shadow max-w-7xl mx-auto"
                 >
                     <div className="py-2 px-4 sm:px-6 shadow-md my-2">
@@ -636,9 +597,6 @@ const InvestigationsAppoin = () => {
 
             {tab === "past" && (
                 <div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
                     className="bg-white border rounded-b-lg p-4 sm:p-6 shadow max-w-7xl mx-auto"
                 >
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -682,9 +640,6 @@ const InvestigationsAppoin = () => {
 
             {webViewVisible && (
                 <div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
                     className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
                 >
                     <div className="bg-white w-full max-w-4xl h-[80vh] rounded-lg p-4 sm:p-6">
@@ -705,60 +660,6 @@ const InvestigationsAppoin = () => {
                         ) : (
                             <p className="text-center text-gray-600">Loading payment page...</p>
                         )}
-                    </div>
-                </div>
-            )}
-
-            {pdfModalVisible && latestTransactionNo && (
-                <div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                >
-                    <div className="bg-white w-full max-w-4xl h-[80vh] rounded-lg p-4 sm:p-6 overflow-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg sm:text-xl font-bold text-blue-600">
-                                Investigation Receipt
-                            </h2>
-                            <button
-                                onClick={() => {
-                                    setPdfModalVisible(false);
-                                    setSelectedDate(null);
-                                    setSelectedInvestigations([]);
-                                    setSearchData([]);
-                                    setSearchQuery("");
-                                    setLatestTransactionNo(null);
-                                    setNumPages(null);
-                                    setPageNumber(1);
-                                }}
-                            >
-                                <X className="h-6 w-6 text-gray-600" />
-                            </button>
-                        </div>
-                        <Document
-                            file={`http://197.138.207.30/Tenwek2208/Design/Common/CommonPrinterOPDThermal.aspx?ReceiptNo=&LedgerTransactionNo=${latestTransactionNo}&IsBill=1&Duplicate=1&Type=OPD`}
-                            onLoadSuccess={onDocumentLoadSuccess}
-                            onLoadError={(error) => {
-                                console.error("PDF Error:", error);
-                                notify("Failed to load PDF. Check console for details or verify the URL.");
-                                setPdfModalVisible(false);
-                                setLatestTransactionNo(null);
-                            }}
-                            loading={<div className="text-center py-4">Loading PDF...</div>}
-                        >
-                            <Page
-                                pageNumber={pageNumber}
-                                width={600}
-                                renderTextLayer={true}
-                                renderAnnotationLayer={true}
-                            />
-                            {numPages > 1 && (
-                                <p className="text-center mt-2">
-                                    Page {pageNumber} of {numPages}
-                                </p>
-                            )}
-                        </Document>
                     </div>
                 </div>
             )}

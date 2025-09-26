@@ -35,7 +35,6 @@ import FeedbackSection from "./app/dashboard/complaints/page";
 import VerifyOtpPage from "./app/verify-otp/page";
 import DischargeSummary from "./app/dashboard/clinical-record/dischargeSummary/DischargeSummary";
 import IsLoader from "./app/loading";
-import ContactUsPage from "./app/dashboard/contact/page";
 import ContactUsScreen from "./app/dashboard/contact/pages";
 import KioskSelectionPage from "./app/dashboard/token/generate/selectKiosk/pages";
 import TokenVerification from "./app/dashboard/token/generate/tokenVerification/page";

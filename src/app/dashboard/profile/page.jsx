@@ -27,22 +27,31 @@ import { encryptPassword } from "../../../components/EncyptHooks/EncryptLib";
 import IsLoader from "../../loading";
 
 export default function ProfilePage() {
-  const { token, userData, saveUserData, getAuthHeader, clearAuth } = useContext(AuthContext);
+  const { token, userData, saveUserData, getAuthHeader, clearAuth } =
+    useContext(AuthContext);
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedGender, setSelectedGender] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
+    dob: "",
+    gender: "",
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    profileImage: "https://placehold.co/128x128.png",
+    base64Image: "",
+  });
+
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [profileImage, setProfileImage] = useState("https://placehold.co/128x128.png");
-  const [base64Image, setBase64Image] = useState("");
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
+
+  // Helper to update fields
+  const updateField = (key, value) =>
+    setFormData((prev) => ({ ...prev, [key]: value }));
 
   // Fetch user data
   const fetchUserData = async () => {
@@ -57,23 +66,24 @@ export default function ProfilePage() {
       const response = await axios.post(
         `${apiUrls.userprofileapiEditapi}?MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`,
         {},
-        {
-          headers: getAuthHeader(),
-        }
+        { headers: getAuthHeader() }
       );
 
       const data = response?.data?.response[0];
       if (data) {
-        setName(`${data?.FirstName || ""} ${data?.LastName || ""}`.trim());
-        setSelectedDate(data?.DOB ? new Date(data.DOB) : "");
-        setSelectedGender(data?.Gender || "");
-        setPhone(data?.Mobile || "");
-        setEmail(data?.Email || "");
-        setAddress(data?.Address || "");
-        if (data?.ProfileImage) {
-          setProfileImage(`data:image/jpeg;base64,${data.ProfileImage}`);
-          setBase64Image(data.ProfileImage); // Store raw Base64 for saving
-        }
+        setFormData((prev) => ({
+          ...prev,
+          name: `${data?.FirstName || ""} ${data?.LastName || ""}`.trim(),
+          dob: data?.DOB ? new Date(data.DOB) : "",
+          gender: data?.Gender?.toLowerCase() || "", // Normalize to lowercase
+          phone: data?.Mobile || "",
+          email: data?.Email || "",
+          address: data?.Address || "",
+          profileImage: data?.ProfileImage
+            ? `data:image/jpeg;base64,${data.ProfileImage}`
+            : prev.profileImage,
+          base64Image: data?.ProfileImage || "",
+        }));
       } else {
         notify("No profile data found.");
       }
@@ -98,9 +108,8 @@ export default function ProfilePage() {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type and size
     const validTypes = ["image/jpeg", "image/png", "image/gif"];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (!validTypes.includes(file.type)) {
       notify("Please upload a valid image (JPEG, PNG, or GIF).");
       return;
@@ -113,23 +122,25 @@ export default function ProfilePage() {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result;
-      const base64 = dataUrl.split(",")[1]; // Extract raw Base64 string
-      setBase64Image(base64); // Store raw Base64 for backend
-      setProfileImage(dataUrl); // Set full data URL for preview
+      const base64 = dataUrl.split(",")[1];
+      setFormData((prev) => ({
+        ...prev,
+        base64Image: base64,
+        profileImage: dataUrl,
+      }));
     };
-    reader.onerror = () => {
-      notify("Failed to read the image file.");
-    };
+    reader.onerror = () => notify("Failed to read the image file.");
     reader.readAsDataURL(file);
   };
 
   // Handle password update
   const handlePasswordUpdate = async () => {
+    const { oldPassword, newPassword, confirmPassword } = formData;
+
     if (!oldPassword || !newPassword || !confirmPassword) {
       notify("Please fill all password fields.");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       notify("New password and confirm password do not match.");
       return;
@@ -137,43 +148,35 @@ export default function ProfilePage() {
 
     setLoading(true);
     try {
-      if (!token) {
-        notify("User is not authenticated.");
-        navigate("/login");
-        return;
-      }
+      const encryptedOld = encryptPassword(oldPassword);
+      const encryptedNew = encryptPassword(newPassword);
+      const encryptedConfirm = encryptPassword(confirmPassword);
 
-      const encryptedOldPassword = encryptPassword(oldPassword);
-      const encryptedNewPassword = encryptPassword(newPassword);
-      const encryptedConfirmPassword = encryptPassword(confirmPassword);
-
-      const apiUrl = `${apiUrls.ResetProfilepasswordapi
-        }?oldpassword=${encodeURIComponent(
-          encryptedOldPassword
-        )}&newpassword=${encodeURIComponent(
-          encryptedNewPassword
-        )}&confirmedpassword=${encodeURIComponent(
-          encryptedConfirmPassword
-        )}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
+      const apiUrl = `${apiUrls.ResetProfilepasswordapi}?oldpassword=${encodeURIComponent(
+        encryptedOld
+      )}&newpassword=${encodeURIComponent(
+        encryptedNew
+      )}&confirmedpassword=${encodeURIComponent(
+        encryptedConfirm
+      )}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
 
       const response = await axios.post(apiUrl, {}, { headers: getAuthHeader() });
 
       if (response?.data?.status === true) {
         notify(response?.data?.message || "Password updated successfully!", "success");
         setIsOpen(false);
-        setOldPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
+        setFormData((prev) => ({
+          ...prev,
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
       } else {
         notify(response?.data?.message || "Failed to update password.");
       }
     } catch (error) {
       console.error("Error updating password:", error);
       notify("Something went wrong. Please try again.");
-      if (error.response?.status === 401) {
-        notify("Session expired. Please log in again.");
-        navigate("/login");
-      }
     } finally {
       setLoading(false);
     }
@@ -181,6 +184,8 @@ export default function ProfilePage() {
 
   // Handle profile save
   const handleSaveChanges = async () => {
+    const { phone, email, base64Image, gender } = formData; // Added gender
+
     if (!phone || !email) {
       notify("Phone number and email cannot be empty.");
       return;
@@ -188,27 +193,23 @@ export default function ProfilePage() {
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
-      formData.append("Mobile", phone);
-      formData.append("Email", email);
-      if (base64Image) {
-        formData.append("ProfileImage", base64Image);
-      }
+      const fd = new FormData();
+      fd.append("mobileappid", "gRWyl7xEbEiVQ3u397J1KQ==");
+      fd.append("Mobile", phone);
+      fd.append("Email", email);
+      fd.append("Gender", gender); // Fixed: Use lowercase gender
+      if (base64Image) fd.append("ProfileImage", base64Image);
 
-      const response = await axios.post(apiUrls.updateProfileapi, formData, {
-        headers: {
-          ...getAuthHeader(),
-          "Content-Type": "multipart/form-data",
-        },
+      const response = await axios.post(apiUrls.updateProfileapi, fd, {
+        headers: { ...getAuthHeader(), "Content-Type": "multipart/form-data" },
       });
 
       if (response?.data?.status === true) {
-        // Update userData in AuthContext with the new profile image
         saveUserData({
           ...userData,
           Mobile: phone,
           Email: email,
+          Gender: gender, // Fixed: Use lowercase gender
           ProfileImage: base64Image || userData?.ProfileImage,
         });
         notify("Profile updated successfully!", "success");
@@ -217,14 +218,8 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      notify(
-        error.response?.data?.message || "Something went wrong. Please try again."
-      );
-      if (error.response?.status === 401) {
-        notify("Session expired. Please log in again.");
-        // navigate("/login");
-        clearAuth()
-      }
+      notify(error.response?.data?.message || "Something went wrong. Please try again.");
+      if (error.response?.status === 401) clearAuth();
     } finally {
       setLoading(false);
     }
@@ -244,16 +239,13 @@ export default function ProfilePage() {
           </Button>
           <Card className="py-3">
             <CardContent className="space-y-6">
+              {/* Profile Image */}
               <div className="flex justify-center">
                 <div className="relative">
                   <Avatar className="w-32 h-32 border-4 border-primary/50">
-                    <AvatarImage
-                      src={profileImage}
-                      alt="Patient Name"
-                      data-ai-hint="profile picture"
-                    />
+                    <AvatarImage src={formData.profileImage} alt="Profile" />
                     <AvatarFallback>
-                      {name ? name.slice(0, 2).toUpperCase() : "PN"}
+                      {formData.name ? formData.name.slice(0, 2).toUpperCase() : "PN"}
                     </AvatarFallback>
                   </Avatar>
                   <Button
@@ -268,33 +260,27 @@ export default function ProfilePage() {
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       onChange={handleImagePick}
                     />
-                    <span className="sr-only">Change profile photo</span>
                   </Button>
                 </div>
               </div>
 
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+              {/* Form */}
+              <form className="">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <CustomInput
                     id="name"
                     type="text"
-                    placeholder="Enter Your Name"
-                    className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
-                    value={name}
+                    value={formData.name}
                     readOnly
+                    placeholder="Enter Your Name"
                   />
-                </div>
-                <div className="space-y-2">
                   <CustomDatePicker
-                    repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                    value={selectedDate}
+                    value={formData.dob}
+                    handleDate={(date) => updateField("dob", date)}
                     placeHolderText="Select Date of Birth"
-                    handleDate={(date) => setSelectedDate(date)}
-                    icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
                     disabled
+                    icon={<Calendar className="absolute right-3 top-2 text-gray-500" />}
                   />
-                </div>
-                <div className="space-y-2">
                   <CustomSelect
                     placeholder="Select a Gender"
                     options={[
@@ -302,131 +288,91 @@ export default function ProfilePage() {
                       { label: "Female", value: "female" },
                     ]}
                     value={
-                      selectedGender
-                        ? { value: selectedGender, label: selectedGender }
+                      formData.gender
+                        ? {
+                          value: formData.gender,
+                          label: formData.gender === "male" ? "Male" : "Female",
+                        }
                         : null
                     }
-                    onChange={(selectedOption) =>
-                      setSelectedGender(selectedOption.value)
-                    }
+                    onChange={(opt) => updateField("gender", opt.value)}
                     disabled
                   />
-                </div>
-                <div className="space-y-2">
                   <CustomInput
                     id="mobile"
                     type="tel"
+                    value={formData.phone}
+                    onChange={(e) => updateField("phone", e.target.value)}
                     placeholder="Enter Mobile Number"
-                    className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
                   />
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div className="my-4">
                   <CustomInput
                     id="email"
                     type="email"
+                    value={formData.email}
+                    onChange={(e) => updateField("email", e.target.value)}
                     placeholder="Enter Email"
-                    className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    icon={<Mail className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
+                    icon={<Mail className="absolute right-3 top-2 text-gray-500" />}
+                  />
+                  
+                </div>
+                <div className="my-y">
+                  <CustomTextArea
+                    value={formData.address}
+                    readOnly
+                    placeHolderText="Enter address"
                   />
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <div className="">
-                    <label>Address</label>
-                    <CustomTextArea
-                      repClass="w-full focus:outline-none focus:ring focus:ring-blue-500"
-                      value={address}
-                      placeHolderText="Enter address"
-                      readOnly
-                    />
-                  </div>
-                </div>
                 <div className="md:col-span-2 flex justify-between">
-                  <Button
-                    className="md:w-auto border text-white"
-                    onClick={() => setIsOpen(true)}
-                    type="button"
-                  >
+                  <Button type="button" onClick={() => setIsOpen(true)}>
                     Change Password
                   </Button>
                   <Button
                     type="button"
-                    className="md:w-auto bg-primary text-white hover:bg-blue"
                     onClick={handleSaveChanges}
                     disabled={loading}
+                    className="bg-primary text-white"
                   >
                     {loading ? "Updating..." : "Update"}
                   </Button>
                 </div>
               </form>
             </CardContent>
+
+            {/* Password Dialog */}
             <DialogBox open={isOpen} onOpenChange={setIsOpen} size="xl">
               <div className="my-3">
-                <div className="text-center">
-                  <Key className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
-                  <h1 className="text-3xl font-bold text-blue-600 mt-2">
-                    Change Password
-                  </h1>
-                  <p className="text-gray-500">
-                    Enter your Old and New Password to update it.
-                  </p>
-                </div>
-
-                <div className="my-5">
-                  <CustomInput
-                    id="oldPassword"
-                    type="password"
-                    placeholder="Enter Your Old Password"
-                    className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    required
-                    icon={<KeyRound className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
-                  />
-                </div>
-                <div className="my-5">
-                  <CustomInput
-                    id="newPassword"
-                    type="password"
-                    placeholder="Enter Your New Password"
-                    className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    icon={<KeyRound className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
-                  />
-                </div>
-                <div className="my-5">
-                  <CustomInput
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm New Password"
-                    className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    icon={<KeyRound className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
-                  />
-                </div>
+                <CustomInput
+                  type="password"
+                  value={formData.oldPassword}
+                  onChange={(e) => updateField("oldPassword", e.target.value)}
+                  placeholder="Enter Your Old Password"
+                  icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
+                />
+                <CustomInput
+                  type="password"
+                  value={formData.newPassword}
+                  onChange={(e) => updateField("newPassword", e.target.value)}
+                  placeholder="Enter Your New Password"
+                  icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
+                />
+                <CustomInput
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => updateField("confirmPassword", e.target.value)}
+                  placeholder="Confirm New Password"
+                  icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
+                />
               </div>
               <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsOpen(false)}
-                  type="button"
-                >
+                <Button variant="outline" onClick={() => setIsOpen(false)}>
                   Cancel
                 </Button>
                 <Button
-                  className="bg-blue-300 text-white hover:bg-blue-500"
+                  className="bg-blue-500 text-white"
                   onClick={handlePasswordUpdate}
                   disabled={loading}
-                  type="button"
                 >
                   {loading ? "Updating..." : "Update Password"}
                 </Button>
@@ -435,7 +381,6 @@ export default function ProfilePage() {
           </Card>
         </>
       )}
-      <Toaster />
     </div>
   );
 }

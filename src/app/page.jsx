@@ -118,7 +118,7 @@ export default function LoginPage() {
           </div>
 
           {errorMsg && (
-            <p className="text-red-500 text-sm text-center">{errorMsg}</p>
+            <p className="text-red-500 text-sm text-center uppercase bg-slate-200 px-3 py-1 rounded-lg">{errorMsg}</p>
           )}
 
           <button

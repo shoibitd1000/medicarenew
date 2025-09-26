@@ -10,7 +10,7 @@ const IsLoader = ({ isFullScreen = true, text = "Loading ....", size = "10" }) =
           }
           .custom-spin {
             animation: spin 1s linear infinite;
-            border: 3px solid #060606ff;
+            border: 6px solid rgb(63 34 196 / 10%);
             border-top-color: transparent;
             border-radius: 50%;
           }

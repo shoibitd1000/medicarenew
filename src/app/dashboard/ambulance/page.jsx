@@ -280,24 +280,25 @@ export default function AmbulancePage() {
                 </div>
             );
         }
-
         if (ambulanceHistory.length === 0) {
             return <p className="text-center text-gray-500">No Booking History</p>;
         }
 
         return ambulanceHistory.map((item, index) => (
             <Card key={index} className="mb-4">
-                <CardContent className="p-4">
-                    <div className="flex justify-between mb-2">
-                        <span className="font-semibold text-primary">{item.PatientDiscription}</span>
-                        <span className="text-center">{item.RcNo}</span>
+                <div className="shadow-md p-4">
+                    <div className="border rounded-md p-4">
+                        <div className="flex justify-between mb-2">
+                            <span className="font-semibold text-primary">{item.PatientDiscription}</span>
+                            <span className="text-center">{item.RcNo}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">{item.BookingDate}</span>
+                            <span className="text-sm">{item.KmRun}</span>
+                        </div>
+                        <div className="text-sm font-semibold mt-2">{item.Status}</div>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">{item.BookingDate}</span>
-                        <span className="text-sm">{item.KmRun} KM</span>
-                    </div>
-                    <div className="text-sm font-semibold mt-2">{item.Status}</div>
-                </CardContent>
+                </div>
             </Card>
         ));
     };
@@ -329,9 +330,12 @@ export default function AmbulancePage() {
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <Toaster />
+            <div className="text-center">
+                <p className="text-sm text-green-600 font-extrabold">Request, track, and manage your emergency transport.</p>
+            </div>
             <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="request" className="w-full">
-                <TabsList className="w-full">
-                    <div className="flex w-full justify-between mt-4">
+                <TabsList className="w-full flex justify-start ">
+                    <div className="mt-4 flex gap-4">
                         <TabsTrigger value="request">Request Ambulance</TabsTrigger>
                         <TabsTrigger value="history">Booking History</TabsTrigger>
                         <TabsTrigger value="charges">Ambulance Charges</TabsTrigger>
@@ -339,11 +343,7 @@ export default function AmbulancePage() {
                 </TabsList>
 
                 <TabsContent value="request">
-                    <div className="text-center">
-                        <p className="text-sm text-green-600 font-extrabold">Request, track, and manage your emergency transport.</p>
-                    </div>
-
-                    <Card className="p-4 my-3 text-center bg-slate-200">
+                    <Card className="p-4 mb-3 text-center bg-slate-200">
                         <div className="flex-grow">
                             <p className="font-bold text-sm">In case of a critical emergency, please call us directly at {emergencyNumber[0]?.LandlineNo || 'N/A'}</p>
                         </div>

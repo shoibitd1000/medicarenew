@@ -46,7 +46,7 @@ export const apiUrls = {
   helthTrackRecordapi: `${envUrl}/LoginAPIDynamic/GetVitalSignDashBoardRecord`,
   trendGraphDetails: `${envUrl}/LoginAPIDynamic/getTrendsGraphDetails`,
   insertVitalSignValue: `${envUrl}/LoginAPIDynamic/InsertVitalSignValue`,
-  
+
   opdPackageapi: `${envUrl}/LoginAPIDynamic/ReactBindOPDPackage`,
   opdPackageDetailapi: `${envUrl}/LoginAPIDynamic/BindOpdPackageDetail`,
   ipdPackageDetailapi: `${envUrl}/LoginAPIDynamic/ReactBindIPDPackageDetail`,
@@ -88,9 +88,8 @@ export const apiUrls = {
   removeDocumentApi: `${envUrl}/LoginAPIDynamic/RemoveDocument`,
   pdfDoctorPrescription: `${envUrl}/Tenwek2208/Design/CPOE/DoctorPrescription.aspx`,
 
-  
 
-  paymentUrlapi: 'Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
+
+
   // payment: 'http://197.138.207.30/Tenwek2208/Design/OPD/MobileMpesaRequest.aspx',
-
 };

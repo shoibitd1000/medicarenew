@@ -257,7 +257,7 @@ export default function MedicinesPage() {
 
         {tab === "prescription Medicines" && (
           <>
-            <div className="space-y-8 p-6 bg-white rounded-lg rounded-s-0">
+            <div className="space-y-8 p-6 bg-white rounded-b-lg">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-primary mb-1">Prescription Medicines</h2>
               </div>

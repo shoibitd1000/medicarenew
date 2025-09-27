@@ -316,11 +316,13 @@ export default function AmbulancePage() {
             <div className="grid lg:grid-cols-2 gap-3 bg-white shadow-md rounded p-4">
                 {ambulanceDetails?.map((item, index) => (
                     <Card key={index}>
-                        <CardContent className="p-4">
-                            <h2 className="text-lg font-bold text-primary uppercase">{item?.VehicleName}</h2>
-                            <p className="text-xs font-semibold">{item?.VehicleNo}/ {item?.ReadingType}</p>
-                            <p className="text-xs text-gray-600">KES: {item?.RatePerKM}</p>
-                        </CardContent>
+                        <div className="p-2">
+                            <div className="border p-2 rounded-lg">
+                                <h2 className="text-lg font-bold text-primary uppercase">{item?.VehicleName}</h2>
+                                <p className="text-xs font-semibold">{item?.VehicleNo}/ {item?.ReadingType}</p>
+                                <p className="text-xs text-gray-600">KES: {item?.RatePerKM}</p>
+                            </div>
+                        </div>
                     </Card>
                 ))}
             </div>

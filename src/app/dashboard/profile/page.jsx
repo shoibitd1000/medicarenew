@@ -31,7 +31,7 @@ export default function ProfilePage() {
     useContext(AuthContext);
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
+  const [initialState, setInitialState] = useState({
     name: "",
     phone: "",
     email: "",
@@ -51,7 +51,7 @@ export default function ProfilePage() {
 
   // Helper to update fields
   const updateField = (key, value) =>
-    setFormData((prev) => ({ ...prev, [key]: value }));
+    setInitialState((prev) => ({ ...prev, [key]: value }));
 
   // Fetch user data
   const fetchUserData = async () => {
@@ -71,7 +71,7 @@ export default function ProfilePage() {
 
       const data = response?.data?.response[0];
       if (data) {
-        setFormData((prev) => ({
+        setInitialState((prev) => ({
           ...prev,
           name: `${data?.FirstName || ""} ${data?.LastName || ""}`.trim(),
           dob: data?.DOB ? new Date(data.DOB) : "",
@@ -123,7 +123,7 @@ export default function ProfilePage() {
     reader.onload = () => {
       const dataUrl = reader.result;
       const base64 = dataUrl.split(",")[1];
-      setFormData((prev) => ({
+      setInitialState((prev) => ({
         ...prev,
         base64Image: base64,
         profileImage: dataUrl,
@@ -135,7 +135,7 @@ export default function ProfilePage() {
 
   // Handle password update
   const handlePasswordUpdate = async () => {
-    const { oldPassword, newPassword, confirmPassword } = formData;
+    const { oldPassword, newPassword, confirmPassword } = initialState;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
       notify("Please fill all password fields.");
@@ -152,11 +152,11 @@ export default function ProfilePage() {
       const encryptedNew = encryptPassword(newPassword);
       const encryptedConfirm = encryptPassword(confirmPassword);
 
-      const apiUrl = `${apiUrls.ResetProfilepasswordapi}?oldpassword=${encodeURIComponent(
+      const apiUrl = `${apiUrls.ResetProfilepasswordapi}?oldpassword=${encryptPassword(
         encryptedOld
-      )}&newpassword=${encodeURIComponent(
+      )}&newpassword=${encryptPassword(
         encryptedNew
-      )}&confirmedpassword=${encodeURIComponent(
+      )}&confirmedpassword=${encryptPassword(
         encryptedConfirm
       )}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
 
@@ -165,7 +165,7 @@ export default function ProfilePage() {
       if (response?.data?.status === true) {
         notify(response?.data?.message || "Password updated successfully!", "success");
         setIsOpen(false);
-        setFormData((prev) => ({
+        setInitialState((prev) => ({
           ...prev,
           oldPassword: "",
           newPassword: "",
@@ -184,7 +184,7 @@ export default function ProfilePage() {
 
   // Handle profile save
   const handleSaveChanges = async () => {
-    const { phone, email, base64Image, gender } = formData; // Added gender
+    const { phone, email, base64Image, gender } = initialState; // Added gender
 
     if (!phone || !email) {
       notify("Phone number and email cannot be empty.");
@@ -243,9 +243,9 @@ export default function ProfilePage() {
               <div className="flex justify-center">
                 <div className="relative">
                   <Avatar className="w-32 h-32 border-4 border-primary/50">
-                    <AvatarImage src={formData.profileImage} alt="Profile" />
+                    <AvatarImage src={initialState.profileImage} alt="Profile" />
                     <AvatarFallback>
-                      {formData.name ? formData.name.slice(0, 2).toUpperCase() : "PN"}
+                      {initialState.name ? initialState.name.slice(0, 2).toUpperCase() : "PN"}
                     </AvatarFallback>
                   </Avatar>
                   <Button
@@ -270,12 +270,12 @@ export default function ProfilePage() {
                   <CustomInput
                     id="name"
                     type="text"
-                    value={formData.name}
+                    value={initialState.name}
                     readOnly
                     placeholder="Enter Your Name"
                   />
                   <CustomDatePicker
-                    value={formData.dob}
+                    value={initialState.dob}
                     handleDate={(date) => updateField("dob", date)}
                     placeHolderText="Select Date of Birth"
                     disabled
@@ -288,10 +288,10 @@ export default function ProfilePage() {
                       { label: "Female", value: "female" },
                     ]}
                     value={
-                      formData.gender
+                      initialState.gender
                         ? {
-                          value: formData.gender,
-                          label: formData.gender === "male" ? "Male" : "Female",
+                          value: initialState.gender,
+                          label: initialState.gender === "male" ? "Male" : "Female",
                         }
                         : null
                     }
@@ -301,7 +301,7 @@ export default function ProfilePage() {
                   <CustomInput
                     id="mobile"
                     type="tel"
-                    value={formData.phone}
+                    value={initialState.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
                     placeholder="Enter Mobile Number"
                     
@@ -311,7 +311,7 @@ export default function ProfilePage() {
                   <CustomInput
                     id="email"
                     type="email"
-                    value={formData.email}
+                    value={initialState.email}
                     onChange={(e) => updateField("email", e.target.value)}
                     placeholder="Enter Email"
                     icon={<Mail className="absolute right-3 top-2 text-gray-500" />}
@@ -320,7 +320,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="my-y">
                   <CustomTextArea
-                    value={formData.address}
+                    value={initialState.address}
                     readOnly
                     placeHolderText="Enter address"
                   />
@@ -346,21 +346,21 @@ export default function ProfilePage() {
               <div className="my-3">
                 <CustomInput
                   type="password"
-                  value={formData.oldPassword}
+                  value={initialState.oldPassword}
                   onChange={(e) => updateField("oldPassword", e.target.value)}
                   placeholder="Enter Your Old Password"
                   icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
                 />
                 <CustomInput
                   type="password"
-                  value={formData.newPassword}
+                  value={initialState.newPassword}
                   onChange={(e) => updateField("newPassword", e.target.value)}
                   placeholder="Enter Your New Password"
                   icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
                 />
                 <CustomInput
                   type="password"
-                  value={formData.confirmPassword}
+                  value={initialState.confirmPassword}
                   onChange={(e) => updateField("confirmPassword", e.target.value)}
                   placeholder="Confirm New Password"
                   icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}

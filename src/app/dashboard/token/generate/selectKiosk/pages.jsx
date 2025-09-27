@@ -5,6 +5,7 @@ import { ChevronRight, MoveLeft, LaptopMinimal } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiUrls } from "../../../../../components/Network/ApiEndpoint";
 import { Button } from "../../../../../components/components/ui/button";
+import Toaster, { notify } from "../../../../../lib/notify";
 
 const KioskSelectionPage = () => {
   const [kiosks, setKiosks] = useState([]);
@@ -37,7 +38,7 @@ const KioskSelectionPage = () => {
     } catch (error) {
       console.error("Error fetching kiosks:", error);
       setKiosks([]);
-      alert("Failed to fetch kiosks. Please try again.");
+      notify("Failed to fetch kiosks. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -52,7 +53,7 @@ const KioskSelectionPage = () => {
       >
         <MoveLeft className="mr-2 h-4 w-4" /> Back to Centers
       </Button>
-
+      <Toaster />
       {loading ? (
         <div className="flex justify-center">
           <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>

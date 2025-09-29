@@ -8,6 +8,7 @@ import CustomInput from "../../../../../components/components/ui/CustomInput";
 import CustomTable from "../../../../../components/components/ui/customTabel";
 import CustomSelect from "../../../../../components/components/ui/CustomSelect";
 import { MoveLeft } from "lucide-react";
+import Toaster, { notify } from "../../../../../lib/notify";
 
 const TokenVerification = () => {
     const [uhidMobile, setUhidMobile] = useState("");
@@ -104,7 +105,7 @@ const TokenVerification = () => {
 
     const handleVerify = async () => {
         if (!uhidMobile) {
-            alert("Please enter UHID/Mobile No.");
+            notify("Please enter UHID/Mobile No.");
             return;
         }
         setLoading(true);
@@ -129,13 +130,13 @@ const TokenVerification = () => {
             } else {
                 setPatientDetails([]);
                 setSelectedPatient(null);
-                alert("No patient details found.");
+                notify("No patient details found.");
             }
         } catch (error) {
             console.error("Error fetching patient details:", error);
             setPatientDetails([]);
             setSelectedPatient(null);
-            alert("Failed to fetch patient details. Please try again.");
+            notify("Failed to fetch patient details. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -148,7 +149,7 @@ const TokenVerification = () => {
             !selectedLevel ||
             !selectedService
         ) {
-            alert("Please complete all selections before saving.");
+            notify("Please complete all selections before saving.");
             return;
         }
 
@@ -182,14 +183,14 @@ const TokenVerification = () => {
             );
 
             if (response?.data?.status === true) {
-                alert("Token saved successfully.");
+                notify("Token saved successfully.");
                 navigate("/token");
             } else {
-                alert(response?.data?.message || "Failed to save token.");
+                notify(response?.data?.message || "Failed to save token.");
             }
         } catch (error) {
             console.error("Error saving token:", error);
-            alert("Failed to save token. Please try again.");
+            notify("Failed to save token. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -227,7 +228,7 @@ const TokenVerification = () => {
             >
                 <MoveLeft className="mr-2 h-4 w-4" /> Back to Kiosks
             </Button>
-
+            <Toaster />
             <div className="bg-blue-300 p-4 shadow-sm rounded-md">
                 <div className="flex items-center gap-2">
                     <span className="font-medium text-white">Center Name:</span>

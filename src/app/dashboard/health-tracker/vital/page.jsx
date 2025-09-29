@@ -19,6 +19,7 @@ import axios from 'axios';
 import { useLocation, useParams } from 'react-router-dom';
 import { apiUrls } from '../../../../components/Network/ApiEndpoint';
 import IsLoader from '../../../loading';
+import Toaster, { notify } from '../../../../lib/notify';
 
 const Thead = [
   { key: 'date', label: 'Date & Time' },
@@ -138,11 +139,10 @@ const HealthTrackerDetailsPage = () => {
     try {
       const formattedDate = formatApiDate(captureDate);
       const encodedPatientId = encodeURIComponent(patientID || '');
-      const apiUrl = `${apiUrls.insertVitalSignValue}?DateAndTime=${formattedDate}&VitalSignType=${
-        state?.vitalSignType || slug
-      }&VitalSignValue=${vitalValue}&VitalSignUnit=${encodeURIComponent(
-        unit
-      )}&PatientType=&PatientID=${encodedPatientId}&updatedid=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
+      const apiUrl = `${apiUrls.insertVitalSignValue}?DateAndTime=${formattedDate}&VitalSignType=${state?.vitalSignType || slug
+        }&VitalSignValue=${vitalValue}&VitalSignUnit=${encodeURIComponent(
+          unit
+        )}&PatientType=&PatientID=${encodedPatientId}&updatedid=0&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
 
       const response = await axios.post(apiUrl, {}, {
         headers: {
@@ -159,7 +159,7 @@ const HealthTrackerDetailsPage = () => {
         setHistory(prev => [...prev, newEntry].sort((a, b) => new Date(a.date) - new Date(b.date)));
         setVitalValue('');
         setErrorMessage('');
-        alert(`${state?.metricName || slug} saved successfully!`);
+        notify(`${state?.metricName || slug} saved successfully!`);
         setActiveTab('history');
       } else {
         setErrorMessage('Failed to save vital. Please try again.');
@@ -168,7 +168,7 @@ const HealthTrackerDetailsPage = () => {
       console.error('Error saving vital:', error);
       setErrorMessage('Error saving vital. Please try again.');
       if (error.response?.status === 401) {
-        alert('Unauthorized. Please log in again.');
+        notify('Unauthorized. Please log in again.');
       }
     } finally {
       setLoading(false);
@@ -231,25 +231,23 @@ const HealthTrackerDetailsPage = () => {
         <h2 className="text-2xl font-bold text-[#4B9CD3]">{state?.metricName || slug}</h2>
         <p className="text-gray-600 text-sm">Capture and view your {state?.metricName || slug} history.</p>
       </div>
-
+      <Toaster />
       {/* Tabs */}
       <div className="flex justify-start bg-[#F4F7F9]  overflow-hidden">
         <button
-          className={`flex-1 py-2 px-5 text-sm font-medium ${
-            activeTab === 'capture'
+          className={`flex-1 py-2 px-5 text-sm font-medium ${activeTab === 'capture'
               ? 'bg-blue-800 text-white transition-all duration-600 font-semibold shadow-md rounded-t-md'
               : 'bg-[#F4F7F9] text-gray-600 transition-all duration-600 shadow-md rounded-t-md'
-          }`}
+            }`}
           onClick={() => setActiveTab('capture')}
         >
           Capture Vital
         </button>
         <button
-          className={`flex-1 py-2 px-5 text-sm font-medium ${
-            activeTab === 'history'
+          className={`flex-1 py-2 px-5 text-sm font-medium ${activeTab === 'history'
               ? 'bg-blue-800 text-white transition-all duration-600 font-semibold shadow-md rounded-t-md'
               : 'bg-[#F4F7F9] text-gray-600 transition-all duration-600 shadow-md rounded-t-md'
-          }`}
+            }`}
           onClick={() => setActiveTab('history')}
         >
           History
@@ -297,9 +295,8 @@ const HealthTrackerDetailsPage = () => {
               </div>
               <div className="flex justify-center">
                 <button
-                  className={`w-48 bg-[#4B9CD3] text-white py-2 rounded-md hover:bg-[#3B8BB0] transition-colors ${
-                    loading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-48 bg-[#4B9CD3] text-white py-2 rounded-md hover:bg-[#3B8BB0] transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   onClick={handleSaveVital}
                   disabled={loading}
                 >
@@ -323,11 +320,10 @@ const HealthTrackerDetailsPage = () => {
             {['2 Days', '7 Days', '15 Days', '30 Days'].map(period => (
               <button
                 key={period}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  selectedPeriod === period
+                className={`px-3 py-1 rounded-md text-sm ${selectedPeriod === period
                     ? 'bg-[#4B9CD3] text-white'
                     : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
                 onClick={() => handlePeriodSelect(period)}
               >
                 {period}

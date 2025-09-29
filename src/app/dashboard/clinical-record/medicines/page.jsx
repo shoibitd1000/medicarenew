@@ -186,7 +186,7 @@ export default function MedicinesPage() {
         <p className="text-gray-500">A list of your prescribed medications.</p>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="space-y-8">
         {/* Back Button */}
         {/* <button
           onClick={() => navigate(-1)}

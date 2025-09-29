@@ -113,7 +113,7 @@ export default function LabReportsPage() {
   }));
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 p-4">
+    <div className="space-y-8 p-4">
       <div className="text-center mb-3">
         <Scan className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
         <h1 className="text-3xl font-bold text-primary">
@@ -130,7 +130,7 @@ export default function LabReportsPage() {
       <div className="border rounded-lg shadow-md p-4 bg-white">
         <h2 className="text-lg font-semibold">Your Radiology Reports</h2>
         <p className="text-sm text-gray-500 mb-4">
-          View your past reports. Use the date picker to filter results.Update as of 03:21 PM IST, August 26,2025.
+          View your past reports. Use the date picker to filter results.Update.
         </p>
 
         <div className="grid md:grid-cols-2 gap-3 my-3">
@@ -151,7 +151,7 @@ export default function LabReportsPage() {
           />
         </div>
 
-        <div className="overflow-x-auto">
+        <div className={`${formattedData?.length > 0  ? "grid md:grid-cols-2 xl:grid-cols-3 gap-3" : ""}`}>
           {loading ? (
             <div className="text-center py-8">
               <IsLoader
@@ -186,7 +186,7 @@ export default function LabReportsPage() {
                     className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
                   >
                     <FileDown className="h-4 w-4" />
-                    
+
                   </a>
 
                   {/* OR PDF force download */}

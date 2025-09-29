@@ -29,7 +29,7 @@ const ConsultationHistoryPage = () => {
 
       // Prepare FormData payload
       const formData = new FormData();
-      const encodedPatientId = encryptPassword(patientId);
+      const encodedPatientId = (patientId);
       formData.append("PatientID", encodedPatientId);
       // ✅ Pass formData as the body, not null
       const response = await axios.post(
@@ -133,7 +133,7 @@ const ConsultationHistoryPage = () => {
   return (
     <>
       <Toaster />
-      <div className="max-w-4xl mx-auto space-y-8 p-4">
+      <div className=" space-y-8 p-4">
         {/* Page Header */}
         <div className="text-center m-0">
           <ClipboardPlus className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
@@ -146,7 +146,7 @@ const ConsultationHistoryPage = () => {
         </div>
 
         <div className="p-4">
-          <div className="space-y-6">
+          <div className="grid xl:grid-cols-3 md:grid-cols-2 gap-3">
             {/* <button
               onClick={() => navigate(-1)}
               className="inline-flex items-center border px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"

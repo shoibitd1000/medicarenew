@@ -14,7 +14,7 @@ import Toaster, { notify } from "../../../../lib/notify";
 
 const TeleconsultationAppointment = () => {
     const navigate = useNavigate();
-    const { token, userData, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
+    const { token, userData, getCurrentPatientId, getAuthHeader, logout } = useContext(AuthContext);
     const patientid = getCurrentPatientId();
     const { id: centerID } = useParams();
     const centerName = "Kaboson";
@@ -294,7 +294,7 @@ const TeleconsultationAppointment = () => {
             if (response.data?.status) {
                 notify("Appointment saved successfully!", "success");
                 setShowConfirm(false);
-                setPdfModalVisible(true);
+                // setPdfModalVisible(true);
                 fetchAppointments();
                 setSelectedDoctor("");
                 setSelectedDate(null);
@@ -306,6 +306,7 @@ const TeleconsultationAppointment = () => {
             console.error("Error saving appointment:", error);
             notify("Failed to save appointment. Please try again.", "error");
             if (error.response?.status === 401) {
+                logout()
                 navigate("/");
             }
         }
@@ -320,9 +321,13 @@ const TeleconsultationAppointment = () => {
                 return;
             }
             const today = new Date();
+            const nextMonth = new Date(today);
+            nextMonth.setMonth(today.getMonth() + 1);
+            const PrevMonth = new Date(today);
+            PrevMonth.setMonth(today.getMonth() - 12);
             today.setHours(0, 0, 0, 0);
-            const formattedFromDate = tab === "past" ? formatDateForApi(fromDate) : formatDateForApi(today);
-            const formattedToDate = tab === "past" ? formatDateForApi(toDate) : formatDateForApi(today);
+            const formattedFromDate = tab === "past" ? formatDateForApi(fromDate) : formatDateForApi(PrevMonth);
+            const formattedToDate = tab === "past" ? formatDateForApi(toDate) : formatDateForApi(nextMonth);
             if (!formattedFromDate || !formattedToDate) {
                 notify("Invalid date range selected.", "error");
                 setPastAppointments([]);
@@ -331,13 +336,13 @@ const TeleconsultationAppointment = () => {
                 setPastErrorMessage(tab === "past" ? "Invalid date range." : "");
                 return;
             }
-            const encodedPatientId = encodeURIComponent(encryptPassword(patientid));
+            const encodedPatientId = (patientid);
             const doctor = selectedDoctor
                 ? doctors.find((doc) => doc.doctorname === selectedDoctor)
                 : null;
-            const DoctorID = doctor?.ID || 0;
+            const DoctorID = doctor?.ID || 555;
             const response = await axios.post(
-                `${apiUrls.doctors}?patientid=${encodedPatientId}&IsTeleconsulation=1&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${formattedFromDate}&ToDate=${formattedToDate}&DoctorID=${DoctorID}&status=`,
+                `${apiUrls.doctors}?patientid=${encodedPatientId}&IsTeleconsulation=1&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D&FromDate=${formattedFromDate}&ToDate=${formattedToDate}&DoctorID=${DoctorID}&Status=IsConform`,
                 null,
                 { headers: getAuthHeader() }
             );
@@ -644,20 +649,19 @@ const TeleconsultationAppointment = () => {
                                             key={i}
                                             className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition"
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <div>
-                                                    <h3 className="text-lg font-medium text-blue-600">{app.doctor}</h3>
-                                                    <span className="text-xs font-semibold">{app.dateTime}</span>
-                                                    <div className="text-xs font-semibold text-green-900">{app.status}</div>
-                                                </div>
+                                            <div className="">
+                                                <h3 className="text-lg font-bold text-blue-600">{app.doctor}</h3>
+                                                <span className="text-xs font-semibold">{app.dateTime}</span>
+                                                <div className="text-xs font-semibold text-green-900">{app.status}</div>
                                             </div>
                                             <div>
                                                 <div className="text-xs font-semibold py-3">{app.center}</div>
                                                 <div className="text-xs font-semibold py-3 flex gap-2">
-                                                    {app.isShowJoin && app.meetingUrl && (
+                                                    {/* {app?.PatientMeetingUrl &&( */}
+                                                    {(
                                                         <button
-                                                            className="px-2 py-1 text-xs font-medium bg-blue-300 text-gray-700 rounded hover:bg-blue-700 transition"
-                                                            onClick={() => handleVideoCall(app.meetingUrl)}
+                                                            className="px-2 py-1 text-xs font-medium border text-gray-700 rounded hover:bg-blue-700 hover:text-white transition"
+                                                            onClick={() => handleVideoCall(app.PatientMeetingUrl)}
                                                         >
                                                             <Video />
                                                         </button>
@@ -719,17 +723,16 @@ const TeleconsultationAppointment = () => {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div>
+                                            {/* <div>
                                                 <div className="text-xs font-semibold text-green-600 py-4">{app.center}</div>
                                                 <div className="text-xs font-semibold py-4 flex gap-2">
-                                                    <button
+                                                    <a target="_blank" href="http://197.138.207.30/Tenwek2208/Design/Common/CommonPrinterOPDThermal.aspx?ReceiptNo=&LedgerTransactionNo=2019489&IsBill=1&Duplicate=1&Type=OPD"
                                                         className="px-2 py-1 text-xs text-blue-600 font-medium bg-slate-200 rounded-md"
-                                                        onClick={() => setPdfModalVisible(true)}
                                                     >
                                                         <FileDown />
-                                                    </button>
+                                                    </a>
                                                 </div>
-                                            </div>
+                                            </div> */}
                                         </div>
                                     ))}
                                 </div>
@@ -766,7 +769,7 @@ const TeleconsultationAppointment = () => {
                             <p>Loading payment page...</p>
                         )}
                     </DialogBox>
-                    <DialogBox
+                    {/* <DialogBox
                         open={pdfModalVisible}
                         onOpenChange={setPdfModalVisible}
                         title="Doctor Notes"
@@ -798,7 +801,7 @@ const TeleconsultationAppointment = () => {
                                 setSelectedSlot(null);
                             }}
                         />
-                    </DialogBox>
+                    </DialogBox> */}
                 </div>
             </div>
         </>

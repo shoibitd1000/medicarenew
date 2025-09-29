@@ -25,6 +25,7 @@ import Toaster, { notify } from "../../../lib/notify";
 import axios from "axios";
 import { encryptPassword } from "../../../components/EncyptHooks/EncryptLib";
 import IsLoader from "../../loading";
+import CustomPasswordInput from "../../../components/components/ui/CustomPassInput";
 
 export default function ProfilePage() {
   const { token, userData, saveUserData, getAuthHeader, clearAuth } =
@@ -304,7 +305,7 @@ export default function ProfilePage() {
                     value={initialState.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
                     placeholder="Enter Mobile Number"
-                    
+
                   />
                 </div>
                 <div className="my-4">
@@ -316,7 +317,7 @@ export default function ProfilePage() {
                     placeholder="Enter Email"
                     icon={<Mail className="absolute right-3 top-2 text-gray-500" />}
                   />
-                  
+
                 </div>
                 <div className="my-y">
                   <CustomTextArea
@@ -344,21 +345,26 @@ export default function ProfilePage() {
             {/* Password Dialog */}
             <DialogBox open={isOpen} onOpenChange={setIsOpen} size="xl">
               <div className="my-3">
-                <CustomInput
+                <div className="my-3">
+                <CustomPasswordInput
                   type="password"
                   value={initialState.oldPassword}
                   onChange={(e) => updateField("oldPassword", e.target.value)}
                   placeholder="Enter Your Old Password"
                   icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
                 />
-                <CustomInput
+              </div>
+              <div className="my-3">
+                <CustomPasswordInput
                   type="password"
                   value={initialState.newPassword}
                   onChange={(e) => updateField("newPassword", e.target.value)}
                   placeholder="Enter Your New Password"
                   icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
                 />
-                <CustomInput
+              </div>
+              <div className="my-3">
+                <CustomPasswordInput
                   type="password"
                   value={initialState.confirmPassword}
                   onChange={(e) => updateField("confirmPassword", e.target.value)}
@@ -366,22 +372,24 @@ export default function ProfilePage() {
                   icon={<KeyRound className="absolute right-3 top-2 text-gray-500" />}
                 />
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  className="bg-blue-500 text-white"
-                  onClick={handlePasswordUpdate}
-                  disabled={loading}
-                >
-                  {loading ? "Updating..." : "Update Password"}
-                </Button>
-              </DialogFooter>
-            </DialogBox>
-          </Card>
-        </>
-      )}
-    </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="bg-blue-500 text-white"
+                onClick={handlePasswordUpdate}
+                disabled={loading}
+              >
+                {loading ? "Updating..." : "Update Password"}
+              </Button>
+            </DialogFooter>
+          </DialogBox>
+        </Card>
+    </>
+  )
+}
+    </div >
   );
 }

@@ -50,7 +50,7 @@ const Investigations = () => {
     };
 
     return (
-        <div className="space-y-8 p-6 min-h-screen bg-blue-50">
+        <div className="space-y-8  bg-blue-50">
             {loading ? (
                 <div className="flex justify-center items-center h-full">
                     <IsLoader />

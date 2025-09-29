@@ -844,7 +844,7 @@ const AppointmentsPage = () => {
                         {app.cancel === 0 && (
                           <div className="text-xs font-semibold py-4 flex gap-2">
                             <a
-                              href={`${apiUrls.DoctorPrescription}?App_ID=${app.AppID}`} // Use API endpoint
+                              href={`http://197.138.207.30/Tenwek2208/Design/CPOE/DoctorPrescription.aspx?App_ID=${app.AppID}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition-colors"

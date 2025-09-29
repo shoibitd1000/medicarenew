@@ -97,7 +97,7 @@ export default function DashboardHeader({ currentUser, allUsers, onSwitchProfile
 
         {/* Center Logo */}
         <div className="hidden md:flex items-center gap-2">
-          <h2 className="text-xl font-bold text-primary font-headline">Health Care</h2>
+          <h2 className="text-xl font-bold text-primary font-headline">Healthcare – Patient Portal</h2>
         </div>
 
         {/* Right Side Actions */}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
 
 const CustomMultiSelect = ({
@@ -16,6 +16,7 @@ const CustomMultiSelect = ({
   const [search, setSearch] = useState("");
 
   const hasValue = selectedValues && selectedValues.length > 0;
+  const wrapperRef = useRef(null);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -41,8 +42,22 @@ const CustomMultiSelect = ({
     opt.label?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" ref={wrapperRef}>
       {/* Floating Label */}
       {label && (
         <label
@@ -58,7 +73,6 @@ const CustomMultiSelect = ({
       <div
         className={`peer border rounded-md px-3 py-2 w-full text-sm flex flex-wrap gap-1 bg-white cursor-pointer ${repClass}`}
         onClick={toggleDropdown}
-        onBlur={() => setIsFocused(false)}
         tabIndex={0} // so onBlur works properly
       >
         {selectedValues.length > 0 ? (

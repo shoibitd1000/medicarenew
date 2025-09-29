@@ -114,7 +114,7 @@ export default function LabReportsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 p-4">
+    <div className="mx-auto space-y-8 p-4">
       <div className="text-center m-0">
         <TestTubeDiagonal className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
         <h1 className="text-3xl font-bold text-primary">Lab Investigation Reports</h1>
@@ -150,44 +150,44 @@ export default function LabReportsPage() {
             icon={<Calendar className="absolute right-3 top-2 text-gray-500 pointer-events-none" />}
           />
         </div>
-
-        {loading ? (
-          <div className="text-center py-4">
-            <IsLoader isFullScreen={false} size="6" text="Lab Investigation Reports..." />
-          </div>
-        ) : filteredReports.length > 0 ? (
-          filteredReports.map((item, i) => (
-            <div key={i} className="border rounded-lg shadow-md p-4 bg-white my-3">
-              <div className="flex justify-between">
-                <h2 className="text-lg font-semibold text-primary">
-                  {item.InvestigationName || "Unknown"}
-                </h2>
-                <span className="text-sm text-gray-500">{item.BarcodeNo || "N/A"}</span>
-              </div>
-              <span className="text-sm font-semibold block">{formatDate(item.DATE)}</span>
-              <p className="text-sm text-gray-700">Doctor: {item.DoctorName || "N/A"}</p>
-              <div className="flex justify-between items-center mt-3">
-                <span className={statusClasses[item.IsResult] || statusClasses.Pending}>
-                  {item.IsResult || "Pending"}
-                </span>
-                <a
-                  href={`http://197.138.207.15/Tenwek/Design/Lab/OnlineprintLabReport_pdf.aspx?IsPrev=1&TestID=${
-                    item.Test_ID || ""
-                  }&Phead=0`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
-                >
-                  <FileDown className="h-4 w-4" />
-                </a>
-              </div>
+        <div className="gap-3 grid md:grid-cols-2 xl:grid-cols-3">
+          {loading ? (
+            <div className="text-center py-4">
+              <IsLoader isFullScreen={false} size="6" text="Lab Investigation Reports..." />
             </div>
-          ))
-        ) : (
-          <h2 className="text-lg font-extrabold text-center text-gray-500 py-4">
-            No lab reports available.
-          </h2>
-        )}
+          ) : filteredReports.length > 0 ? (
+            filteredReports.map((item, i) => (
+              <div key={i} className="border rounded-lg shadow-md p-4 bg-white my-3">
+                <div className="flex justify-between">
+                  <h2 className="text-lg font-semibold text-primary">
+                    {item.InvestigationName || "Unknown"}
+                  </h2>
+                  <span className="text-sm text-gray-500">{item.BarcodeNo || "N/A"}</span>
+                </div>
+                <span className="text-sm font-semibold block">{formatDate(item.DATE)}</span>
+                <p className="text-sm text-gray-700">Doctor: {item.DoctorName || "N/A"}</p>
+                <div className="flex justify-between items-center mt-3">
+                  <span className={statusClasses[item.IsResult] || statusClasses.Pending}>
+                    {item.IsResult || "Pending"}
+                  </span>
+                  <a
+                    href={`http://197.138.207.15/Tenwek/Design/Lab/OnlineprintLabReport_pdf.aspx?IsPrev=1&TestID=${item.Test_ID || ""
+                      }&Phead=0`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
+                  >
+                    <FileDown className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+            ))
+          ) : (
+            <h2 className="text-lg font-extrabold text-center text-gray-500 py-4">
+              No lab reports available.
+            </h2>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -63,7 +63,7 @@ export default function DischargeSummary() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 p-4">
+        <div className="space-y-8 p-4">
             <div className="text-center mb-2">
                 <FilePlus className="h-12 w-12 mx-auto text-primary bg-white border rounded-lg shadow-md p-2" />
                 <h1 className="text-3xl font-bold text-primary">Discharge Summary</h1>
@@ -103,31 +103,33 @@ export default function DischargeSummary() {
                     </div>
                 ) : labReports?.length > 0 ? (
                     labReports.map((item, i) => (
-                        <div key={i} className="border rounded-xs shadow-md p-4 bg-white my-3">
-                            <div className="flex justify-between">
-                                <h2 className="text-lg font-semibold text-primary">Discharge Summary</h2>
-                                <span className="text-sm text-gray-500 mb-4">{item?.IPDNo}</span>
-                            </div>
-                            <span className="text-sm font-semibold mb-4">{formatDate(item?.EntryDate || item?.date)}</span>
-                            <h2 className="text-sm font-semibold">{item?.NAME}</h2>
-                            <div className="flex justify-between">
-                                <span className="text-sm text-gray-500 mb-4">{item?.NoteID}</span>
-                                <a
-                                    href={`http://197.138.207.30/Tenwek2208/Design/IPD/printNoteCreationReport_pdf.aspx?TID=2014162&Status=IN&ReportType=PDF&NoteID=1347790`}
-                                    fileName={`DischargeSummary_${item?.NoteID}.pdf`}
-                                    token={token}
-                                    target="_blank"
-                                    // download={`discharge summary${item.App_ID}.pdf`}
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
-                                >
-                                    <FileDown className="h-4 w-4" />
-                                </a>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3">
+                            <div key={i} className="border rounded-xs shadow-md p-4 bg-white my-3">
+                                <div className="flex justify-between">
+                                    <h2 className="text-lg font-semibold text-primary">Discharge Summary</h2>
+                                    <span className="text-sm text-gray-500 mb-4">{item?.IPDNo}</span>
+                                </div>
+                                <span className="text-sm font-semibold mb-4">{formatDate(item?.EntryDate || item?.date)}</span>
+                                <h2 className="text-sm font-semibold">{item?.NAME}</h2>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-500 mb-4">{item?.NoteID}</span>
+                                    <a
+                                        href={`http://197.138.207.30/Tenwek2208/Design/IPD/printNoteCreationReport_pdf.aspx?TID=2014162&Status=IN&ReportType=PDF&NoteID=1347790`}
+                                        fileName={`DischargeSummary_${item?.NoteID}.pdf`}
+                                        token={token}
+                                        target="_blank"
+                                        // download={`discharge summary${item.App_ID}.pdf`}
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition"
+                                    >
+                                        <FileDown className="h-4 w-4" />
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <h2 className="text-lg font-extrabold text-center">No discharge summary available.</h2>
+                    <h2 className="text-lg font-extrabold text-center">No discharge summary.</h2>
                 )}
             </div>
         </div>

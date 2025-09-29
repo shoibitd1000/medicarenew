@@ -37,6 +37,8 @@ const InvestigationsAppoin = () => {
     const [paymentUrl, setPaymentUrl] = useState("");
     const [webViewVisible, setWebViewVisible] = useState(false);
     const [latestTransactionNo, setLatestTransactionNo] = useState(null);
+    console.log(latestTransactionNo,"latest");
+    
     const iframeRef = useRef(null);
 
     const totalAmount = selectedInvestigations.reduce(
@@ -264,7 +266,8 @@ const InvestigationsAppoin = () => {
                     "Content-Type": "application/json",
                 },
             });
-            if (response.data?.status === true) {
+            debugger
+            if (response.data?.status) {
                 notify("Appointment saved successfully!");
                 setLatestTransactionNo(response.data.response);
                 setWebViewVisible(false);

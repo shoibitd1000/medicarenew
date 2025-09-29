@@ -44,6 +44,7 @@ import MyDocumentsPage from "./app/dashboard/my-document/page";
 export function App() {
   const { token, isLoading, userData } = useContext(AuthContext);
   const [currentUser, setCurrentUser] = useState(userData);
+
   if (isLoading) return <div><IsLoader /></div>;
 
   return (
@@ -55,7 +56,8 @@ export function App() {
           onSwitchProfile={setCurrentUser}
         />
       )}
-      <main className="">
+
+      <main className="flex-1 py-5">
         <Routes>
           <Route
             path="/"
@@ -107,6 +109,21 @@ export function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
+
+      {/* ✅ Enhanced Footer */}
+      <footer className="bg-white  left-0 border-t border-gray-300 w-full text-center text-xs md:text-xs  ">
+        <p className="text-gray-600">
+          Copyright © 2025{" | "}
+          <a
+            href="https://www.itdoseinfo.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-800"
+          >
+            Itdose Infosystems Pvt Ltd.
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }

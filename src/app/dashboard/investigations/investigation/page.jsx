@@ -10,6 +10,7 @@ import { Button } from "../../../../components/components/ui/button";
 import Toaster, { notify } from "../../../../lib/notify";
 import IsLoader from "../../../loading";
 import { encryptPassword } from "../../../../components/EncyptHooks/EncryptLib";
+import { DialogBox } from "../../../../components/components/ui/dialog";
 
 const InvestigationsAppoin = () => {
     const { id: centerID, centername = "Tenwek Hospital" } = useParams();
@@ -25,6 +26,7 @@ const InvestigationsAppoin = () => {
         date.setMonth(date.getMonth() - 1);
         return date;
     });
+    const [isOpen, setIsOpen] = useState(false);
     const [toDate, setToDate] = useState(new Date());
     const [searchData, setSearchData] = useState([]);
     const [selectedInvestigations, setSelectedInvestigations] = useState([]);
@@ -37,8 +39,8 @@ const InvestigationsAppoin = () => {
     const [paymentUrl, setPaymentUrl] = useState("");
     const [webViewVisible, setWebViewVisible] = useState(false);
     const [latestTransactionNo, setLatestTransactionNo] = useState(null);
-    console.log(latestTransactionNo,"latest");
-    
+    console.log(latestTransactionNo, "latest");
+
     const iframeRef = useRef(null);
 
     const totalAmount = selectedInvestigations.reduce(
@@ -77,7 +79,7 @@ const InvestigationsAppoin = () => {
         return `${year}-${month}-${day}`;
     };
 
-    
+
 
     const Search_Package = async () => {
         setLoading(true);
@@ -405,14 +407,39 @@ const InvestigationsAppoin = () => {
             <p className="text-sm font-semibold text-gray-800 truncate">{item.PName}</p>
             <div className="flex justify-between items-center mt-3">
                 <p className="text-sm text-gray-600">{item.dateTime}</p>
-                <a
+                {item?.id ? (<a
+                    href={"#"}
+                    rel="noopener noreferrer"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition-colors"
+                >
+                    <FileDown className="h-5 w-5 text-gray-600" />
+                </a>) : (<a
                     href={"http://197.138.207.30/Tenwek2208/Design/Common/CommonPrinterOPDThermal.aspx?ReceiptNo=&LedgerTransactionNo=4387151&IsBill=1&Duplicate=1&Type=OPD"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 p-2 border rounded-md text-sm hover:bg-gray-100 transition-colors"
                 >
                     <FileDown className="h-5 w-5 text-gray-600" />
-                </a>
+                </a>)}
+
+                <DialogBox
+                    open={isOpen}
+                    onOpenChange={setIsOpen}
+                    title="Doctor Notes"
+                    size="xl"
+                    footer={
+                        <button
+                            className="px-3 py-1 text-sm font-medium bg-blue-300 text-white rounded hover:bg-blue-500 transition"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Close
+                        </button>
+                    }
+                >
+                    <p className="text-center font-semibold uppercase">Pdf Reciept Not Found</p>
+                </DialogBox>
+
             </div>
         </div>
     );
@@ -429,11 +456,10 @@ const InvestigationsAppoin = () => {
                 {["book", "upcoming", "past"].map((t) => (
                     <button
                         key={t}
-                        className={`py-2 border rounded-t-md text-sm sm:text-base font-semibold ${
-                            tab === t
-                                ? "bg-blue-800 text-white shadow-md"
-                                : "bg-gray-100"
-                        } transition-colors`}
+                        className={`py-2 border rounded-t-md text-sm sm:text-base font-semibold ${tab === t
+                            ? "bg-blue-800 text-white shadow-md"
+                            : "bg-gray-100"
+                            } transition-colors`}
                         onClick={() => setTab(t)}
                     >
                         {t === "book" ? "Book New" : t === "upcoming" ? "Upcoming" : "Past"}
@@ -465,11 +491,10 @@ const InvestigationsAppoin = () => {
                                 <p className="flex items-start gap-2">
                                     <strong className="text-gray-700 min-w-[120px]">Investigation:</strong>
                                     <span
-                                        className={`text-sm px-3 py-1 rounded-lg shadow-sm ${
-                                            selectedInvestigations.length > 0
-                                                ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                                : "bg-gray-100 text-gray-500 border border-gray-300 italic"
-                                        }`}
+                                        className={`text-sm px-3 py-1 rounded-lg shadow-sm ${selectedInvestigations.length > 0
+                                            ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                            : "bg-gray-100 text-gray-500 border border-gray-300 italic"
+                                            }`}
                                     >
                                         {selectedInvestigations.length > 0
                                             ? selectedInvestigations.map((d) => d.label).join(", ")
@@ -480,10 +505,10 @@ const InvestigationsAppoin = () => {
                                     <strong>Date:</strong>{" "}
                                     {selectedDate
                                         ? selectedDate.toLocaleDateString("en-US", {
-                                              day: "numeric",
-                                              month: "long",
-                                              year: "numeric",
-                                          })
+                                            day: "numeric",
+                                            month: "long",
+                                            year: "numeric",
+                                        })
                                         : "Not selected"}
                                 </p>
                                 <p>
@@ -558,11 +583,10 @@ const InvestigationsAppoin = () => {
                             </div>
                             <div className="flex justify-center mt-4">
                                 <button
-                                    className={`px-4 py-2 bg-blue-600 text-white rounded uppercase text-sm sm:text-base ${
-                                        !selectedInvestigations.length || !selectedDate
-                                            ? "opacity-50 cursor-not-allowed"
-                                            : ""
-                                    }`}
+                                    className={`px-4 py-2 bg-blue-600 text-white rounded uppercase text-sm sm:text-base ${!selectedInvestigations.length || !selectedDate
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                        }`}
                                     onClick={handleConfirm}
                                     disabled={!selectedInvestigations.length || !selectedDate}
                                 >

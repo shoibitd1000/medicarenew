@@ -82,7 +82,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center">
-     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md flex flex-col justify-between shadow-2xl rounded-lg p-6 bg-white h-full sm:h-auto">
+     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md flex flex-col justify-between shadow-2xl rounded-lg p-6 bg-white  sm:h-auto">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="mx-auto bg-blue-100 p-3 rounded-full border border-blue-200 w-fit mb-3">
@@ -117,7 +117,7 @@ export default function LoginPage() {
           </div>
 
           {errorMsg && (
-            <p className="text-red-500 text-sm text-center uppercase bg-slate-200 px-3 py-1 rounded-lg">
+            <p className="text-red-500 text-xs  uppercase  mb-2">
               {errorMsg}
             </p>
           )}
@@ -140,21 +140,6 @@ export default function LoginPage() {
             Generate / Forgot Password
           </Link>
         </div>
-
-        {/* Optional Footer */}
-        {/* 
-    <div className="bg-white border-t border-gray-300 w-full text-center text-xs capitalize py-2 mt-6">
-      Copyright © 2025{" "}
-      <a
-        target="_blank"
-        rel="noopener noreferrer"
-        href="https://www.itdoseinfo.com/"
-        className="text-blue-600 hover:underline"
-      >
-        ITDOSE INFOSYSTEMS PVT LTD
-      </a>
-    </div>
-    */}
       </div>
     </div>
 

@@ -1,4 +1,4 @@
-const environment = import.meta.env.VITE_NODE_ENV || "development";
+const environment = import.meta.env.VITE_NODE_ENV || "production";
 
 const allEnvApiUrls = {
   production: {
@@ -8,16 +8,16 @@ const allEnvApiUrls = {
     baseUrl: import.meta.env.VITE_BASE_URL_STAGING,
   },
   development: {
-    baseUrl: "", // proxy
+    baseUrl: import.meta.env.VITE_BASE_URL_DEV,
   },
 };
 
-const currentEnv = allEnvApiUrls[environment] ? environment : "development";
+const currentEnv = allEnvApiUrls[environment] ? environment : "production";
 
 const envUrl =
   currentEnv === "development"
-    ? "/MobileApp_API/API"
-    : `${allEnvApiUrls[currentEnv]?.baseUrl}/MobileApp_API/API`;
+    ? "/MobileApp_API/API" // handled by proxy
+    : `${allEnvApiUrls[currentEnv].baseUrl}/MobileApp_API/API`;
 
 export const apiUrls = {
   login: `${envUrl}/LoginAPIDynamic/Getlogin`,
@@ -86,6 +86,11 @@ export const apiUrls = {
   getUloadedapi: `${envUrl}/LoginAPIDynamic/GetUploadedDocument`,
   saveDocumentapi: `${envUrl}/LoginAPIDynamic/SaveDocument`,
   removeDocumentApi: `${envUrl}/LoginAPIDynamic/RemoveDocument`,
+  
+  // otp
+  validateOtp: `${envUrl}/LoginAPIDynamic/ValidateOTP`,
+
+  
   pdfDoctorPrescription: `${envUrl}/Tenwek2208/Design/CPOE/DoctorPrescription.aspx`,
 
 

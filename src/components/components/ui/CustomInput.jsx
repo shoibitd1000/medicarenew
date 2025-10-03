@@ -21,7 +21,7 @@ const CustomInput = ({
           ${leftIcon ? "pl-10" : "pl-3"} pr-3 py-2 font-medium ${repClass}`}
         value={value}
         onChange={onChange}
-        placeholder=" " // needed for floating effect
+        placeholder=" " // Placeholder is needed for floating effect
       />
 
       {/* Left Icon */}
@@ -37,11 +37,10 @@ const CustomInput = ({
         className={`absolute bg-white px-1 transition-all duration-200 pointer-events-none
           ${leftIcon ? "left-10" : "left-3"}
           top-2 text-gray-400 text-base
-          peer-placeholder-shown:top-2   peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base
-          peer-focus:-top-2 peer-focus:text-xs peer-focus:-left-[-20px] peer-focus:text-blue-600
-          peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:-left-[-20px] peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-blue-600`}
+          peer-placeholder-shown:top-2 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base
+          peer-focus:-top-2 peer-focus:text-xs rounded-lg peer-focus:-left-[-20px] peer-focus:text-blue-600
+          peer-not-placeholder-shown:-top-2 peer-not-placeholder-shown:-left-[-20px] peer-not-placeholder-shown:text-xs rounded-lg peer-not-placeholder-shown:text-blue-600`}
       >
-        
         {placeholder}
       </label>
     </div>

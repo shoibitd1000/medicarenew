@@ -43,9 +43,9 @@ export default function ForgotPassword() {
         'elRjUBWVTUmpoP7CVOG1I-%3AAPA91bGfOwTxW7QYf981cRs_5ATiqmye466BFPA7WtTlwQQN8zFR9zOWSGGUgWDNVeJviMyuWGrrDG0P6vXOYSRxNf7qRxR4z-yvSmrcSQ2rPEm9yeWGqvo';
 
       // Updated API endpoint
-      const apiUrl = `${apiUrls.forgotPasswordapi}?EmailID=${encryptPassword(
+      const apiUrl = `${apiUrls.forgotPasswordapi}?EmailID=${
         email
-      )}&devicetype=${deviceType}&deviceid=${deviceId}`;
+      }&devicetype=${deviceType}&deviceid=${deviceId}`;
 
       const response = await axios.post(
         apiUrl,
@@ -98,7 +98,7 @@ export default function ForgotPassword() {
               Forget Password
             </CardTitle>
             <CardDescription>
-              To reset your password, please enter the Patient ID or Mobile Number linked to your account
+              <p>To reset your password, please enter Email ID linked to your account</p>
             </CardDescription>
           </CardHeader>
 
@@ -108,7 +108,7 @@ export default function ForgotPassword() {
                 <CustomInput
                   id="patientId"
                   type="mail"
-                  placeholder="UID/Mobile Number"
+                  placeholder="Enter your e-mail"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"

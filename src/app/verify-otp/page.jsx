@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "../../components/components/ui/button"; // Adjust path as needed
+import { Button } from "../../components/components/ui/button"; // Adjust path
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/components/ui/card"; // Adjust path as needed
-import { Input } from "../../components/components/ui/input"; // Adjust path as needed
+} from "../../components/components/ui/card"; // Adjust path
+import { Input } from "../../components/components/ui/input"; // Adjust path
 import { ArrowLeft, Mail } from "lucide-react";
 import axios from "axios";
-import Toaster from "../../lib/notify"; // Adjust path as needed
+import Toaster from "../../lib/notify"; // Adjust path
+import { apiUrls } from "../../components/Network/ApiEndpoint";
+import { encryptPassword } from "../../components/EncyptHooks/EncryptLib";
 
 const OtpVerification = () => {
   const navigate = useNavigate();
@@ -19,56 +21,53 @@ const OtpVerification = () => {
   const { email, token } = state || {};
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [error, setError] = useState(false);
-  const [timer, setTimer] = useState(120); // Start with 2 minutes
+  const [timer, setTimer] = useState(120);
   const inputRefs = useRef([]);
 
-  // Timer countdown and initial focus
+  // Timer countdown
   useEffect(() => {
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus();
-    }
-
-    let interval = null;
-    if (timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    }
+    const interval = timer > 0 ? setInterval(() => setTimer((t) => t - 1), 1000) : null;
     return () => clearInterval(interval);
   }, [timer]);
 
+  // Auto focus first input
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
   const handleChange = (value, index) => {
-    // Allow only digits and limit to single character
-    if (/[^0-9]/.test(value) || value.length > 1) return;
+    if (!/^[0-9]?$/.test(value)) return; // Only allow single digit
+    setError(false);
 
-    setError(false); // Reset error when user starts typing
-    setOtp((prev) => {
-      const newOtp = [...prev];
-      newOtp[index] = value;
-      return newOtp;
-    });
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
 
-    // Move to next input if value is entered
     if (value && index < otp.length - 1) {
-      inputRefs.current[index + 1].focus();
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (e, index) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
+    if (e.key === "Backspace" || e.key === "Delete") {
+      if (otp[index]) {
+        const newOtp = [...otp];
+        newOtp[index] = "";
+        setOtp(newOtp);
+      } else if (index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
     }
   };
 
   const handlePaste = (e) => {
+    e.preventDefault();
     const pastedData = e.clipboardData.getData("text").trim();
     if (/^\d{6}$/.test(pastedData)) {
       const newOtp = pastedData.split("").slice(0, 6);
       setOtp(newOtp);
-      setError(false);
-      inputRefs.current[5].focus(); // Focus on last input
+      inputRefs.current[5]?.focus();
     }
-    e.preventDefault();
   };
 
   const handleVerify = async (e) => {
@@ -81,12 +80,8 @@ const OtpVerification = () => {
     }
 
     try {
-      const apiUrl = `http://197.138.207.30/MobileApp_API/API/LoginAPIDynamic/ValidateOTP?OTP=${enteredOtp}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
-      const response = await axios.post(apiUrl, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const apiUrl = `${apiUrls.validateOtp}?OTP=${encryptPassword(enteredOtp)}&MobileAppID=gRWyl7xEbEiVQ3u397J1KQ%3D%3D`;
+      const response = await axios.post(apiUrl,{
       });
 
       if (response?.data?.status === true) {
@@ -97,33 +92,31 @@ const OtpVerification = () => {
         setError(true);
         alert(response?.data?.message || "Invalid OTP. Please try again.");
       }
-    } catch (error) {
-      console.error("Error verifying OTP:", error);
+    } catch (err) {
+      console.error("Error verifying OTP:", err);
       setError(true);
       alert("Something went wrong. Please try again.");
     }
   };
 
   const handleResend = () => {
-    setTimer(120); // Reset to 2 minutes
+    setTimer(120);
     setError(false);
     setOtp(new Array(6).fill(""));
-    inputRefs.current[0].focus();
-    // Add API call for resending OTP if needed
+    inputRefs.current[0]?.focus();
+    // 🔹 Call resend OTP API here
   };
 
   const resetState = () => {
     setOtp(new Array(6).fill(""));
     setError(false);
     setTimer(0);
-    inputRefs.current[0].focus();
+    inputRefs.current[0]?.focus();
   };
 
   const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
+    const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+    const s = String(seconds % 60).padStart(2, "0");
     return `${m}:${s}`;
   };
 
@@ -184,6 +177,7 @@ const OtpVerification = () => {
                 Verify OTP
               </Button>
             </form>
+
             <div className="text-center mt-4">
               {timer > 0 ? (
                 <p className="text-gray-600 text-base font-medium">

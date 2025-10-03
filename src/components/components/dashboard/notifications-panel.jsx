@@ -14,47 +14,29 @@ import { SheetTitle } from "../ui/sheet";
 
 export const sampleNotifications = [
   {
-    id: "1",
-    title: "Appointment Reminder",
-    body: "Your appointment with Dr. Smith is tomorrow at 10:00 AM.",
-    timestamp: "2024-08-15T09:00:00Z",
-    type: "appointment",
-  },
-  {
-    id: "2",
-    title: "Bill Due",
-    body: "Your hospital bill of $250 is due today.",
-    timestamp: "2024-08-15T08:00:00Z",
-    type: "bill",
-  },
-  {
-    id: "3",
-    title: "Lab Results Ready",
-    body: "Your lab results are available to view in your health record.",
-    timestamp: "2024-08-14T15:30:00Z",
-    type: "report",
-  },
-  {
-    id: "4",
-    title: "Health Tip",
-    body: "Remember to drink at least 8 glasses of water today!",
-    timestamp: "2024-08-15T11:00:00Z",
-    type: "reminder",
-  },
-  {
-    id: "5",
-    title: "Medication Reminder",
-    body: "Time to take your afternoon medication.",
-    timestamp: "2024-08-15T13:00:00Z",
-    type: "medication",
-  },
-  {
-    id: "6",
-    title: "Upcoming Bill",
-    body: "Your bill for the recent consultation will be generated soon.",
-    timestamp: "2024-08-15T14:00:00Z",
-    type: "bill",
-  },
+      id: 1,
+      title: 'New Lab Report Available',
+      message: 'Your latest lab report is ready for review.',
+      timestamp: '11:22 AM IST, Sep 03, 2025',
+    },
+    {
+      id: 2,
+      title: 'Appointment Reminder',
+      message: 'You have an appointment tomorrow at 10:00 AM.',
+      timestamp: '10:15 AM IST, Sep 02, 2025',
+    },
+    {
+      id: 3,
+      title: 'System Update',
+      message: 'The app has been updated with new features.',
+      timestamp: '09:30 AM IST, Sep 01, 2025',
+    },
+    {
+      id: 4,
+      title: 'Happy Birthday Kenny',
+      message: 'Happy Birthday Kenny',
+      timestamp: '09:30 AM IST, Sep 01, 2025',
+    },
 ];
 
 const priorityColorMap = {

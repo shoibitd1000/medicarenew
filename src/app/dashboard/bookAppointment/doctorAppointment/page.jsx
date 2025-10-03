@@ -239,8 +239,8 @@ const AppointmentsPage = () => {
       const doctor = isDoctors.find(doc => doc.id === selectedDoctor);
       const formattedDate = selectedDate
         ? `${String(new Date(selectedDate).getDate()).padStart(2, '0')}-${[
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-          ][new Date(selectedDate).getMonth()]}-${new Date(selectedDate).getFullYear()}`
+          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        ][new Date(selectedDate).getMonth()]}-${new Date(selectedDate).getFullYear()}`
         : '';
       const body = {
         appointment_mobile: [{
@@ -344,32 +344,7 @@ const AppointmentsPage = () => {
     }
   };
 
-  useEffect(() => {
-    let intervalId;
-    if (webViewVisible && iframeRef.current) {
-      intervalId = setInterval(() => {
-        try {
-          const iframe = iframeRef.current;
-          const url = iframe.contentWindow?.location.href || iframe.src;
-          if (url && url.includes('/MobileMpesaSuccess.aspx')) {
-            const queryString = url.split('?')[1] || '';
-            const params = new URLSearchParams(queryString);
-            const receiptNumber = params.get('ReceiptNumber') || url.match(/ReceiptNumber=([^&]+)/)?.[1];
-            if (receiptNumber) {
-              fetchSaveAppointment(receiptNumber);
-              clearInterval(intervalId);
-            }
-          } else if (url && (url.includes('/failure') || url.includes('payment=failed'))) {
-            notify('Payment failed. Please try again.', 'error');
-            clearInterval(intervalId);
-          }
-        } catch (error) {
-          console.error('Iframe polling error:', error);
-        }
-      }, 1000);
-    }
-    return () => clearInterval(intervalId);
-  }, [webViewVisible]);
+
 
   // Reschedule appointment
   const rescheduleAppointment = async () => {
@@ -502,7 +477,7 @@ const AppointmentsPage = () => {
               src={paymentUrl}
               style={{ width: '100%', height: '400px', border: 'none' }}
               title="M-Pesa Payment"
-            //   sandbox="allow-same-origin allow-scripts" // Add security
+              //   sandbox="allow-same-origin allow-scripts" // Add security
               onLoad={handleIframeNavigation}
               onError={() => notify('Failed to load payment', 'error')}
             />
@@ -841,6 +816,7 @@ const AppointmentsPage = () => {
                       </div>
                       <div>
                         <div className="text-xs font-semibold text-green-600 py-4">{app.center}</div>
+
                         {app.cancel === 0 && (
                           <div className="text-xs font-semibold py-4 flex gap-2">
                             <a

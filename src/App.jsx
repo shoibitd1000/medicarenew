@@ -109,16 +109,14 @@ export function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
-
-      {/* ✅ Enhanced Footer */}
-      <footer className="bg-white  left-0 border-t border-gray-300 w-full text-center text-xs md:text-xs  ">
+      <footer className="bg-white  font-bold left-0 border-t border-gray-300 w-full text-center text-xs md:text-xs  ">
         <p className="text-gray-600">
           Copyright © 2025{" | "}
           <a
             href="https://www.itdoseinfo.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-800"
+            className="text-blue-800 uppercase"
           >
             Itdose Infosystems Pvt Ltd.
           </a>

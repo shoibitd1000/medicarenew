@@ -18,7 +18,7 @@ const envUrl =
   currentEnv === "development"
     ? "/MobileApp_API/API" // handled by proxy
     : `${allEnvApiUrls[currentEnv].baseUrl}/MobileApp_API/API`;
-
+// console.log("envUrlenvUrlenvUrlenvUrl",allEnvApiUrls[environment]?.baseUrl,environment)
 export const apiUrls = {
   login: `${envUrl}/LoginAPIDynamic/Getlogin`,
   getDashBoard: `${envUrl}/LoginAPIDynamic/GetDashBoard`,

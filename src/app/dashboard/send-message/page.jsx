@@ -15,7 +15,7 @@ export default function SendMessagePage() {
   const { token, getCurrentPatientId, getAuthHeader } = useContext(AuthContext);
   const patientid = getCurrentPatientId();
 
-  // single state for everything
+  // Single state for everything, including pagination
   const [state, setState] = useState({
     isOpenDialog: false,
     pastAppointments: [],
@@ -23,9 +23,11 @@ export default function SendMessagePage() {
     description: "",
     selectedDoctorId: "",
     selectedDoctorMobile: "",
+    currentPage: 1,
+    itemsPerPage: 9,
   });
 
-  // update helper
+  // Update helper
   const updateState = (updates) =>
     setState((prev) => ({ ...prev, ...updates }));
 
@@ -53,8 +55,18 @@ export default function SendMessagePage() {
     const year = parseInt(dateParts[2], 10);
 
     const monthNames = [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     const month = monthNames.indexOf(monthStr);
     if (month === -1) return null;
@@ -111,7 +123,7 @@ export default function SendMessagePage() {
       );
 
       if (response?.data?.status !== true) {
-        updateState({ pastAppointments: [] });
+        updateState({ pastAppointments: [], currentPage: 1 });
         notify("No past appointments found.", "info");
         return;
       }
@@ -120,7 +132,10 @@ export default function SendMessagePage() {
       const doctorMobiles = new Set();
 
       response.data.response.forEach((item) => {
-        const appointmentDate = parseAppointmentDate(item.BookingDate, item.BookingTime);
+        const appointmentDate = parseAppointmentDate(
+          item.BookingDate,
+          item.BookingTime
+        );
         if (!appointmentDate) return;
 
         const appointmentData = {
@@ -155,7 +170,7 @@ export default function SendMessagePage() {
         isDelivered: deliveryMap[a.doctorMobile] || false,
       }));
 
-      updateState({ pastAppointments: updatedAppointments });
+      updateState({ pastAppointments: updatedAppointments, currentPage: 1 });
     } catch (error) {
       if (error.response?.status === 401) {
         notify("Session expired. Please log in again.", "error");
@@ -163,7 +178,7 @@ export default function SendMessagePage() {
       } else {
         notify("Failed to fetch appointments.", "error");
       }
-      updateState({ pastAppointments: [] });
+      updateState({ pastAppointments: [], currentPage: 1 });
     } finally {
       updateState({ loading: false });
     }
@@ -187,12 +202,17 @@ export default function SendMessagePage() {
       );
 
       if (response?.data?.status === true) {
-        notify(response?.data?.message || "Message sent successfully.", "success");
+        notify(
+          response?.data?.message || "Message sent successfully.",
+          "success"
+        );
         updateState({
           description: "",
           isOpenDialog: false,
           pastAppointments: state.pastAppointments.map((a) =>
-            a.doctorMobile === selectedDoctorMobile ? { ...a, isDelivered: true } : a
+            a.doctorMobile === selectedDoctorMobile
+              ? { ...a, isDelivered: true }
+              : a
           ),
         });
       } else {
@@ -205,14 +225,32 @@ export default function SendMessagePage() {
     }
   };
 
+  // Pagination logic
+  const { pastAppointments, currentPage, itemsPerPage } = state;
+  const totalPages = Math.ceil(pastAppointments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAppointments = pastAppointments.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      updateState({ currentPage: page });
+      // window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const AppointmentRow = ({ item, onSelect }) => (
     <div className="p-4 shadow-lg hover:shadow-md transition bg-white rounded-lg">
       <div className="flex items-center justify-between">
         <span className="text-md font-extrabold text-blue-600">{item.doctor}</span>
         <span className="text-xs font-bold text-gray-600">{item.center}</span>
       </div>
-      <div className="text-[10px] py-[2px] font-medium text-gray-700">{item.PName}</div>
-      <div className="text-[10px] py-[2px] font-medium text-gray-700">{item.dateTime}</div>
+      <div className="text-[10px] py-[2px] font-medium text-gray-700">
+        {item.PName}
+      </div>
+      <div className="text-[10px] py-[2px] font-medium text-gray-700">
+        {item.dateTime}
+      </div>
       <div className="flex justify-between items-center">
         <div
           className={`text-[10px] py-[2px] font-extrabold capitalize ${
@@ -223,11 +261,11 @@ export default function SendMessagePage() {
         </div>
         <button
           className={`text-xs font-bold ${
-            item.isDelivered ? "text-gray-400 cursor-not-allowed" : "text-blue-500 hover:text-blue-700"
+            item.isDelivered
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-blue-500 hover:text-blue-700"
           }`}
-          onClick={() =>
-            onSelect(item)
-          }
+          onClick={() => onSelect(item)}
           disabled={item.isDelivered}
         >
           {item.isDelivered ? "Message Sent" : "Send Message"}
@@ -237,40 +275,148 @@ export default function SendMessagePage() {
   );
 
   return (
-    <div className="space-y-5 p-2">
+    <div className="p-2">
       <Toaster />
       <div className="text-center">
-        <Mail className="h-12 w-12 mx-auto text-blue-600 bg-white border rounded-lg shadow-md p-2" />
-        <h1 className="text-3xl font-bold text-blue-600 mt-2">Your Past Appointments</h1>
+        <Mail
+          className="h-12 w-12 mx-auto text-blue-600 bg-white border rounded-lg shadow-md p-2"
+        />
+        <h1 className="text-3xl font-bold text-blue-600 mt-2">
+          Your Past Appointments
+        </h1>
         <p className="text-gray-500">Send a message to your doctor</p>
       </div>
 
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="bg-white rounded-lg p-4 shadow">
-          <div className="space-y-6 p-6">
-            <h2 className="text-2xl font-bold text-blue-600 text-center">Past Appointments</h2>
+        <div className="bg-white rounded-lg px-4 shadow">
+          <div className="space-y-2 py-6">
+            <h2 className="text-2xl font-bold text-blue-600 text-center">
+              Past Appointments
+            </h2>
             {state.loading ? (
               <div className="flex justify-center items-center">
                 <IsLoader isFullScreen={false} size="6" />
               </div>
-            ) : state.pastAppointments.length > 0 ? (
-              <div className="grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {state.pastAppointments.map((item) => (
-                  <AppointmentRow
-                    key={item.id}
-                    item={item}
-                    onSelect={(item) => {
-                      updateState({
-                        selectedDoctorId: item.doctorId,
-                        selectedDoctorMobile: item.doctorMobile,
-                        isOpenDialog: true,
-                      });
-                    }}
-                  />
-                ))}
-              </div>
+            ) : paginatedAppointments.length > 0 ? (
+              <>
+                <div className="grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {paginatedAppointments.map((item) => (
+                    <AppointmentRow
+                      key={item.id}
+                      item={item}
+                      onSelect={(item) => {
+                        updateState({
+                          selectedDoctorId: item.doctorId,
+                          selectedDoctorMobile: item.doctorMobile,
+                          isOpenDialog: true,
+                        });
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Pagination Controls */}
+                {pastAppointments.length > 0 && (
+                  <div className="flex justify-center items-center space-x-2 mt-6">
+                    {/* Double Chevron Left (First Page) */}
+                    {totalPages > 10 && (
+                      <button
+                        className={`px-4 py-2 text-sm font-medium rounded transition ${
+                          currentPage === 1
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-blue-500 text-white hover:bg-blue-600"
+                        }`}
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        aria-label="Go to first page"
+                      >
+                        &laquo;
+                      </button>
+                    )}
+
+                    {/* Previous Button */}
+                    <button
+                      className={`px-4 py-2 text-sm font-medium rounded transition ${
+                        currentPage === 1
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      }`}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      aria-label="Previous page"
+                    >
+                      Previous
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex space-x-1">
+                      {(() => {
+                        const maxPagesToShow = 5;
+                        const startPage = Math.max(
+                          1,
+                          currentPage - Math.floor(maxPagesToShow / 2)
+                        );
+                        const endPage = Math.min(
+                          totalPages,
+                          startPage + maxPagesToShow - 1
+                        );
+
+                        const pages = [];
+                        for (let page = startPage; page <= endPage; page++) {
+                          pages.push(
+                            <button
+                              key={page}
+                              className={`px-3 py-1 text-sm font-medium rounded transition ${
+                                currentPage === page
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              }`}
+                              onClick={() => handlePageChange(page)}
+                              aria-label={`Page ${page}`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        }
+                        return pages;
+                      })()}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      className={`px-4 py-2 text-sm font-medium rounded transition ${
+                        currentPage === totalPages
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-blue-500 text-white hover:bg-blue-600"
+                      }`}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      aria-label="Next page"
+                    >
+                      Next
+                    </button>
+
+                    {/* Double Chevron Right (Last Page) */}
+                    {totalPages > 10 && (
+                      <button
+                        className={`px-4 py-2 text-sm font-medium rounded transition ${
+                          currentPage === totalPages
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-blue-500 text-white hover:bg-blue-600"
+                        }`}
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                        aria-label="Go to last page"
+                      >
+                        &raquo;
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-center text-gray-500">No past appointments found.</div>
+              <div className="text-center text-gray-500">
+                No past appointments found.
+              </div>
             )}
           </div>
         </div>
@@ -289,7 +435,9 @@ export default function SendMessagePage() {
           <>
             <button
               className={`px-4 py-2 text-sm font-medium rounded transition ${
-                state.loading ? "bg-gray-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 text-white"
+                state.loading
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600 text-white"
               }`}
               onClick={sendMessageToDoctor}
               disabled={state.loading}
@@ -308,7 +456,9 @@ export default function SendMessagePage() {
         }
       >
         <div className="my-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type Your Message</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Type Your Message
+          </label>
           <CustomTextArea
             repClass="w-full focus:outline-none focus:ring focus:ring-blue-500 rounded-lg p-2"
             value={state.description}

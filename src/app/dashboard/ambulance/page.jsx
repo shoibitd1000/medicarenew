@@ -16,7 +16,7 @@ import Toaster, { notify } from "../../../lib/notify";
 import IsLoader from "../../loading";
 
 export default function AmbulancePage() {
-    const { token, getCurrentPatientId } = React.useContext(AuthContext);
+    const { token, getCurrentPatientId, getAuthHeader } = React.useContext(AuthContext);
     const [location, setLocation] = useState('');
     const [type, setType] = useState('');
     const [condition, setCondition] = useState('');
@@ -160,7 +160,7 @@ export default function AmbulancePage() {
             );
 
             if (response?.data?.status === true) {
-                notify('Success', 'Ambulance request saved successfully');
+                notify('Ambulance request saved successfully', 'success');
                 setCondition('');
                 setContact('');
                 setLocation('');
@@ -169,13 +169,13 @@ export default function AmbulancePage() {
                 setSelectedTime(null);
                 // window.location.href = '/live-tracking'; // Adjust as needed
             } else {
-                notify('Error', 'Failed to save ambulance request');
+                notify('Failed to save ambulance request', 'error');
             }
         } catch (error) {
             console.error('Error saving ambulance request:', error);
             if (error.response?.status === 401) {
-                notify('Error', 'Session expired. Please log in again.');
-                // window.location.href = '/enter-mpin'; // Adjust as needed
+                notify('Session expired. Please log in again.', "error");
+                // window.location.href = '/'; // Adjust as needed
             }
             notify('Error', 'An error occurred while saving the request');
         } finally {
@@ -201,12 +201,7 @@ export default function AmbulancePage() {
                 try {
                     const response = await fetch(
                         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-                        {
-                            headers: {
-                                'User-Agent': 'YourAppName/1.0 (your.email@example.com)', // Replace with your app name and contact email
-                                Accept: 'application/json',
-                            },
-                        },
+                        { headers: getAuthHeader() },
                     );
 
                     if (!response.ok) {

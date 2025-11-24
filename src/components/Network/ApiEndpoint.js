@@ -17,7 +17,8 @@ const currentEnv = allEnvApiUrls[environment] ? environment : "production";
 const envUrl =
   currentEnv === "development"
     ? "/MobileApp_API/API" // handled by proxy
-    : `${allEnvApiUrls[currentEnv].baseUrl}/MobileApp_API/API`;
+    : `${allEnvApiUrls[environment].baseUrl}/MobileApp_API/API`;
+    // : `${allEnvApiUrls[currentEnv].baseUrl}/MobileApp_API/API`;
 // console.log("envUrlenvUrlenvUrlenvUrl",allEnvApiUrls[environment]?.baseUrl,environment)
 export const apiUrls = {
   login: `${envUrl}/LoginAPIDynamic/Getlogin`,

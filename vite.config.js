@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
       case "development":
         return env.VITE_BASE_URL_DEV;
       default:
-        return env.VITE_BASE_URL_PROD; // fallback to production
+        return env.VITE_BASE_URL_DEV; // fallback to production
     }
   }
 
